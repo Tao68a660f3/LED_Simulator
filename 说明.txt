@@ -1,0 +1,45 @@
+滚动(左,右,上,下)
+    **移动速度 1~100
+    * 滚动对象间距
+移到中间(左,右,上,下)
+    **移动速度 1~100
+    **时间
+中间移开(左,右,上,下)
+    **移动速度 1~100
+    **时间
+跳动(端到端)(左,右,上,下)
+    **移动速度 1~100
+    **移动步长 1~64
+闪烁
+    **亮时长 1~50
+    **灭时长 1~50
+静止
+
+**对齐方式 -1~1(左,居中,右)
+    
+文字排列方向(横,竖)
+yoffset -32~32, 对齐方式(-1~1)
+加粗x 1~4
+加粗y 1~2
+文字间隔 0~20
+缩放比例 40~200 , 仅缩放系统字体, 自动缩放
+
+"font":"宋体",
+"fontSize":16,
+"ascFont":"ASC1608",
+"sysFontOnly":False,
+"appearance":"滚动",
+"vertical":False,
+"argv_1":1,
+"argv_2":1,
+"spacing":0,
+"bold":[1,1],
+"y_offset":0,
+"align":[0,0], # x对齐，y对齐
+"scale":100,
+"autoScale":False,
+"scaleSysFontOnly":False,
+"text":"",
+"color_1":"red",
+"color_RGB":[255,255,255],
+"bitmap":None,    # bitmap是BmpCreater生成的图像对象
