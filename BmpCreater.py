@@ -181,7 +181,7 @@ class FontManager():
                 folder = ""
                 for i in range(len(file)):
                     if file[i].startswith("ICON"):
-                        folder = file[i].split(",")[2].split(":")[1]
+                        folder = file[i].split(",")[2][4:]
                     else:
                         icon_name = '`'+file[i].split(",")[0]+'`'
                         icon_file = file[i].split(",")[1]
