@@ -196,10 +196,8 @@ class SelfDefineLayout(QDialog,Ui_SelfDefineScreen):
 class MainWindow(QMainWindow, Ui_ControlPanel):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-        self.currentFileDir = ""
         self.setupUi(self)
-        self.initUI()
-        self.make_menu()
+        self.currentFileDir = ""
         self.setWindowTitle("LED模拟器")
         self.setWindowIcon(QIcon("./resources/icon.ico"))
         #获取显示器分辨率大小
@@ -209,11 +207,13 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.width = int(self.height*1500/850)
         self.setMaximumSize(self.width,self.height)
         self.setMinimumSize(self.width,self.height)
+        self.initUI()
+        self.make_menu()
 
     def initUI(self):
-        self.AboutWindow = AboutWindow()
         self.BtnWidget = QWidget(self)
         self.verticalLayout_LayoutBtn.addWidget(self.BtnWidget)
+        self.AboutWindow = AboutWindow()
         self.LineEditor = LineEditor()
         self.LineController = LineController(self)
         self.LineSettler = LineSettler(self)
@@ -826,20 +826,12 @@ class LineSettler():
         self.parent = parent
         self.customLayouts = []
         self.customLButtons = []
-        self.widgetSize = [self.parent.BtnWidget.size().width(),self.parent.BtnWidget.size().height()]
-        self.btn_w = self.widgetSize[0]
-        self.btn_h = self.widgetSize[1]
+        self.btn_w = 600
+        self.btn_h = 220
         self.initUI()
 
     def initUI(self):
-        pixmap = QPixmap("./resources/welcome.png")
-        pixmap = pixmap.scaledToWidth(self.widgetSize[0])
-        self.parent.BtnWidget.label = QLabel(parent=self.parent.BtnWidget)
-        self.parent.BtnWidget.label.setGeometry(0,0,600,220)
-        self.parent.BtnWidget.label.setPixmap(pixmap)
-        self.parent.BtnWidget.label.setScaledContents(True) 
         self.parent.statusBar().showMessage("请先添加线路，然后添加节目，选择节目后为各个路牌设置布局，再设置显示的内容！")
-
         self.parent.btn_SaveChange.clicked.connect(self.ok_layout)
         self.parent.tableWidget_lineChoose.itemSelectionChanged.connect(self.init_LineSetting)
         self.parent.combo_LayoutChoose.currentTextChanged.connect(self.flush_width_height_spinbox)
@@ -850,6 +842,15 @@ class LineSettler():
         self.parent.spin_Width_2.setMinimum(4)
         self.parent.spin_Height_1.setMinimum(4)
         self.parent.spin_Height_2.setMinimum(4)
+
+        QTimer.singleShot(0, self.set_pixmap)
+
+    def set_pixmap(self):
+        self.parent.BtnWidget.label = QLabel(parent=self.parent.BtnWidget)
+        pixmap = QPixmap("./resources/welcome.png")
+        pixmap = pixmap.scaledToWidth(self.parent.BtnWidget.size().width())
+        self.parent.BtnWidget.label.setPixmap(pixmap)
+        self.parent.BtnWidget.label.show()
 
     def flush_verticalLayout_LayoutBtn(self):
         for widget in self.parent.BtnWidget.findChildren(QWidget):
@@ -905,7 +906,7 @@ class LineSettler():
                     pixmap = QPixmap("./resources/preset_BeijingBus.png")
                 elif mode == "普通":
                     pixmap = QPixmap("./resources/preset_CommonBus.png")
-                pixmap = pixmap.scaledToWidth(self.widgetSize[0])
+                pixmap = pixmap.scaledToWidth(self.parent.BtnWidget.size().width())
                 self.parent.BtnWidget.label = QLabel(parent=self.parent.BtnWidget)
                 self.parent.BtnWidget.label.setGeometry(0,0,600,220)
                 self.parent.BtnWidget.label.setPixmap(pixmap)
