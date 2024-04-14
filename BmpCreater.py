@@ -134,6 +134,7 @@ class Sys_Font_Reader():
         bbox = draw.textbbox((0, 0), text, font=self.font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
+        offset = text_height+int(0.5*(1+font_size-text_height))
 
         image = Image.new("1", (text_width, font_size))
         # 获取新的Draw对象
@@ -141,7 +142,10 @@ class Sys_Font_Reader():
         # 设置字体，绘制文本，加粗
         for i in range(xb):
             for j in range(yb):
-                draw.text((i, j-y_offset), text, font=self.font, fill=1)
+                if font_size > 18 and not text.isascii():
+                    draw.text((i, j+offset-y_offset), text, font=self.font, fill=1, anchor="lb")
+                else:
+                    draw.text((i, j-y_offset), text, font=self.font, fill=1)
 
         image = image.resize((int(image.width*scale/100),image.height),resample=Image.LANCZOS)
 
@@ -326,7 +330,7 @@ class BmpCreater():
     
 if __name__ == "__main__":
     ch_font="宋体"
-    asc_font="ASC1608"
+    asc_font="旧宋体"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="1",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, text="欢迎乘坐低地板无障碍公交车！", ch_font_size=22, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
+    font_img = FontCreater.create_character(vertical=0, text="欢迎无障碍混合字体测试生成0123456789", ch_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
     font_img.save("混合字体测试生成.bmp")
