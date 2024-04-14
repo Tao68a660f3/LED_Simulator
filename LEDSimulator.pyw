@@ -826,12 +826,14 @@ class LineSettler():
         self.parent = parent
         self.customLayouts = []
         self.customLButtons = []
-        self.btn_w = 600
-        self.btn_h = 220
+        self.widgetSize = [self.parent.BtnWidget.size().width(),self.parent.BtnWidget.size().height()]
+        self.btn_w = self.widgetSize[0]
+        self.btn_h = self.widgetSize[1]
         self.initUI()
 
     def initUI(self):
         pixmap = QPixmap("./resources/welcome.png")
+        pixmap = pixmap.scaledToWidth(self.widgetSize[0])
         self.parent.BtnWidget.label = QLabel(parent=self.parent.BtnWidget)
         self.parent.BtnWidget.label.setGeometry(0,0,600,220)
         self.parent.BtnWidget.label.setPixmap(pixmap)
@@ -903,6 +905,7 @@ class LineSettler():
                     pixmap = QPixmap("./resources/preset_BeijingBus.png")
                 elif mode == "普通":
                     pixmap = QPixmap("./resources/preset_CommonBus.png")
+                pixmap = pixmap.scaledToWidth(self.widgetSize[0])
                 self.parent.BtnWidget.label = QLabel(parent=self.parent.BtnWidget)
                 self.parent.BtnWidget.label.setGeometry(0,0,600,220)
                 self.parent.BtnWidget.label.setPixmap(pixmap)
