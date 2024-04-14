@@ -134,8 +134,7 @@ class Sys_Font_Reader():
         bbox = draw.textbbox((0, 0), text, font=self.font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
-        # if text_height % 2 and font_size >= 17:
-        #     y_offset -= 1
+
         image = Image.new("1", (text_width, font_size))
         # 获取新的Draw对象
         draw = ImageDraw.Draw(image)
