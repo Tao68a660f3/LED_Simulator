@@ -908,9 +908,7 @@ class LineSettler():
                     pixmap = QPixmap("./resources/preset_CommonBus.png")
                 pixmap = pixmap.scaledToWidth(self.parent.BtnWidget.size().width())
                 self.parent.BtnWidget.label = QLabel(parent=self.parent.BtnWidget)
-                self.parent.BtnWidget.label.setGeometry(0,0,600,220)
                 self.parent.BtnWidget.label.setPixmap(pixmap)
-                self.parent.BtnWidget.label.setScaledContents(True)
                 self.parent.BtnWidget.label.show()
                 self.parent.combo_LayoutChoose.setEnabled(True)
                 self.parent.combo_LayoutChoose.addItems(["布局1","布局2","布局3","布局4","布局5","布局6"])    # screen["layout"]
