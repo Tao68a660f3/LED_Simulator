@@ -142,7 +142,7 @@ class Sys_Font_Reader():
         # 设置字体，绘制文本，加粗
         for i in range(xb):
             for j in range(yb):
-                if font_size > 18 and not text.isascii():
+                if font_size > 18 and text_height >= 0.8*font_size:
                     draw.text((i, j+offset-y_offset), text, font=self.font, fill=1, anchor="lb")
                 else:
                     draw.text((i, j-y_offset), text, font=self.font, fill=1)
@@ -332,5 +332,5 @@ if __name__ == "__main__":
     ch_font="宋体"
     asc_font="旧宋体"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="1",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, text="欢迎无障碍混合字体测试生成0123456789", ch_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
+    font_img = FontCreater.create_character(vertical=0, text="一二三亖-=_我的一生就选择了你！欢迎无障碍混合字体测试生成0123456789 My life Choose you!", ch_font_size=22, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
     font_img.save("混合字体测试生成.bmp")
