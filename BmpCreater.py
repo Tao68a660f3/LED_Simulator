@@ -134,7 +134,7 @@ class Sys_Font_Reader():
         bbox = draw.textbbox((0, 0), text, font=self.font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
-        offset = text_height+int(0.5*(1+font_size-text_height))
+        offset = int(0.5*font_size)
 
         image = Image.new("1", (text_width, font_size))
         # 获取新的Draw对象
@@ -142,10 +142,7 @@ class Sys_Font_Reader():
         # 设置字体，绘制文本，加粗
         for i in range(xb):
             for j in range(yb):
-                if font_size > 18 and text_height >= 0.8*font_size:
-                    draw.text((i, j+offset-y_offset), text, font=self.font, fill=1, anchor="lb")
-                else:
-                    draw.text((i, j-y_offset), text, font=self.font, fill=1)
+                draw.text((i, j+offset-y_offset), text, font=self.font, fill=1, anchor="lm")
 
         image = image.resize((int(image.width*scale/100),image.height),resample=Image.LANCZOS)
 
