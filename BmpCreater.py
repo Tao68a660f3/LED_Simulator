@@ -132,25 +132,20 @@ class Sys_Font_Reader():
         draw = ImageDraw.Draw(image)
         # 计算文本的宽度和高度
         bbox = draw.textbbox((0, 0), text+"█", font=self.font)
-        text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
         # 多余的宽度
-        bbox = draw.textbbox((0, 0), "█", font=self.font)
-        delta_width = bbox[2] - bbox[0]
+        bbox = draw.textbbox((0, 0), text, font=self.font)
+        text_width = bbox[2] - bbox[0]
 
         offset = text_height+int(0.5*(1+font_size-text_height))
  
-        image = Image.new("1", (text_width-delta_width, font_size))
+        image = Image.new("1", (text_width, font_size))
         # 获取新的Draw对象
         draw = ImageDraw.Draw(image)
         # 设置字体，绘制文本，加粗
         for i in range(xb):
             for j in range(yb):
-                # if font_size > 18:
                 draw.text((i, j+offset-y_offset), text+"█", font=self.font, fill=1, anchor="lb")
-                # else:
-                    # draw.text((i, j-y_offset), text, font=self.font, fill=1)
- 
 
         image = image.resize((int(image.width*scale/100),image.height),resample=Image.LANCZOS)
 
@@ -337,5 +332,5 @@ if __name__ == "__main__":
     ch_font="宋体"
     asc_font="旧宋体"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="1",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, text="一二三亖-=_我的一生就选择了你！欢迎无障碍混合字体测试生成0123456789 My life Choose you!", ch_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
+    font_img = FontCreater.create_character(vertical=0, text="一二三亖-=_我的一生就选择了你！欢迎无障碍混合字体测试生成0123456789 My life Choose you!", ch_font_size=23, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
     font_img.save("混合字体测试生成.bmp")
