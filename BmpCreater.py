@@ -70,7 +70,7 @@ class ASC_Bmp_Reader():
             if asc == " ":
                 r = l+int(0.25*self.ascii_size[0])    ####!!
 
-            r = r+2 if r+2 <= self.ascii_size[0] else r
+            r = r+2 if r+2 <= self.ascii_size[0] else r+1
         else:
             l = 0
             r = self.ascii_size[0]
