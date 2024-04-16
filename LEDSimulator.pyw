@@ -90,7 +90,7 @@ class NewALine(QDialog,Ui_NewALine):
                 combo.setCurrentText("(6,6)")
                 combo.setEnabled(False)
             for combo in ledTypeCombo[2:]:
-                combo.setCurrentText("(6,6)")
+                combo.setCurrentText("(8,8)")
                 combo.setEnabled(False)
             for spin in widthSpin[:2]:
                 spin.setValue(160)
@@ -288,7 +288,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                     fps.append(s.get_fps())
             except Exception as e:
                 pass
-                # print(e)
+                # pass
         if len(fps) != 0:
             msg = ""
             for i in range(len(fps)):
@@ -368,7 +368,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                 try:
                     screen.close()
                 except Exception as e:
-                    print(e)
+                    pass
                 if self.LineEditor.LineInfoList[row][screen]["enabled"]:
                     try:
                         scn = ScreenController(flushRate=self.LineEditor.LineInfoList[row]["flushRate"],screenInfo={"colorMode":self.LineEditor.LineInfoList[row][screen]["colorMode"],"screenSize":self.LineEditor.LineInfoList[row][screen]["screenSize"]},screenProgramSheet=self.LineEditor.LineInfoList[row]["programSheet"],FontIconMgr=self.IconManager.FontMgr,toDisplay=screen)
@@ -376,7 +376,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                         h += self.LineEditor.LineInfoList[row][screen]["screenSize"][1]*self.LineEditor.LineInfoList[row][screen]["screenSize"][2][1]+120
                         self.LedScreens[screen] = scn
                     except Exception as e:
-                        print(e)
+                        pass
 
     def close_all_screen(self):
         for s in self.LedScreens.values():
@@ -385,7 +385,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                 del s
                 gc.collect()
             except Exception as e:
-                print(e)
+                pass
 
     def preview_screen(self):
         row = self.selected_row(self.tableWidget_lineChoose)
@@ -412,7 +412,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                         else:
                             self.LedScreens[screen].close()
                     except Exception as e:
-                        print(e)
+                        pass
 
     def screenShot(self):
         screen = QApplication.primaryScreen()
@@ -421,14 +421,14 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                 try:
                     os.makedirs("./ScreenShots")
                 except Exception as e:
-                    print(e)
+                    pass
                 if scn.isVisible():
                     window_handle = scn.winId()
                     screenshot = screen.grabWindow(window_handle)
                     fileName = datetime.datetime.now().strftime(f"{name}_%H%M%S.png")
                     screenshot.save(os.path.join("./ScreenShots",fileName))
             except Exception as e:
-                print(e)
+                pass
 
     def topMost(self):
         for scn in self.LedScreens.values():
@@ -442,7 +442,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                     scn.show()
                     scn.show()
             except Exception as e:
-                print(e)
+                pass
 
 class IconManager():
     def __init__(self,parent):
@@ -1130,37 +1130,40 @@ class LineSettler():
 
             w1 = self.parent.spin_Width_1.value()
             h1 = self.parent.spin_Height_1.value()
-            scn_argv = self.get_scn_pos_size(row,screen,w1,h1)
+            if screen in ["frontSideScreen","backSideScreen"]:
+                scn_argv = self.get_scn_pos_size(row,screen,w1,h1,False)
+            else:
+                scn_argv = self.get_scn_pos_size(row,screen,w1,h1)
             to_add = []
             m_size = "bigSizeScaled" if mode == "北京公交" else "midSize"
+            scn_size = "bigSize" if screen in ["frontSideScreen","backSideScreen"]  else "midSize"
+            m_size = scn_size if screen in ["frontSideScreen","backSideScreen"]  else m_size
             if layout == "布局1":
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],"midSize",colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],scn_size,colorMode,"yellow"))
                 to_add.append(self.get_toadd_screenunit(scn_argv[0][2],scn_argv[1][2],m_size,colorMode,"red"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],scn_argv[1][3],"midSize",colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],scn_argv[1][3],scn_size,colorMode,"yellow"))
             elif layout == "布局2":
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],"midSize",colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][1],scn_argv[1][1],"midSize",colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],scn_size,colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][1],scn_argv[1][1],scn_size,colorMode,"yellow"))
                 to_add.append(self.get_toadd_screenunit(scn_argv[0][2],scn_argv[1][2],m_size,colorMode,"red"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],[scn_argv[1][3][0],scn_argv[1][3][1]+scn_argv[1][4][1]],"midSize",colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],[scn_argv[1][3][0],scn_argv[1][3][1]+scn_argv[1][4][1]],scn_size,colorMode,"yellow"))
             elif layout == "布局3":
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],[scn_argv[1][0][0],scn_argv[1][0][1]+scn_argv[1][1][1]],"midSize",colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],[scn_argv[1][0][0],scn_argv[1][0][1]+scn_argv[1][1][1]],scn_size,colorMode,"yellow"))
                 to_add.append(self.get_toadd_screenunit(scn_argv[0][2],scn_argv[1][2],m_size,colorMode,"red"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],scn_argv[1][3],"midSize",colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][4],scn_argv[1][4],"midSize",colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],scn_argv[1][3],scn_size,colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][4],scn_argv[1][4],scn_size,colorMode,"yellow"))
             elif layout == "布局4":
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],"midSize",colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][1],scn_argv[1][1],"midSize",colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],scn_size,colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][1],scn_argv[1][1],scn_size,colorMode,"yellow"))
                 to_add.append(self.get_toadd_screenunit(scn_argv[0][2],scn_argv[1][2],m_size,colorMode,"red"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],scn_argv[1][3],"midSize",colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][4],scn_argv[1][4],"midSize",colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],scn_argv[1][3],scn_size,colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][4],scn_argv[1][4],scn_size,colorMode,"yellow"))
             elif layout == "布局5":
                 scn_argv = self.get_scn_pos_size(row,screen,w1,h1,False)
-                scn_size = "bigSize" if screen in ["frontSideScreen","backSideScreen"]  else "midSize"
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],scn_size,colorMode,"red"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],[scn_argv[1][0][0],scn_argv[1][0][1]+scn_argv[1][1][1]],scn_size,colorMode,"red"))
                 to_add.append(self.get_toadd_screenunit(scn_argv[0][2],[scn_argv[1][2][0]+scn_argv[1][3][0],scn_argv[1][2][1]],scn_size,colorMode,"yellow"))
             elif layout == "布局6":
                 scn_argv = self.get_scn_pos_size(row,screen,w1,h1,False)
-                scn_size = "bigSize" if screen in ["frontSideScreen","backSideScreen"]  else "midSize"
                 to_add.append(self.get_toadd_screenunit(scn_argv[0][0],[scn_argv[1][0][0],scn_argv[1][0][1]+scn_argv[1][1][1]],scn_size,colorMode,"red"))
                 to_add.append(self.get_toadd_screenunit([scn_argv[0][2][0],scn_argv[0][3][1]],[scn_argv[1][2][0]+scn_argv[1][3][0],scn_argv[1][3][1]],scn_size,colorMode,"yellow"))
                 to_add.append(self.get_toadd_screenunit([scn_argv[0][2][0],scn_argv[0][4][1]],[scn_argv[1][2][0]+scn_argv[1][3][0],scn_argv[1][4][1]],scn_size,colorMode,"yellow"))
