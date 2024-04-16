@@ -318,6 +318,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             if button == QMessageBox.No:
                 return
         self.LineController.new_line()
+        self.currentFileDir = ""
     
     def save_another(self):
         filedir,ok = QFileDialog.getSaveFileName(self,'保存','./','路牌文件 (*.bsu)')
