@@ -90,7 +90,7 @@ class NewALine(QDialog,Ui_NewALine):
                 combo.setCurrentText("(6,6)")
                 combo.setEnabled(False)
             for combo in ledTypeCombo[2:]:
-                combo.setCurrentText("(8,8)")
+                combo.setCurrentText("(6,6)")
                 combo.setEnabled(False)
             for spin in widthSpin[:2]:
                 spin.setValue(160)
