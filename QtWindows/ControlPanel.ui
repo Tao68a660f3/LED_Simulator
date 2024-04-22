@@ -18,8 +18,8 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>1500</width>
-    <height>850</height>
+    <width>16777215</width>
+    <height>16777215</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -51,16 +51,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="btn_newLine">
+           <widget class="QPushButton" name="btn_saveFile">
             <property name="text">
-             <string>新建线路</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btn_MvUp_BusLine">
-            <property name="text">
-             <string>上移↑</string>
+             <string>保存文件</string>
             </property>
            </widget>
           </item>
@@ -69,9 +62,9 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
-           <widget class="QPushButton" name="btn_saveFile">
+           <widget class="QPushButton" name="btn_newLine">
             <property name="text">
-             <string>保存文件</string>
+             <string>新建线路</string>
             </property>
            </widget>
           </item>
@@ -79,6 +72,17 @@
            <widget class="QPushButton" name="btn_delLine">
             <property name="text">
              <string>删除选中</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <item>
+           <widget class="QPushButton" name="btn_MvUp_BusLine">
+            <property name="text">
+             <string>上移↑</string>
             </property>
            </widget>
           </item>

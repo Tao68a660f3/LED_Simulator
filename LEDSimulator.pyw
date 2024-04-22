@@ -1,7 +1,7 @@
 import sys, os, ast, copy, datetime, gc
 from PyQt5.QtWidgets import QApplication, QWidget, QDialog, QMainWindow, QAbstractItemView, QTableWidgetItem, QHeaderView, QFileDialog, QPushButton, QLabel, QColorDialog, QMenu, QAction, QMessageBox
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtCore import pyqtSignal, Qt, QCoreApplication
 from BmpCreater import FontManager
 from ControlPanel import Ui_ControlPanel
 from NewALine import Ui_NewALine
@@ -10,6 +10,9 @@ from ScreenInfo import *
 from LineInfo import *
 from LedScreenModule import *
 from About import *
+
+#适配高分辨率
+# QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
 class AboutWindow(QWidget,Ui_Form):
     def __init__(self, parent=None):
@@ -205,7 +208,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.screenRect = self.desktop.screenGeometry()
         self.height = int(self.screenRect.height()*850/1620)
         self.width = int(self.height*1500/850)
-        self.setMaximumSize(self.width,self.height)
+        # self.setMaximumSize(self.screenRect.width(),self.screenRect.height())
         self.setMinimumSize(self.width,self.height)
         self.initUI()
         self.make_menu()
@@ -1180,7 +1183,7 @@ class LineSettler():
             if add_to:
                 self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = aim_add
             else:
-                self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = copy.deepcopy(template_screenInfo["midSize_1"])
+                self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = [copy.deepcopy(template_screenInfo["midSize_1"])]
             self.parent.ProgramSettler.show_scnUnit()
 
 class LineController():
