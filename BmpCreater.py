@@ -155,7 +155,7 @@ class Sys_Font_Reader():
         delta_width = int((bbox[2] - bbox[0])*0.5)
         delta_height = font_size-text_height
         if delta_height != 0:
-            delta_y = int(0.5*((-1*abs(delta_height)/delta_height)*(1+delta_height)))
+            delta_y = int(0.5*(1+delta_height))
         else:
             delta_y = 0
 
@@ -369,7 +369,7 @@ class BmpCreater():
         return new_image
     
 if __name__ == "__main__":
-    ch_font="微软雅黑"
+    ch_font="华文行楷"
     asc_font="Arial"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="1",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
     font_img = FontCreater.create_character(vertical=0, text="铁皮青蛙提醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
