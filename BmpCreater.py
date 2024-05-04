@@ -125,20 +125,41 @@ class Sys_Font_Reader():
         self.font = None
         self.font_path = font_path
 
+    def is_Chinese(self,word):
+        for ch in word:
+            if '\u4e00' <= ch <= '\u9fff':
+                return True
+        return False
+
     def get_text_bmp(self,text,y_offset=0,font_size=16,xb=1,yb=1,scale=100):
         self.font = ImageFont.truetype(self.font_path, font_size)
+        allowed_font = ["simsun","arial","arialn","yh","simkai","deng","simhei","simyou","stxihei","stzhongs","fzytk"]
+        scaled_font = {"fzytk":72,}
+        s = text
+        ss = ""
+        for fnt in allowed_font:
+            if fnt in self.font_path.lower():
+                s = "█| "+s+" |█"
+                ss = "| █ |█"
+
         # 创建一个Image对象
         image = Image.new("1", (1, 1))  # 1-bit image (black and white)
         draw = ImageDraw.Draw(image)
         # 计算文本的宽度和高度
-        bbox = draw.textbbox((0, 0), "| "+text+" |", font=self.font)
+        bbox = draw.textbbox((0, 0), s, font=self.font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
         # 多余的宽度
-        bbox = draw.textbbox((0, 0), "| ", font=self.font)
-        delta_width = bbox[2] - bbox[0]
+        bbox = draw.textbbox((0, 0), ss, font=self.font)
+        delta_width = int((bbox[2] - bbox[0])*0.5)
+        delta_height = font_size-text_height
+        if delta_height != 0:
+            delta_y = int(0.5*((abs(delta_height)/delta_height)*(1+delta_height)))
+        else:
+            delta_y = 0
 
-        offset = text_height+int(0.5*(1+font_size-text_height))
+        offset = text_height+delta_y
+        print(s,offset,font_size,text_height,delta_y)
  
         image = Image.new("1", (text_width-2*delta_width, font_size))#
         # 获取新的Draw对象
@@ -146,7 +167,20 @@ class Sys_Font_Reader():
         # 设置字体，绘制文本，加粗
         for i in range(xb):
             for j in range(yb):
-                draw.text((i-delta_width, j+offset-y_offset), "| "+text+" |█", font=self.font, fill=1, anchor="lb")
+                draw.text((i-1*delta_width, j+offset-y_offset), s, font=self.font, fill=1, anchor="lb")
+
+        for fnt in scaled_font.keys():
+            if fnt in self.font_path.lower() and self.is_Chinese(text):
+                image = image.crop((int(image.width*(1-scaled_font[fnt]/100)*0.5),0,int(image.width*(1-(1-scaled_font[fnt]/100)*0.5)),image.height))
+
+        ########################################
+        # for x in range(image.width):
+            # x=0
+            # if delta_y < image.height:
+            #     image.putpixel((x, delta_y), 1)
+            # if offset-1 < image.height:
+            #     image.putpixel((x, offset-1), 1)
+        ########################################
 
         image = image.resize((int(image.width*scale/100),image.height),resample=Image.LANCZOS)
 
@@ -330,11 +364,12 @@ class BmpCreater():
         return new_image
     
 if __name__ == "__main__":
-    ch_font="微软雅黑"
-    asc_font="Arial"
+    ch_font="宋体"
+    asc_font=ch_font
     FontCreater = BmpCreater(Manager=FontManager(),color_type="1",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, text="铁皮青蛙", ch_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
+    font_img = FontCreater.create_character(vertical=0, text="# 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]", ch_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]
 # 一二三亖-=_欢迎无障碍0123456789 My life花儿尽情地开吧
+# 铁皮青蛙提醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj
