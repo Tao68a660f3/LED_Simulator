@@ -133,8 +133,8 @@ class Sys_Font_Reader():
 
     def get_text_bmp(self,text,y_offset=0,font_size=16,xb=1,yb=1,scale=100):
         self.font = ImageFont.truetype(self.font_path, font_size)
-        allowed_font = ["simsun","Arial","ARIALN","yh","simkai","Deng","simhei","SIMYOU","STXIHEI","STZHONGS","FZYTK"]
-        offseted_font = {"Arial":3,"ARIALN":2}
+        allowed_font = ["simsun","arial","ARIALN","yh","simkai","Deng","simhei","SIMYOU","STXIHEI","STZHONGS","FZYTK"]
+        offseted_font = {"arial":2,"ARIALN":2}
         scaled_font = {"FZYTK":72,}
         s = text
         ss = ""
@@ -370,9 +370,9 @@ class BmpCreater():
     
 if __name__ == "__main__":
     ch_font="华文行楷"
-    asc_font="ARIALN"
+    asc_font="Arial"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="1",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, text="铁皮青蛙提醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
+    font_img = FontCreater.create_character(vertical=0, text="铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]
