@@ -133,13 +133,13 @@ class Sys_Font_Reader():
 
     def get_text_bmp(self,text,y_offset=0,font_size=16,xb=1,yb=1,scale=100):
         self.font = ImageFont.truetype(self.font_path, font_size)
-        allowed_font = ["simsun","arial","arialn","yh","simkai","deng","simhei","simyou","stxihei","stzhongs","fzytk"]
-        offseted_font = {"arial":3,"arialn":3}
-        scaled_font = {"fzytk":72,}
+        allowed_font = ["simsun","Arial","ARIALN","yh","simkai","Deng","simhei","SIMYOU","STXIHEI","STZHONGS","FZYTK"]
+        offseted_font = {"Arial":3,"ARIALN":2}
+        scaled_font = {"FZYTK":72,}
         s = text
         ss = ""
         for fnt in allowed_font:
-            if fnt in self.font_path.lower():
+            if fnt in self.font_path:
                 s = "█| "+s+" |█"
                 ss = "█|  |█"
 
@@ -167,7 +167,7 @@ class Sys_Font_Reader():
         draw = ImageDraw.Draw(image)
 
         for fnt in offseted_font.keys():
-            if fnt in self.font_path.lower():
+            if fnt in self.font_path:
                 delta_width = delta_width - offseted_font[fnt]
         # 设置字体，绘制文本，加粗
         for i in range(xb):
@@ -175,7 +175,7 @@ class Sys_Font_Reader():
                 draw.text((i-delta_width, j+offset-y_offset), s, font=self.font, fill=1, anchor="lb")
 
         for fnt in scaled_font.keys():
-            if fnt in self.font_path.lower() and self.is_Chinese(text):
+            if fnt in self.font_path and self.is_Chinese(text):
                 image = image.crop((int(image.width*(1-scaled_font[fnt]/100)*0.5),0,int(image.width*(1-(1-scaled_font[fnt]/100)*0.5)),image.height))
 
         ########################################
@@ -370,7 +370,7 @@ class BmpCreater():
     
 if __name__ == "__main__":
     ch_font="华文行楷"
-    asc_font="Arial"
+    asc_font="ARIALN"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="1",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
     font_img = FontCreater.create_character(vertical=0, text="铁皮青蛙提醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
     font_img.save("混合字体测试生成.bmp")
