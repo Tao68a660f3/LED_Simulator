@@ -521,6 +521,7 @@ class ProgramSheetManager():
         self.parent.tableWidget_ProgramSheet.verticalHeader().setDefaultSectionSize(18)
 
         self.parent.spinBox.setMaximum(3600*24)
+        self.parent.spinBox.setMinimum(-1)
 
         self.parent.tableWidget_lineChoose.itemSelectionChanged.connect(self.show_program)
         self.parent.tableWidget_ProgramSheet.itemSelectionChanged.connect(self.show_name_time)
