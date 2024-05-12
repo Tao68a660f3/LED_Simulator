@@ -133,15 +133,12 @@ class Sys_Font_Reader():
 
     def get_text_bmp(self,text,y_offset=0,font_size=16,xb=1,yb=1,scale=100):
         self.font = ImageFont.truetype(self.font_path, font_size)
-        allowed_font = ["simsun","arial","ARIALN","yh","simkai","Deng","simhei","SIMYOU","STXIHEI","STZHONGS","FZYTK"]
-        offseted_font = {"arial":2,"ARIALN":1,}
+        x_offseted_font = {"arial":2,"ARIALN":1,}
         scaled_font = {"FZYTK":72,}
+        extra_size = int(0.2*font_size) if text.isascii() else 0
         s = text
-        ss = ""
-        for fnt in allowed_font:
-            if fnt in self.font_path:
-                s = "█| "+s+" |█"
-                ss = "█|  |█"
+        s = "█| "+s+" |█"
+        ss = "█|  |█"
 
         # 创建一个Image对象
         image = Image.new("1", (1, 1))  # 1-bit image (black and white)
@@ -153,26 +150,22 @@ class Sys_Font_Reader():
         # 多余的宽度
         bbox = draw.textbbox((0, 0), ss, font=self.font)
         delta_width = int((bbox[2] - bbox[0])*0.5)
-        delta_height = font_size-text_height
-        if delta_height != 0:
-            delta_y = int(0.5*(1+delta_height))
-        else:
-            delta_y = 0
+        # delta_height = font_size-text_height
 
-        offset = text_height+delta_y
+        offset = int(0.5*font_size)+int(0.5*extra_size)
         # print(s,offset,font_size,text_height,delta_y)
  
-        image = Image.new("1", (text_width-2*delta_width, font_size))#
+        image = Image.new("1", (text_width-2*delta_width, font_size+extra_size))#
         # 获取新的Draw对象
         draw = ImageDraw.Draw(image)
 
-        for fnt in offseted_font.keys():
+        for fnt in x_offseted_font.keys():
             if fnt in self.font_path:
-                delta_width = delta_width - offseted_font[fnt]
+                delta_width = delta_width - x_offseted_font[fnt]
         # 设置字体，绘制文本，加粗
         for i in range(xb):
             for j in range(yb):
-                draw.text((i-delta_width, j+offset-y_offset), s, font=self.font, fill=1, anchor="lb")
+                draw.text((i-delta_width, j+offset-y_offset), s, font=self.font, fill=1, anchor="lm")
 
         for fnt in scaled_font.keys():
             if fnt in self.font_path and self.is_Chinese(text):
@@ -180,11 +173,12 @@ class Sys_Font_Reader():
 
         ########################################
         # for x in range(image.width):
+        #     print(int(delta_height/2),int(delta_height/2)+text_height-1)
         #     # x=0
-        #     if delta_y < image.height:
-        #         image.putpixel((x, delta_y), 1)
-        #     if offset-1 < image.height:
-        #         image.putpixel((x, offset-1), 1)
+        #     if int(delta_height/2) > 0:
+        #         image.putpixel((x, int(delta_height/2)), 1)
+        #     if int(delta_height/2)+text_height-1 < image.height:
+        #         image.putpixel((x, int(delta_height/2)+text_height-1), 1)
         ########################################
 
         image = image.resize((int(image.width*scale/100),image.height),resample=Image.LANCZOS)
@@ -242,9 +236,7 @@ class BmpCreater():
         self.asc_font = self.FontManager.font_dict[asc_font]
         self.color_type = color_type
         self.color = (color[0],color[1],color[2])
-        #-------------------------------------------------
-        # print(self.ch_font,self.asc_font)
-        #-------------------------------------------------
+
         asc_font_type = self.asc_font.split(".")[-1].lower()
         ch_font_type = self.ch_font.split(".")[-1].lower()
         # if not self.only_sysfont:
@@ -258,11 +250,6 @@ class BmpCreater():
             self.Ch_Reader = HZK_Font_Reader(self.relative_path,self.ch_font)
         else:
             self.Ch_Reader = Sys_Font_Reader(self.ch_font)
-        # else:
-        #     if ch_font_type == "bin":
-        #         self.Ch_Reader = Sys_Font_Reader("simsun.ttc")
-        #     else:
-        #         self.Ch_Reader = Sys_Font_Reader(self.ch_font)
 
     def find_backtick_strings(self,s):
         ordered_strings = []
@@ -369,10 +356,10 @@ class BmpCreater():
         return new_image
     
 if __name__ == "__main__":
-    ch_font="华文行楷"
-    asc_font="Arial"
+    ch_font="微软雅黑"
+    asc_font=ch_font
     FontCreater = BmpCreater(Manager=FontManager(),color_type="1",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, text="铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 0, style = 0)
+    font_img = FontCreater.create_character(vertical=0, text="铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=20, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, style = 0)
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]
