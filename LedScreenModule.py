@@ -1,18 +1,18 @@
-﻿import sys, time, datetime
-from PyQt5.QtWidgets import QApplication, QWidget
+﻿import sys, time, datetime, os
+from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction
 from PyQt5.QtGui import QPainter, QColor
-from PyQt5.QtCore import QTimer
-from PIL import Image
+from PyQt5.QtCore import QTimer, Qt
+from PIL import Image, ImageGrab
 from ScreenInfo import *
 from LineInfo import *
 from BmpCreater import *
 
-undefinedProgramSheet = [['测试信息', 54, {'frontScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'red', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'red', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'frontSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'red', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'red', 'color_RGB': [255, 255, 0], 'bitmap': None}]]}]]
+undefinedProgramSheet = [['测试信息', 900, {'frontScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%#m月%#d日 %A 时间 %H时%M分', 'color_1': 'red', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%#m月%#d日 %A 时间 %H时%M分', 'color_1': 'red', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'frontSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%#m月%#d日 %A 时间 %H时%M分', 'color_1': 'red', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%#m月%#d日 %A 时间 %H时%M分', 'color_1': 'red', 'color_RGB': [255, 255, 0], 'bitmap': None}]]}]]
 
 class ScreenController(QWidget):
     def __init__(self,flushRate,screenInfo,screenProgramSheet,toDisplay,FontIconMgr):
         super().__init__()
-        self.offset = 30
+        self.offset = 16
         self.flushRate = int(1000/flushRate)
         self.colorMode = screenInfo["colorMode"]
         self.screenSize = [screenInfo["screenSize"][0],screenInfo["screenSize"][1]]
@@ -25,8 +25,11 @@ class ScreenController(QWidget):
         self.currentBeginTime = 0
         self.runningTime = 0
         self.performFinish = False
+        self.gifRecording = False
+        self.endGifFrame = 0
         self.fpsCounter = 0
         self.units = []
+        self.gifFrames = []
 
         if len(self.screenProgramSheet) == 0:
             self.screenProgramSheet = undefinedProgramSheet
@@ -49,9 +52,74 @@ class ScreenController(QWidget):
         self.timer4.start(self.flushRate)
 
         self.setWindowTitle(self.toDisplay)
+        self.setWindowFlags(Qt.FramelessWindowHint) # 隐藏边框
         self.show()
         self.programTimeout()
         self.checkProgramTimeout()
+
+        self.setContextMenuPolicy(Qt.CustomContextMenu) # 右键菜单
+        self.customContextMenuRequested.connect(self.showContextMenu)
+
+    def showContextMenu(self, pos):
+        contextMenu = QMenu(self)
+        newAction = QAction('关闭窗口', self)
+        newAction.triggered.connect(self.close)
+        contextMenu.addAction(newAction)
+        newAction = QAction('屏幕截图', self)
+        newAction.triggered.connect(self.screen_shot)
+        contextMenu.addAction(newAction)
+        if not self.gifRecording:
+            newAction = QAction('开始录制GIF', self)
+            newAction.triggered.connect(self.start_recording_gif)
+        else:
+            newAction = QAction('结束录制GIF', self)
+            newAction.triggered.connect(self.stop_recording_gif)
+        contextMenu.addAction(newAction)
+
+        contextMenu.exec_(self.mapToGlobal(pos))
+
+    def mousePressEvent(self, e):
+        if self.gifRecording:
+            self.endGifFrame = len(self.gifFrames)
+        if e.buttons() == Qt.LeftButton:
+            try:
+                print(e.pos())
+                self.mos = e.pos()
+            except:
+                pass
+                
+    def mouseMoveEvent(self, e):
+        try:
+            if e.buttons() == Qt.LeftButton and self.mos:
+                self.move(self.mapToGlobal(e.pos() - self.mos))
+            e.accept()
+        except:
+            pass
+
+    def capture_screen(self):
+        bbox = (self.frameGeometry().x(), self.frameGeometry().y(), 
+                self.frameGeometry().x() + self.frameGeometry().width(), 
+                self.frameGeometry().y() + self.frameGeometry().height())
+        img = ImageGrab.grab(bbox)
+        self.gifFrames.append(img)
+
+    def screen_shot(self):
+        self.capture_screen()
+        fileName = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S.png")
+        self.gifFrames[0].save(os.path.join("./ScreenShots",fileName))
+
+    def start_recording_gif(self):
+        self.gifFrames = []
+        self.gifRecording = True
+
+    def stop_recording_gif(self):
+        self.gifRecording = False
+        self.save_gif()
+
+    def save_gif(self):
+        fileName = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S.gif")
+        self.gifFrames[0].save(os.path.join("./ScreenShots",fileName), save_all=True, append_images=self.gifFrames[1:self.endGifFrame], optimize=False, duration=self.flushRate, loop=0)
+        self.gifFrames = []
 
     def checkTimeStr(self):
         chinese_week_day = {
@@ -122,6 +190,8 @@ class ScreenController(QWidget):
         for s in self.units:
             self.drawScreen(s,qp)
         qp.end()
+        if self.gifRecording:
+            self.capture_screen()
         self.fpsCounter += 1
 
     def flushScreen(self):
@@ -132,6 +202,7 @@ class ScreenController(QWidget):
     def get_fps(self):
         fps = self.fpsCounter
         self.fpsCounter = 0
+        self.setWindowTitle(f'{self.toDisplay} @ {fps} FPS')
         return fps
 
     def posTransFunc(self,obj):
@@ -337,7 +408,7 @@ class ScreenController(QWidget):
                     obj.y = obj.y-arg2 if obj.y-arg2 >= 0 else -obj.pointNum[1]+obj.Bitmap.size[1]
 
     def drawBackground(self,qp):
-        qp.setBrush(QColor(90,90,90))
+        qp.setBrush(QColor(25,25,25))
         qp.drawRect(0,0,2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
         qp.setBrush(QColor(30,30,30))
         qp.drawRect(self.offset,self.offset,self.screenSize[0]*self.screenScale[0],self.screenSize[1]*self.screenScale[1])
@@ -464,8 +535,8 @@ if __name__ == '__main__':
     screenInfomation = {
         "flushRate":54,
         "screenInfo":{
-            "colorMode":"RGB",    # "RGB","1"
-            "screenSize":[224,32,(3,3)],
+            "colorMode":"1",    # "RGB","1"
+            "screenSize":[224,32,(6,6)],
         },
         "screenProgramSheet":undefinedProgramSheet
     }
