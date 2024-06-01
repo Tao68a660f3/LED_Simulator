@@ -63,17 +63,17 @@ class ScreenController(QWidget):
     def showContextMenu(self, pos):
         contextMenu = QMenu(self)
         newAction = QAction('关闭窗口', self)
-        newAction.triggewhite.connect(self.close)
+        newAction.triggered.connect(self.close)
         contextMenu.addAction(newAction)
         newAction = QAction('屏幕截图', self)
-        newAction.triggewhite.connect(self.screen_shot)
+        newAction.triggered.connect(self.screen_shot)
         contextMenu.addAction(newAction)
         if not self.gifRecording:
             newAction = QAction('开始录制GIF', self)
-            newAction.triggewhite.connect(self.start_recording_gif)
+            newAction.triggered.connect(self.start_recording_gif)
         else:
             newAction = QAction('结束录制GIF', self)
-            newAction.triggewhite.connect(self.stop_recording_gif)
+            newAction.triggered.connect(self.stop_recording_gif)
         contextMenu.addAction(newAction)
 
         contextMenu.exec_(self.mapToGlobal(pos))
