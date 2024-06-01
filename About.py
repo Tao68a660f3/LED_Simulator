@@ -65,9 +65,9 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
-        self.label.setText(_translate("Form", "关于 LED模拟器"))
+        self.label.setText(_translate("Form", "关于LED模拟器"))
         self.label_6.setText(_translate("Form", "TextLabel"))
         self.label_4.setText(_translate("Form", "联系作者:lt738b@163.com"))
         self.label_2.setText(_translate("Form", "<a href=\"https://github.com/Tao68a660f3/LED_Simulator\">GitHub"))
         self.label_3.setText(_translate("Form", "<a href=\"https://space.bilibili.com/1051238382\">bilibili"))
-        self.label_5.setText(_translate("Form", "本软件为开源软件，不得售卖"))
+        self.label_5.setText(_translate("Form", "本软件为开源软件，不得倒卖"))
