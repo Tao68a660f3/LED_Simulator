@@ -362,7 +362,7 @@ template_program_show = {
         "autoScale":False,
         "scaleSysFontOnly":False,
         "text":"",
-        "color_1":"red",
+        "color_1":"white",
         "color_RGB":[255,255,255],
         "bitmap":None,    # bitmap是BmpCreater生成的图像对象
 }
