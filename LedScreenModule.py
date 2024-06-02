@@ -1,8 +1,9 @@
 ﻿import sys, time, datetime, os
+import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction
-from PyQt5.QtGui import QPainter, QColor
+from PyQt5.QtGui import QPainter, QColor, QImage
 from PyQt5.QtCore import QTimer, Qt
-from PIL import Image, ImageGrab
+from PIL import Image
 from ScreenInfo import *
 from LineInfo import *
 from BmpCreater import *
@@ -12,6 +13,8 @@ undefinedProgramSheet = [['测试信息', 900, {'frontScreen': [[{'position': [0
 class ScreenController(QWidget):
     def __init__(self,flushRate,screenInfo,screenProgramSheet,toDisplay,FontIconMgr):
         super().__init__()
+        self.window_handle = self.winId()
+        self.screen = QApplication.primaryScreen()
         self.offset = 16
         self.flushRate = int(1000/flushRate)
         self.colorMode = screenInfo["colorMode"]
@@ -97,11 +100,27 @@ class ScreenController(QWidget):
             pass
 
     def capture_screen(self):
-        bbox = (self.frameGeometry().x(), self.frameGeometry().y(), 
-                self.frameGeometry().x() + self.frameGeometry().width(), 
-                self.frameGeometry().y() + self.frameGeometry().height())
-        img = ImageGrab.grab(bbox)
-        self.gifFrames.append(img)
+        pixmap = self.screen.grabWindow(self.window_handle)
+        # 将 QPixmap 转换为 QImage
+        qimage = pixmap.toImage()
+        # 确保 qimage 是 ARGB32 格式
+        if qimage.format() != QImage.Format_ARGB32:
+            qimage = qimage.convertToFormat(QImage.Format_ARGB32)
+        
+        # 获取 QImage 的字节数据
+        ptr = qimage.bits()
+        ptr.setsize(qimage.byteCount())
+        arr = np.array(ptr).reshape(qimage.height(), qimage.width(), 4)  # 4通道 (RGBA)
+
+        # 转换通道顺序从 ARGB 到 RGBA
+        arr = arr[..., [2, 1, 0, 3]]  # 将通道顺序从 ARGB 转换为 RGBA
+        
+        # 使用 PIL Image 从 NumPy 数组中读取图像
+        pil_image = Image.fromarray(arr, 'RGBA')
+
+        # img = ImageQt.fromqpixmap(pixmap)
+        # print(type(pil_image))
+        self.gifFrames.append(pil_image)
 
     def screen_shot(self):
         self.capture_screen()
@@ -406,6 +425,33 @@ class ScreenController(QWidget):
                     if obj.y-arg2 < 0:
                         obj.counter += 1
                     obj.y = obj.y-arg2 if obj.y-arg2 >= 0 else -obj.pointNum[1]+obj.Bitmap.size[1]
+        elif appearance == "上下反复跳跃移动":
+            obj.appear = True
+            obj.x = pos0
+            if obj.rollCounter < arg1:
+                pass
+            else:
+                if obj.pointNum[1] > obj.Bitmap.size[1]:
+                    if (obj.counter+1) % 2:
+                        if obj.y == 0 and obj.rollCounter >= int(1000/self.flushRate):
+                            obj.counter += 1
+                        obj.y = obj.y+arg2 if obj.y+arg2 <= 0 else obj.y
+                    else:
+                        if obj.y == -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
+                            obj.counter += 1
+                        obj.y = obj.y-arg2 if obj.y-arg2 >= -obj.pointNum[1]+obj.Bitmap.size[1] else obj.y
+                else:
+                    if (obj.counter+1) % 2:
+                        if obj.y == -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
+                            obj.counter += 1
+                        obj.y = obj.y+arg2 if obj.y+arg2 <= -obj.pointNum[1]+obj.Bitmap.size[1] else obj.y
+                    else:
+                        if obj.y == 0 and obj.rollCounter >= int(1000/self.flushRate):
+                            obj.counter += 1
+                        obj.y = obj.y-arg2 if obj.y-arg2 >= 0 else obj.y
+                if obj.rollCounter <= int(1000/self.flushRate):
+                    return
+                obj.rollCounter = 0
 
     def drawBackground(self,qp):
         qp.setBrush(QColor(25,25,25))

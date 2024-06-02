@@ -330,7 +330,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             with open(filedir,'w',encoding = 'utf-8') as w:
                 w.write(str(self.LineEditor.LineInfoList))
 
-        self.statusBar().showMessage(datetime.datetime.now().strftime(f"%Y年%#m月%#d日 %H:%M 文件已保存到{self.currentFileDir}"))
+        self.statusBar().showMessage(datetime.datetime.now().strftime("%Y%m%d %H:%M") + f"文件已保存到{self.currentFileDir}")
     
     def save_file(self):
         button = QMessageBox.question(self, "对话框", "确定要保存吗？")
@@ -343,7 +343,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         else:
             self.save_another()
 
-        self.statusBar().showMessage(datetime.datetime.now().strftime(f"%Y年%#m月%#d日 %H:%M 文件已保存到{self.currentFileDir}"))
+        self.statusBar().showMessage(datetime.datetime.now().strftime("%Y%m%d %H:%M") + f"文件已保存到{self.currentFileDir}")
 
     def open_file(self):
         if os.path.exists(self.currentFileDir):
@@ -631,7 +631,7 @@ class ProgramSettler():
 
         self.parent.combo_Font.addItems(self.ChFont)
         self.parent.combo_ASCII_Font.addItems(self.EngFont)
-        self.parent.combo_Show.addItems(["静止","闪烁","向左滚动","向左移到中间","向上移到中间","中间向左移开","中间向上移开","跳跃向左移动","跳跃向上移动","向右滚动","向右移到中间","向下移到中间","中间向右移开","中间向下移开","跳跃向右移动","跳跃向下移动",])
+        self.parent.combo_Show.addItems(["静止","闪烁","向左滚动","向左移到中间","向上移到中间","中间向左移开","中间向上移开","跳跃向左移动","跳跃向上移动","向右滚动","向右移到中间","向下移到中间","中间向右移开","中间向下移开","跳跃向右移动","跳跃向下移动","上下反复跳跃移动",])
         self.parent.combo_TextDirect.addItems(["横向","竖向"])
         self.parent.combo_SingleColorChoose.addItems(template_monochromeColors.keys())
 
