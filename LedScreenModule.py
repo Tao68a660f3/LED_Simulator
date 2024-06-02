@@ -433,22 +433,22 @@ class ScreenController(QWidget):
             else:
                 if obj.pointNum[1] > obj.Bitmap.size[1]:
                     if (obj.counter+1) % 2:
-                        if obj.y == 0 and obj.rollCounter >= int(1000/self.flushRate):
+                        if obj.y >= 0 and obj.rollCounter >= int(1000/self.flushRate):
                             obj.counter += 1
-                        obj.y = obj.y+arg2 if obj.y+arg2 <= 0 else obj.y
+                        obj.y = obj.y+arg2 if obj.y <= 0 else obj.y
                     else:
-                        if obj.y == -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
+                        if obj.y <= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
                             obj.counter += 1
-                        obj.y = obj.y-arg2 if obj.y-arg2 >= -obj.pointNum[1]+obj.Bitmap.size[1] else obj.y
+                        obj.y = obj.y-arg2 if obj.y >= -obj.pointNum[1]+obj.Bitmap.size[1] else obj.y
                 else:
                     if (obj.counter+1) % 2:
-                        if obj.y == -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
+                        if obj.y >= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
                             obj.counter += 1
-                        obj.y = obj.y+arg2 if obj.y+arg2 <= -obj.pointNum[1]+obj.Bitmap.size[1] else obj.y
+                        obj.y = obj.y+arg2 if obj.y <= -obj.pointNum[1]+obj.Bitmap.size[1] else obj.y
                     else:
-                        if obj.y == 0 and obj.rollCounter >= int(1000/self.flushRate):
+                        if obj.y <= 0 and obj.rollCounter >= int(1000/self.flushRate):
                             obj.counter += 1
-                        obj.y = obj.y-arg2 if obj.y-arg2 >= 0 else obj.y
+                        obj.y = obj.y-arg2 if obj.y >= 0 else obj.y
                 if obj.rollCounter <= int(1000/self.flushRate):
                     return
                 obj.rollCounter = 0
