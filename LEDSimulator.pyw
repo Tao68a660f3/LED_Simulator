@@ -908,7 +908,11 @@ class LineSettler():
             self.parent.spin_Height_1.setMaximum(screenSize[1])
 
             if self.parent.LineEditor.LineInfoList[row]["preset"] == "自定义":
+                self.layoutHistory = []
+                layout = self.init_layout()
+                self.layoutHistory.append(layout)
                 self.show_custom_layout_btn()
+                self.layoutHistory.append(copy.deepcopy(self.customLayouts))
 
     def init_LineSetting(self):
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
@@ -951,10 +955,10 @@ class LineSettler():
                 self.parent.btn_SaveChange.setEnabled(False)
                 self.layoutHistoryCount = 0
                 self.layoutHistory = []
-                layout = self.init_layout()
-                self.layoutHistory.append(layout)
-                self.show_custom_layout_btn()
-                self.layoutHistory.append(copy.deepcopy(self.customLayouts))
+                # layout = self.init_layout()
+                # self.layoutHistory.append(layout)
+                # self.show_custom_layout_btn()
+                # self.layoutHistory.append(copy.deepcopy(self.customLayouts))
             self.flush_width_height_spinbox()
 
     def retranslate_screenUnit_size(self):
