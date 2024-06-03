@@ -955,10 +955,7 @@ class LineSettler():
                 self.parent.btn_SaveChange.setEnabled(False)
                 self.layoutHistoryCount = 0
                 self.layoutHistory = []
-                # layout = self.init_layout()
-                # self.layoutHistory.append(layout)
-                # self.show_custom_layout_btn()
-                # self.layoutHistory.append(copy.deepcopy(self.customLayouts))
+                
             self.flush_width_height_spinbox()
 
     def retranslate_screenUnit_size(self):

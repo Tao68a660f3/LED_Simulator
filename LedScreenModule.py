@@ -65,10 +65,10 @@ class ScreenController(QWidget):
         self.customContextMenuRequested.connect(self.showContextMenu)
 
     def showContextMenu(self, pos):
-        contextMenu.addAction(newAction)
+        contextMenu = QMenu(self)
         newAction = QAction('关闭窗口', self)
         newAction.triggered.connect(self.close)
-        contextMenu = QMenu(self)
+        contextMenu.addAction(newAction)
         newAction = QAction('窗口置顶', self)
         newAction.triggered.connect(self.top_most)
         contextMenu.addAction(newAction)
