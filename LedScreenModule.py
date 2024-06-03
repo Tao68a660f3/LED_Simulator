@@ -1,4 +1,4 @@
-﻿import sys, time, datetime, os, imageio
+﻿import sys, time, datetime, os, imageio, random
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction
 from PyQt5.QtGui import QPainter, QColor, QImage
@@ -31,6 +31,7 @@ class ScreenController(QWidget):
         self.gifRecording = False
         # self.endGifFrame = 0
         self.fpsCounter = 0
+        self.commonFps = flushRate
         self.units = []
         self.gifFrames = []
         self.tmpGifNames = []
@@ -141,6 +142,7 @@ class ScreenController(QWidget):
         # img = ImageQt.fromqpixmap(pixmap)
         # print(type(pil_image))
         self.gifFrames.append(pil_image)
+        # print(pil_image)
         if len(self.gifFrames) >= 200:
             self.save_gif(True)
 
@@ -165,13 +167,13 @@ class ScreenController(QWidget):
     def save_gif(self, temp = False):
         if temp:
             fileName = datetime.datetime.now().strftime(f"temp_{self.toDisplay}_%Y%m%d%H%M%S.gif")
-            self.gifFrames[0].save(os.path.join("./ScreenShots",fileName), save_all=True, append_images=self.gifFrames[1:], optimize=False, duration=self.flushRate, loop=0)
+            self.gifFrames[0].save(os.path.join("./ScreenShots",fileName), save_all=True, append_images=self.gifFrames[:], optimize=False, duration=0.1, loop=0)
             self.gifFrames = []
             self.tmpGifNames.append(fileName)
         else:
             self.save_gif(True)
             fileName = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S_output.gif")
-            combined_gif = imageio.get_writer(os.path.join("./ScreenShots",fileName), fps = int(1000/self.flushRate), loop = 0)
+            combined_gif = imageio.get_writer(os.path.join("./ScreenShots",fileName), fps = self.commonFps, loop = 0)
             print(self.tmpGifNames)
             for g in self.tmpGifNames:
                 g = os.path.join("./ScreenShots",g)
@@ -255,17 +257,19 @@ class ScreenController(QWidget):
         for s in self.units:
             self.drawScreen(s,qp)
         qp.end()
-        if self.gifRecording:
-            self.capture_screen()
+
         self.fpsCounter += 1
 
     def flushScreen(self):
         for u in self.units:
             self.posTransFunc(u)
             u.rollCounter += 1
+        if self.gifRecording and self.isVisible():
+            self.capture_screen()
 
     def get_fps(self):
         fps = self.fpsCounter
+        self.commonFps = int(0.5*(self.commonFps+fps))
         self.fpsCounter = 0
         fps = str(fps)
         if self.gifRecording:
@@ -520,6 +524,10 @@ class ScreenController(QWidget):
         qp.drawRect(0,0,2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
         qp.setBrush(QColor(30,30,30))
         qp.drawRect(self.offset,self.offset,self.screenSize[0]*self.screenScale[0],self.screenSize[1]*self.screenScale[1])
+        qp.setBrush(QColor(random.randint(30,200),random.randint(30,200),random.randint(30,200)))
+        qp.drawRect(int(0.8*(2*self.offset+self.screenSize[0]*self.screenScale[0])),(2*self.offset+self.screenSize[1]*self.screenScale[1])-int(0.5*self.offset),4,4)
+        qp.setBrush(QColor(random.randint(30,200),random.randint(30,200),random.randint(30,200)))
+        qp.drawRect(int(0.8*(2*self.offset+self.screenSize[0]*self.screenScale[0])+10),(2*self.offset+self.screenSize[1]*self.screenScale[1])-int(0.5*self.offset),4,4)
         self.resize(2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
 
     def drawScreen(self, unit, qp):
