@@ -285,6 +285,15 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
     def closeEvent(self,event):
         self.save_file()
+        # 删除屏幕截图文件夹中可能存在的GIF临时文件
+        try:
+            figure = os.listdir("./ScreenShots")
+            for f in figure:
+                if f.startswith("temp"):
+                    tempGIF = os.path.join("./ScreenShots",f)
+                    os.remove(tempGIF)
+        except:
+            pass
         self.close()
 
     def getFps(self):
@@ -299,7 +308,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         if len(fps) != 0:
             msg = ""
             for i in range(len(fps)):
-                msg+=f"FPS{i+1}: {fps[i]}  "
+                msg+=f" FPS{i+1}: {fps[i]} "
             self.statusBar().showMessage(msg)
 
     def flush_table(self,tableWidgetObject,data):
@@ -942,6 +951,8 @@ class LineSettler():
                 self.parent.btn_SaveChange.setEnabled(False)
                 self.layoutHistoryCount = 0
                 self.layoutHistory = []
+                layout = self.init_layout()
+                self.layoutHistory.append(layout)
                 self.show_custom_layout_btn()
                 self.layoutHistory.append(copy.deepcopy(self.customLayouts))
             self.flush_width_height_spinbox()
@@ -999,6 +1010,23 @@ class LineSettler():
                     self.customLButtons[-1].show()
             self.parent.ProgramSettler.show_scnUnit()
 
+    def init_layout(self):
+        row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
+        if isinstance(row,int):
+            screen = self.get_currentScreen()
+            colorMode = self.parent.LineEditor.LineInfoList[row][screen]["colorMode"]
+            screenSize = [self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
+            screenScale = self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][2]
+            pointKind = str(screenScale).replace(" ","")
+            pointKindDict = {"(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled","(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled"}
+            pointKind = pointKindDict[pointKind]
+            layout = []
+            layout.append(copy.deepcopy(template_screenInfo[pointKind+"_"+colorMode]))
+            layout[-1]["position"] = [0,0]
+            layout[-1]["pointNum"] = [screenSize[0],screenSize[1]]
+
+            return layout
+
     def reset_layout(self,p):
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
         if isinstance(row,int):
@@ -1012,15 +1040,7 @@ class LineSettler():
             if len(self.layoutHistory) > 0:
                 self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = copy.deepcopy(self.layoutHistory[self.layoutHistoryCount])
                 self.customLayouts = self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"]
-            # colorMode = self.parent.LineEditor.LineInfoList[row][screen]["colorMode"]
-            # screenSize = [self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
-            # screenScale = self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][2]
-            # pointKind = str(screenScale).replace(" ","")
-            # pointKindDict = {"(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled","(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled"}
-            # pointKind = pointKindDict[pointKind]
-            # self.customLayouts.append(copy.deepcopy(template_screenInfo[pointKind+"_"+colorMode]))
-            # self.customLayouts[-1]["position"] = [0,0]
-            # self.customLayouts[-1]["pointNum"] = [screenSize[0],screenSize[1]]
+
             self.show_custom_layout_btn()
 
     def add_custom_layout_pre(self,index):
