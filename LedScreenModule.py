@@ -166,10 +166,13 @@ class ScreenController(QWidget):
 
     def save_gif(self, temp = False):
         if temp:
-            fileName = datetime.datetime.now().strftime(f"temp_{self.toDisplay}_%Y%m%d%H%M%S.gif")
-            self.gifFrames[0].save(os.path.join("./ScreenShots",fileName), save_all=True, append_images=self.gifFrames[:], optimize=False, duration=0.1, loop=0)
-            self.gifFrames = []
-            self.tmpGifNames.append(fileName)
+            try:
+                fileName = datetime.datetime.now().strftime(f"temp_{self.toDisplay}_%Y%m%d%H%M%S.gif")
+                self.gifFrames[0].save(os.path.join("./ScreenShots",fileName), save_all=True, append_images=self.gifFrames[1:], optimize=False, duration=0.1, loop=0)
+                self.gifFrames = []
+                self.tmpGifNames.append(fileName)
+            except Exception as e:
+                print(e)
         else:
             self.save_gif(True)
             fileName = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S_output.gif")

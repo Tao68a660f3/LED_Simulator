@@ -21,7 +21,7 @@ class Ui_Form(object):
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.label = QtWidgets.QLabel(Form)
         font = QtGui.QFont()
-        font.setPointSize(15)
+        font.setPointSize(12)
         self.label.setFont(font)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setObjectName("label")
@@ -65,7 +65,7 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
-        self.label.setText(_translate("Form", "关于LED模拟器"))
+        self.label.setText(_translate("Form", "关于LED模拟器 1.3 Final Plus"))
         self.label_6.setText(_translate("Form", "TextLabel"))
         self.label_4.setText(_translate("Form", "联系作者:lt738b@163.com"))
         self.label_2.setText(_translate("Form", "<a href=\"https://github.com/Tao68a660f3/LED_Simulator\">GitHub"))
