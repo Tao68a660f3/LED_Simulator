@@ -484,23 +484,36 @@ class ScreenController(QWidget):
                     if (obj.counter+1) % 2:
                         if obj.y >= 0 and obj.rollCounter >= int(1000/self.flushRate):
                             obj.counter += 1
-                        obj.y = obj.y+arg2 if obj.y <= 0 else obj.y
+                        if obj.y <= 0:
+                            obj.y = obj.y+arg2
+                            obj.rollCounter = 0
+                        else:
+                            return
                     else:
                         if obj.y <= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
                             obj.counter += 1
-                        obj.y = obj.y-arg2 if obj.y >= -obj.pointNum[1]+obj.Bitmap.size[1] else obj.y
+                        if obj.y >= -obj.pointNum[1]+obj.Bitmap.size[1]:
+                            obj.y = obj.y-arg2
+                            obj.rollCounter = 0
+                        else:
+                            return
                 else:
                     if (obj.counter+1) % 2:
                         if obj.y >= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
                             obj.counter += 1
-                        obj.y = obj.y+arg2 if obj.y <= -obj.pointNum[1]+obj.Bitmap.size[1] else obj.y
+                        if obj.y <= -obj.pointNum[1]+obj.Bitmap.size[1]:
+                            obj.y = obj.y+arg2
+                            obj.rollCounter = 0
+                        else:
+                            return
                     else:
                         if obj.y <= 0 and obj.rollCounter >= int(1000/self.flushRate):
                             obj.counter += 1
-                        obj.y = obj.y-arg2 if obj.y >= 0 else obj.y
-                if obj.rollCounter <= int(1000/self.flushRate):
-                    return
-                obj.rollCounter = 0
+                        if obj.y >= 0:
+                            obj.y = obj.y-arg2
+                            obj.rollCounter = 0
+                        else:
+                            return
 
     def drawBackground(self,qp):
         qp.setBrush(QColor(25,25,25))
