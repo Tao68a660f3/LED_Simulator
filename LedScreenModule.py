@@ -492,7 +492,7 @@ class ScreenController(QWidget):
                     if (obj.counter+1) % 2:
                         if obj.y >= 0 and obj.rollCounter >= int(1000/self.flushRate):
                             obj.counter += 1
-                        if obj.y <= 0:
+                        if obj.y+arg2 <= 0:
                             obj.y = obj.y+arg2
                             obj.rollCounter = 0
                         else:
@@ -500,7 +500,7 @@ class ScreenController(QWidget):
                     else:
                         if obj.y <= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
                             obj.counter += 1
-                        if obj.y >= -obj.pointNum[1]+obj.Bitmap.size[1]:
+                        if obj.y-arg2 >= -obj.pointNum[1]+obj.Bitmap.size[1]:
                             obj.y = obj.y-arg2
                             obj.rollCounter = 0
                         else:
@@ -509,7 +509,7 @@ class ScreenController(QWidget):
                     if (obj.counter+1) % 2:
                         if obj.y >= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
                             obj.counter += 1
-                        if obj.y <= -obj.pointNum[1]+obj.Bitmap.size[1]:
+                        if obj.y+arg2 <= -obj.pointNum[1]+obj.Bitmap.size[1]:
                             obj.y = obj.y+arg2
                             obj.rollCounter = 0
                         else:
@@ -517,7 +517,7 @@ class ScreenController(QWidget):
                     else:
                         if obj.y <= 0 and obj.rollCounter >= int(1000/self.flushRate):
                             obj.counter += 1
-                        if obj.y >= 0:
+                        if obj.y-arg2 >= 0:
                             obj.y = obj.y-arg2
                             obj.rollCounter = 0
                         else:
