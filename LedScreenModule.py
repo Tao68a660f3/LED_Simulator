@@ -260,15 +260,16 @@ class ScreenController(QWidget):
         for s in self.units:
             self.drawScreen(s,qp)
         qp.end()
-
+        
+        if self.gifRecording and self.isVisible():
+            self.capture_screen()
+        
         self.fpsCounter += 1
 
     def flushScreen(self):
         for u in self.units:
             self.posTransFunc(u)
             u.rollCounter += 1
-        if self.gifRecording and self.isVisible():
-            self.capture_screen()
 
     def get_fps(self):
         fps = self.fpsCounter
