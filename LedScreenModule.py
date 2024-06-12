@@ -52,9 +52,7 @@ class ScreenController(QWidget):
         self.timer3 = QTimer(self)
         self.timer3.timeout.connect(self.checkTimeStr)
         self.timer3.start(1000)
-        self.timer4 = QTimer(self)
-        self.timer4.timeout.connect(self.flushScreen)
-        self.timer4.start(self.flushRate)
+
 
         self.setWindowTitle(self.toDisplay)
         self.setWindowFlags(Qt.FramelessWindowHint) # 隐藏边框
@@ -260,7 +258,7 @@ class ScreenController(QWidget):
         for s in self.units:
             self.drawScreen(s,qp)
         qp.end()
-        
+        self.flushScreen()
         if self.gifRecording and self.isVisible():
             self.capture_screen()
         
@@ -551,7 +549,7 @@ class ScreenController(QWidget):
         appear = unit.appear
         # 预先计算可能用到的颜色和参数
         if colorMode == "RGB":
-            black = 80
+            black = 60
             baseColor = QColor(black, black, black)
         else:
             baseColor = QColor(*unit.color_1[0])
@@ -564,7 +562,7 @@ class ScreenController(QWidget):
                     color = unit.Bitmap.getpixel(((x + x_pos) % (bitmapSize[0] + rollSpace), y + y_pos))
                 else:
                     color = [0, 0, 0] if colorMode == "RGB" else 0
-                if colorMode == "RGB":
+                if colorMode == "RGB" and color != [0,0,0]:
                     color = [black + int((255 - black) * c / 255) for c in color]
                     qp.setBrush(QColor(*color))
                 elif colorMode == "1" and color != 0:
