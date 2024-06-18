@@ -29,69 +29,221 @@
    <layout class="QHBoxLayout" name="horizontalLayout_18">
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="3,0,9">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout">
+       <layout class="QVBoxLayout" name="verticalLayout_10" stretch="6,0,4">
         <item>
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>线路列表：</string>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0,0,0,0,0">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="sizeConstraint">
+             <enum>QLayout::SetDefaultConstraint</enum>
+            </property>
+            <item>
+             <widget class="QPushButton" name="btn_newLine">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>新建</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_opFile">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>打开</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_saveFile">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>保存</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_MvUp_BusLine">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>上移</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_MvDn_BusLine">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>下移</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_delLine">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>删除选中</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>线路列表：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="tableWidget_lineChoose"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>编辑</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="LineNameEdit"/>
+            </item>
+            <item>
+             <widget class="QComboBox" name="combo_FlushRate"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="Line" name="line_5">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QTableWidget" name="tableWidget_lineChoose"/>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
+         <layout class="QVBoxLayout" name="verticalLayout_11">
           <item>
-           <widget class="QPushButton" name="btn_opFile">
-            <property name="text">
-             <string>打开文件</string>
-            </property>
-           </widget>
+           <layout class="QHBoxLayout" name="horizontalLayout_27">
+            <item>
+             <widget class="QLabel" name="label_25">
+              <property name="text">
+               <string>图标管理器</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_LoadIcons">
+              <property name="text">
+               <string>加载图标</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
-           <widget class="QPushButton" name="btn_saveFile">
-            <property name="text">
-             <string>保存文件</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <item>
-           <widget class="QPushButton" name="btn_newLine">
-            <property name="text">
-             <string>新建线路</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btn_delLine">
-            <property name="text">
-             <string>删除选中</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_8">
-          <item>
-           <widget class="QPushButton" name="btn_MvUp_BusLine">
-            <property name="text">
-             <string>上移↑</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btn_MvDn_BusLine">
-            <property name="text">
-             <string>下移↓</string>
-            </property>
-           </widget>
+           <widget class="QTableWidget" name="tableWidget_Icons"/>
           </item>
          </layout>
         </item>
@@ -107,7 +259,7 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_6">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_29" stretch="7,0,5">
+         <layout class="QHBoxLayout" name="horizontalLayout_29" stretch="8,0,5">
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_7" stretch="0,0,1,0">
             <item>
@@ -274,7 +426,26 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_25">
               <item>
+               <spacer name="horizontalSpacer_4">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
                <widget class="QPushButton" name="btn_MvUp_Program">
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>30</height>
+                 </size>
+                </property>
                 <property name="text">
                  <string>上移↑</string>
                 </property>
@@ -282,6 +453,12 @@
               </item>
               <item>
                <widget class="QPushButton" name="btn_MvDn_Program">
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>30</height>
+                 </size>
+                </property>
                 <property name="text">
                  <string>下移↓</string>
                 </property>
@@ -289,6 +466,12 @@
               </item>
               <item>
                <widget class="QPushButton" name="btn_CopyProgram">
+                <property name="maximumSize">
+                 <size>
+                  <width>80</width>
+                  <height>30</height>
+                 </size>
+                </property>
                 <property name="text">
                  <string>复制节目</string>
                 </property>
@@ -296,15 +479,34 @@
               </item>
               <item>
                <widget class="QPushButton" name="btn_Remove">
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>30</height>
+                 </size>
+                </property>
                 <property name="text">
                  <string>删除</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_Add">
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>添加</string>
                 </property>
                </widget>
               </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_26" stretch="0,5,0,1,4">
+             <layout class="QHBoxLayout" name="horizontalLayout_26" stretch="0,5,0,1">
               <item>
                <widget class="QLabel" name="label_20">
                 <property name="text">
@@ -324,13 +526,6 @@
               </item>
               <item>
                <widget class="QSpinBox" name="spinBox"/>
-              </item>
-              <item>
-               <widget class="QPushButton" name="btn_Add">
-                <property name="text">
-                 <string>添加</string>
-                </property>
-               </widget>
               </item>
              </layout>
             </item>
@@ -353,7 +548,10 @@
          </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="4,0,5,0,3">
+         <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="4,0,5">
+          <property name="sizeConstraint">
+           <enum>QLayout::SetMinAndMaxSize</enum>
+          </property>
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
@@ -401,13 +599,13 @@
            </widget>
           </item>
           <item>
-           <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,1,1,1,1,1,1,1,0">
+           <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,1,1,0,1,1,1,1,0">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,3,0,1">
+             <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,3,0,1,0,1">
               <item>
                <widget class="QLabel" name="label_4">
                 <property name="text">
-                 <string>字体：</string>
+                 <string>主字体</string>
                 </property>
                </widget>
               </item>
@@ -417,21 +615,31 @@
               <item>
                <widget class="QLabel" name="label_11">
                 <property name="text">
-                 <string>字号：</string>
+                 <string>字号</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QSpinBox" name="spin_FontSize"/>
               </item>
+              <item>
+               <widget class="QLabel" name="label_Y_Offset">
+                <property name="text">
+                 <string>竖直偏移</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="spinBox_Y_Offset"/>
+              </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1,0">
+             <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,3,0,1,0,1">
               <item>
                <widget class="QLabel" name="label_5">
                 <property name="text">
-                 <string>ASCII字体：</string>
+                 <string>ASCII字体</string>
                 </property>
                </widget>
               </item>
@@ -439,20 +647,33 @@
                <widget class="QComboBox" name="combo_ASCII_Font"/>
               </item>
               <item>
-               <widget class="QCheckBox" name="checkBox_sysFont">
+               <widget class="QLabel" name="label_24">
                 <property name="text">
-                 <string>使用系统字体</string>
+                 <string>字号</string>
                 </property>
                </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="spin_FontSize_2"/>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_Y_Offset_2">
+                <property name="text">
+                 <string>竖直偏移</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="spinBox_Y_Offset_2"/>
               </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,2,0,1">
+             <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,1,0,0,0">
               <item>
                <widget class="QLabel" name="label_6">
                 <property name="text">
-                 <string>显示方式：</string>
+                 <string>显示方式</string>
                 </property>
                </widget>
               </item>
@@ -462,44 +683,64 @@
               <item>
                <widget class="QLabel" name="label_23">
                 <property name="text">
-                 <string>文字排列方向</string>
+                 <string>文字方向</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QComboBox" name="combo_TextDirect"/>
               </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_10">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_6">
+               <layout class="QVBoxLayout" name="verticalLayout_5">
                 <item>
-                 <widget class="QLabel" name="label_Argv_1">
+                 <widget class="QCheckBox" name="checkBox_sysFont">
                   <property name="text">
-                   <string>TextLabel</string>
+                   <string>不使用点阵ASCII字体</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QSpinBox" name="spinBox_Argv_1"/>
+                 <widget class="QCheckBox" name="checkBox_rollAscii">
+                  <property name="text">
+                   <string>竖向时旋转ASCII字体</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_7">
-                <item>
-                 <widget class="QLabel" name="label_Argv_2">
-                  <property name="text">
-                   <string>TextLabel</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_Argv_2"/>
-                </item>
-               </layout>
+               <widget class="QLabel" name="label_Argv_1">
+                <property name="text">
+                 <string>TextLabel</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="spinBox_Argv_1"/>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_Argv_2">
+                <property name="text">
+                 <string>TextLabel</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="spinBox_Argv_2"/>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_Argv_3">
+                <property name="text">
+                 <string>TextLabel</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="spinBox_Argv_3"/>
               </item>
              </layout>
             </item>
@@ -541,16 +782,16 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_34">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_35">
+               <layout class="QHBoxLayout" name="horizontalLayout_23">
                 <item>
-                 <widget class="QLabel" name="label_Y_Offset_2">
+                 <widget class="QLabel" name="label_Y_Offset_3">
                   <property name="text">
-                   <string>文字竖直偏移</string>
+                   <string>水平偏移（出现位置）</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QSpinBox" name="spinBox_Y_Offset"/>
+                 <widget class="QSpinBox" name="spinBox_X_Offset"/>
                 </item>
                </layout>
               </item>
@@ -666,6 +907,12 @@
               </item>
               <item>
                <widget class="QPushButton" name="btn_ok">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
@@ -678,51 +925,6 @@
                </widget>
               </item>
              </layout>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="Line" name="line_5">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QVBoxLayout" name="verticalLayout_5">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_16">
-              <item>
-               <widget class="QLabel" name="label_8">
-                <property name="text">
-                 <string>图标：</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QPushButton" name="btn_LoadIcons">
-                <property name="text">
-                 <string>加载图标</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <widget class="QTableWidget" name="tableWidget_Icons"/>
             </item>
            </layout>
           </item>
