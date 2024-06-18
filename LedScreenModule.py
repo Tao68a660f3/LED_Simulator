@@ -283,6 +283,10 @@ class ScreenController(QWidget):
         appearance = obj.appearance
 
         arg1,arg2 = obj.progSheet["argv_1"],obj.progSheet["argv_2"]
+        try:
+            arg3 = obj.progSheet["argv_3"]
+        except:
+            arg3 = 1   # 旧版节目单
         if not obj.progSheet["vertical"]:
             align = obj.progSheet["align"]
         else:
@@ -304,9 +308,9 @@ class ScreenController(QWidget):
         
         if appearance == "静止":
             obj.appear = True
-            obj.x = pos0
+            obj.x = pos0 + obj.x_offset
         elif appearance == "闪烁":
-            obj.x = pos0
+            obj.x = pos0 + obj.x_offset
             if obj.rollCounter <= arg1+1:
                 obj.appear = True
             elif obj.rollCounter <= arg1+arg2+1:
@@ -323,11 +327,11 @@ class ScreenController(QWidget):
                 if arg2 < 0:
                     if obj.x >= obj.Bitmap.size[0]:
                         obj.counter += 1
-                    obj.x = obj.x+1 if obj.x < obj.Bitmap.size[0] else -obj.pointNum[0]
+                    obj.x = obj.x+arg3 if obj.x < obj.Bitmap.size[0] else -obj.pointNum[0]
                 else:
                     if obj.x > obj.Bitmap.size[0]+arg2:
                         obj.counter += 1
-                    obj.x = obj.x+1 if obj.x <= obj.Bitmap.size[0]+arg2 else 2
+                    obj.x = obj.x+arg3 if obj.x <= obj.Bitmap.size[0]+arg2 else 2
         elif appearance == "向左移到中间":
             obj.appear = True
             if obj.rollCounter == 0:
@@ -336,17 +340,17 @@ class ScreenController(QWidget):
                 pass
             else:
                 obj.rollCounter = 0
-                obj.x = obj.x+1 if obj.x < pos0 else obj.x
+                obj.x = obj.x+arg3 if obj.x < pos0 else obj.x
         elif appearance == "向上移到中间":
             obj.appear = True
-            obj.x = pos0
+            obj.x = pos0 + obj.x_offset
             if obj.rollCounter == 0:
                 obj.y = -obj.pointNum[1]
             if obj.rollCounter < arg1:
                 pass
             else:
                 obj.rollCounter = 0
-                obj.y = obj.y+1 if obj.y < y0 else obj.y
+                obj.y = obj.y+arg3 if obj.y < y0 else obj.y
         elif appearance == "中间向左移开":
             obj.appear = True
             if time.time() - self.currentBeginTime > arg2:
@@ -356,10 +360,10 @@ class ScreenController(QWidget):
                     obj.rollCounter = 0
                     if obj.x >= obj.Bitmap.size[0]:
                         obj.counter += 1
-                    obj.x = obj.x+1 if obj.x < obj.Bitmap.size[0] else obj.x
+                    obj.x = obj.x+arg3 if obj.x < obj.Bitmap.size[0] else obj.x
         elif appearance == "中间向上移开":
             obj.appear = True
-            obj.x = pos0
+            obj.x = pos0 + obj.x_offset
             if time.time() - self.currentBeginTime > arg2:
                 if obj.rollCounter < arg1:
                     pass
@@ -367,36 +371,70 @@ class ScreenController(QWidget):
                     obj.rollCounter = 0
                     if obj.y >= obj.Bitmap.size[1]:
                         obj.counter += 1
-                    obj.y = obj.y+1 if obj.y < obj.Bitmap.size[1] else obj.y
+                    obj.y = obj.y+arg3 if obj.y < obj.Bitmap.size[1] else obj.y
         elif appearance == "跳跃向左移动":
             obj.appear = True
             if obj.rollCounter < arg1:
                 pass
             else:
-                obj.rollCounter = 0
                 if obj.pointNum[0] > obj.Bitmap.size[0]:
                     if obj.x+arg2 > 0:
                         obj.counter += 1
-                    obj.x = obj.x+arg2 if obj.x+arg2 <= 0 else -obj.pointNum[0]+obj.Bitmap.size[0]
+                    if obj.x+arg2 <= 0 and obj.rollCounter <= 1:
+                        obj.x = obj.x+arg2
+                        obj.rollCounter = 0
+                    else:
+                        if obj.rollCounter <= int(arg3*1000/self.flushRate):
+                            return
+                        obj.x = -obj.pointNum[0]+obj.Bitmap.size[0]
+                        if obj.rollCounter <= 2*int(arg3*1000/self.flushRate):
+                            return
+                        obj.rollCounter = 0
                 else:
                     if obj.x+arg2 > -obj.pointNum[0]+obj.Bitmap.size[0]:
                         obj.counter += 1
-                    obj.x = obj.x+arg2 if obj.x+arg2 <= -obj.pointNum[0]+obj.Bitmap.size[0] else 0
+                    if obj.x+arg2 <= -obj.pointNum[0]+obj.Bitmap.size[0] and obj.rollCounter <= 1:
+                        obj.x = obj.x+arg2
+                        obj.rollCounter = 0
+                    else:
+                        if obj.rollCounter <= int(arg3*1000/self.flushRate):
+                            return
+                        obj.x = 0
+                        if obj.rollCounter <= 2*int(arg3*1000/self.flushRate):
+                            return
+                        obj.rollCounter = 0
         elif appearance == "跳跃向上移动":
             obj.appear = True
-            obj.x = pos0
+            obj.x = pos0 + obj.x_offset
             if obj.rollCounter < arg1:
                 pass
             else:
-                obj.rollCounter = 0
                 if obj.pointNum[1] > obj.Bitmap.size[1]:
                     if obj.y+arg2 > 0:
                         obj.counter += 1
-                    obj.y = obj.y+arg2 if obj.y+arg2 <= 0 else -obj.pointNum[1]+obj.Bitmap.size[1]
+                    if obj.y+arg2 <= 0 and obj.rollCounter <= 1:
+                        obj.y = obj.y+arg2
+                        obj.rollCounter = 0
+                    else:
+                        if obj.rollCounter <= int(arg3*1000/self.flushRate):
+                            return
+                        obj.y = -obj.pointNum[1]+obj.Bitmap.size[1]
+                        if obj.rollCounter <= 2*int(arg3*1000/self.flushRate):
+                            return
+                        obj.rollCounter = 0
                 else:
                     if obj.y+arg2 > -obj.pointNum[1]+obj.Bitmap.size[1]:
                         obj.counter += 1
-                    obj.y = obj.y+arg2 if obj.y+arg2 <= -obj.pointNum[1]+obj.Bitmap.size[1] else 0
+                    if obj.y+arg2 <= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter <= 1:
+                        obj.y = obj.y+arg2
+                        obj.rollCounter = 0
+                    else:
+                        if obj.rollCounter <= int(arg3*1000/self.flushRate):
+                            return
+                        obj.y = 0
+                        if obj.rollCounter <= 2*int(arg3*1000/self.flushRate):
+                            return
+                        obj.rollCounter = 0
         elif appearance == "向右滚动":
             obj.appear = True
             if obj.rollCounter < arg1:
@@ -406,11 +444,11 @@ class ScreenController(QWidget):
                 if arg2 < 0:
                     if obj.x <= -obj.pointNum[0]:
                         obj.counter += 1
-                    obj.x = obj.x-1 if obj.x > -obj.pointNum[0] else obj.Bitmap.size[0]
+                    obj.x = obj.x-arg3 if obj.x > -obj.pointNum[0] else obj.Bitmap.size[0]
                 else:
                     if obj.x < 2:
                         obj.counter += 1
-                    obj.x = obj.x-1 if obj.x >= 2 else obj.Bitmap.size[0]+arg2
+                    obj.x = obj.x-arg3 if obj.x >= 2 else obj.Bitmap.size[0]+arg2
         elif appearance == "向右移到中间":
             obj.appear = True
             if obj.rollCounter == 0:
@@ -419,17 +457,17 @@ class ScreenController(QWidget):
                 pass
             else:
                 obj.rollCounter = 0
-                obj.x = obj.x-1 if obj.x > pos0 else obj.x
+                obj.x = obj.x-arg3 if obj.x > pos0 else obj.x
         elif appearance == "向下移到中间":
             obj.appear = True
-            obj.x = pos0
+            obj.x = pos0 + obj.x_offset
             if obj.rollCounter == 0:
                 obj.y = obj.Bitmap.size[1]
             if obj.rollCounter < arg1:
                 pass
             else:
                 obj.rollCounter = 0
-                obj.y = obj.y-1 if obj.y > y0 else obj.y
+                obj.y = obj.y-arg3 if obj.y > y0 else obj.y
         elif appearance == "中间向右移开":
             obj.appear = True
             if time.time() - self.currentBeginTime > arg2:
@@ -439,10 +477,10 @@ class ScreenController(QWidget):
                     obj.rollCounter = 0
                     if obj.x <= -obj.pointNum[0]:
                         obj.counter += 1
-                    obj.x = obj.x-1 if obj.x > -obj.pointNum[0] else obj.x
+                    obj.x = obj.x-arg3 if obj.x > -obj.pointNum[0] else obj.x
         elif appearance == "中间向下移开":
             obj.appear = True
-            obj.x = pos0
+            obj.x = pos0 + obj.x_offset
             if time.time() - self.currentBeginTime > arg2:
                 if obj.rollCounter < arg1:
                     pass
@@ -450,45 +488,79 @@ class ScreenController(QWidget):
                     obj.rollCounter = 0
                     if obj.y <= -obj.pointNum[1]:
                         obj.counter += 1
-                    obj.y = obj.y-1 if obj.y > -obj.pointNum[1] else obj.y
+                    obj.y = obj.y-arg3 if obj.y > -obj.pointNum[1] else obj.y
         elif appearance == "跳跃向右移动":
             obj.appear = True
             if obj.rollCounter < arg1:
                 pass
             else:
-                obj.rollCounter = 0
                 if obj.pointNum[0] > obj.Bitmap.size[0]:
                     if obj.x-arg2 < -obj.pointNum[0]+obj.Bitmap.size[0]:
                         obj.counter += 1
-                    obj.x = obj.x-arg2 if obj.x-arg2 >= -obj.pointNum[0]+obj.Bitmap.size[0] else 0
+                    if obj.x-arg2 >= -obj.pointNum[0]+obj.Bitmap.size[0] and obj.rollCounter <= 1:
+                        obj.x = obj.x-arg2
+                        obj.rollCounter = 0
+                    else:
+                        if obj.rollCounter <= int(arg3*1000/self.flushRate):
+                            return
+                        obj.x = 0
+                        if obj.rollCounter <= 2*int(arg3*1000/self.flushRate):
+                            return
+                        obj.rollCounter = 0
                 else:
                     if obj.x-arg2 < 0:
                         obj.counter += 1
-                    obj.x = obj.x-arg2 if obj.x-arg2 >= 0 else -obj.pointNum[0]+obj.Bitmap.size[0]
+                    if obj.x-arg2 >= 0 and obj.rollCounter <= 1:
+                        obj.x = obj.x-arg2
+                        obj.rollCounter = 0
+                    else:
+                        if obj.rollCounter <= int(arg3*1000/self.flushRate):
+                            return
+                        obj.x = -obj.pointNum[0]+obj.Bitmap.size[0]
+                        if obj.rollCounter <= 2*int(arg3*1000/self.flushRate):
+                            return
+                        obj.rollCounter = 0
         elif appearance == "跳跃向下移动":
             obj.appear = True
-            obj.x = pos0
+            obj.x = pos0 + obj.x_offset
             if obj.rollCounter < arg1:
                 pass
             else:
-                obj.rollCounter = 0
                 if obj.pointNum[1] > obj.Bitmap.size[1]:
                     if obj.y-arg2 < -obj.pointNum[1]+obj.Bitmap.size[1]:
                         obj.counter += 1
-                    obj.y = obj.y-arg2 if obj.y-arg2 >= -obj.pointNum[1]+obj.Bitmap.size[1] else 0
+                    if obj.y-arg2 >= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter <= 1:
+                        obj.y = obj.y-arg2
+                        obj.rollCounter = 0
+                    else:
+                        if obj.rollCounter <= int(arg3*1000/self.flushRate):
+                            return
+                        obj.y = 0
+                        if obj.rollCounter <= 2*int(arg3*1000/self.flushRate):
+                            return
+                        obj.rollCounter = 0
                 else:
                     if obj.y-arg2 < 0:
                         obj.counter += 1
-                    obj.y = obj.y-arg2 if obj.y-arg2 >= 0 else -obj.pointNum[1]+obj.Bitmap.size[1]
+                    if obj.y-arg2 >= 0 and obj.rollCounter <= 1:
+                        obj.y = obj.y-arg2
+                        obj.rollCounter = 0
+                    else:
+                        if obj.rollCounter <= int(arg3*1000/self.flushRate):
+                            return
+                        obj.y = -obj.pointNum[1]+obj.Bitmap.size[1]
+                        if obj.rollCounter <= 2*int(arg3*1000/self.flushRate):
+                            return
+                        obj.rollCounter = 0
         elif appearance == "上下反复跳跃移动":
             obj.appear = True
-            obj.x = pos0
+            obj.x = pos0 + obj.x_offset
             if obj.rollCounter < arg1:
                 pass
             else:
                 if obj.pointNum[1] > obj.Bitmap.size[1]:
                     if (obj.counter+1) % 2:
-                        if obj.y+arg2 >= 0 and obj.rollCounter >= int(1000/self.flushRate):
+                        if obj.y+arg2 >= 0 and obj.rollCounter >= int(arg3*1000/self.flushRate):
                             obj.counter += 1
                         if obj.y+arg2 <= 0:
                             obj.y = obj.y+arg2
@@ -496,7 +568,7 @@ class ScreenController(QWidget):
                         else:
                             return
                     else:
-                        if obj.y-arg2 <= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
+                        if obj.y-arg2 <= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(arg3*1000/self.flushRate):
                             obj.counter += 1
                         if obj.y-arg2 >= -obj.pointNum[1]+obj.Bitmap.size[1]:
                             obj.y = obj.y-arg2
@@ -505,7 +577,7 @@ class ScreenController(QWidget):
                             return
                 else:
                     if (obj.counter+1) % 2:
-                        if obj.y+arg2 >= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
+                        if obj.y+arg2 >= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(arg3*1000/self.flushRate):
                             obj.counter += 1
                         if obj.y+arg2 <= -obj.pointNum[1]+obj.Bitmap.size[1]:
                             obj.y = obj.y+arg2
@@ -513,7 +585,7 @@ class ScreenController(QWidget):
                         else:
                             return
                     else:
-                        if obj.y-arg2 <= 0 and obj.rollCounter >= int(1000/self.flushRate):
+                        if obj.y-arg2 <= 0 and obj.rollCounter >= int(arg3*1000/self.flushRate):
                             obj.counter += 1
                         if obj.y-arg2 >= 0:
                             obj.y = obj.y-arg2
@@ -571,34 +643,6 @@ class ScreenController(QWidget):
                 ellipse_y = offset + position[1] + y * scale[1] + int(0.5 * (scale[1] - pointSize))
                 qp.drawEllipse(ellipse_x, ellipse_y, pointSize, pointSize)
 
-    # def drawScreen(self,unit,qp):
-    #     if self.isVisible() == True:
-    #         for y in range(unit.pointNum[1]):
-    #             for x in range(unit.pointNum[0]):
-    #                 if self.colorMode == "RGB": 
-    #                     black = 80
-    #                     qp.setBrush(QColor(black,black,black))
-    #                 elif self.colorMode == "1":
-    #                     qp.setBrush(QColor(unit.color_1[0][0],unit.color_1[0][1],unit.color_1[0][2]))
-
-    #                 if (unit.rollSpace < 0 and x+unit.x in range(unit.Bitmap.size[0]) and y+unit.y in range(unit.Bitmap.size[1]) and unit.appear):
-    #                     color = unit.Bitmap.getpixel((x+unit.x, y+unit.y))
-    #                 elif (unit.rollSpace >= 0 and (x+unit.x)%(unit.Bitmap.size[0]+unit.rollSpace) in range(unit.Bitmap.size[0]) and y+unit.y in range(unit.Bitmap.size[1]) and unit.appear):
-    #                     color = unit.Bitmap.getpixel(((x+unit.x)%(unit.Bitmap.size[0]+unit.rollSpace), y+unit.y))
-    #                 else:
-    #                     color = [0,0,0] if self.colorMode == "RGB" else 0
-    #                 if self.colorMode == "RGB": 
-    #                     black = 80
-    #                     color = [black+int((255-black)*color[0]/255),black+int((255-black)*color[1]/255),black+int((255-black)*color[2]/255)]
-    #                     qp.setBrush(QColor(color[0],color[1],color[2]))
-    #                 elif self.colorMode == "1":
-    #                     if color != 0:
-    #                         qp.setBrush(QColor(unit.color_1[1][0],unit.color_1[1][1],unit.color_1[1][2]))
-    #                     else:
-    #                         qp.setBrush(QColor(unit.color_1[0][0],unit.color_1[0][1],unit.color_1[0][2]))
-
-    #                 qp.drawEllipse(unit.offset+unit.position[0]+x*unit.scale[0]+int(0.5*(unit.scale[0]-unit.pointSize)),unit.offset+unit.position[1]+y*unit.scale[1]+int(0.5*(unit.scale[1]-unit.pointSize)),unit.pointSize,unit.pointSize)
-
 class ScreenUnit():
     def __init__(self,unitInfo,progSheet,colorMode,offset,FontIconMgr):
         self.offset = offset
@@ -615,6 +659,7 @@ class ScreenUnit():
         self.counter = 0
         self.x = 0
         self.y = 0
+        self.x_offset = 0
         self.appear = True
         self.space = self.progSheet["spacing"]
         self.rollSpace = -1
@@ -623,6 +668,13 @@ class ScreenUnit():
         self.Bitmap = Image.new(self.colorMode,(1,1))
         self.BmpCreater = BmpCreater(self.FontIconMgr,self.colorMode,self.progSheet["color_RGB"],self.progSheet["font"],self.progSheet["ascFont"],self.progSheet["sysFontOnly"],)
         self.createFontImg()
+
+        try:
+            self.x_offset = self.progSheet["x_offset"]
+        except:
+            pass
+            # print("旧版程序不可设置出现位置")
+
         if not self.progSheet["vertical"]:
             align = self.progSheet["align"]
         else:
@@ -643,10 +695,17 @@ class ScreenUnit():
             self.y = 0
         if "滚动" in self.progSheet["appearance"]:
             self.rollSpace = self.progSheet["argv_2"]
-            self.x = -self.pointNum[0]                
+            self.x = -self.pointNum[0]
+
+        if "滚" in self.progSheet["appearance"] or "移" in self.progSheet["appearance"] or "跳" in self.progSheet["appearance"]:
+            self.x += self.x_offset
 
     def createFontImg(self):
-        self.Bitmap = self.BmpCreater.create_character(vertical=self.progSheet["vertical"], text=self.progSheet["text"], ch_font_size=self.progSheet["fontSize"], ch_bold_size_x=self.progSheet["bold"][0], ch_bold_size_y=self.progSheet["bold"][1], space=self.progSheet["spacing"], scale=self.progSheet["scale"], auto_scale=self.progSheet["autoScale"], scale_sys_font_only=self.progSheet["scaleSysFontOnly"], new_width = self.pointNum[0], new_height = self.pointNum[1], y_offset = self.progSheet["y_offset"], style = self.progSheet["align"][1])
+        try:
+            self.Bitmap = self.BmpCreater.create_character(vertical=self.progSheet["vertical"], roll_asc = self.progSheet["rollAscii"], text=self.progSheet["text"], ch_font_size=self.progSheet["fontSize"], asc_font_size=self.progSheet["ascFontSize"], ch_bold_size_x=self.progSheet["bold"][0], ch_bold_size_y=self.progSheet["bold"][1], space=self.progSheet["spacing"], scale=self.progSheet["scale"], auto_scale=self.progSheet["autoScale"], scale_sys_font_only=self.progSheet["scaleSysFontOnly"], new_width = self.pointNum[0], new_height = self.pointNum[1], y_offset = self.progSheet["y_offset"], y_offset_asc = self.progSheet["y_offset_asc"], style = self.progSheet["align"][1])
+        except:
+            # print("旧版节目单")
+            self.Bitmap = self.BmpCreater.create_character(vertical=self.progSheet["vertical"], roll_asc = True, text=self.progSheet["text"], ch_font_size=self.progSheet["fontSize"], asc_font_size=self.progSheet["fontSize"], ch_bold_size_x=self.progSheet["bold"][0], ch_bold_size_y=self.progSheet["bold"][1], space=self.progSheet["spacing"], scale=self.progSheet["scale"], auto_scale=self.progSheet["autoScale"], scale_sys_font_only=self.progSheet["scaleSysFontOnly"], new_width = self.pointNum[0], new_height = self.pointNum[1], y_offset = self.progSheet["y_offset"], y_offset_asc = self.progSheet["y_offset"], style = self.progSheet["align"][1])
 
 
 if __name__ == '__main__':
