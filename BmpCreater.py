@@ -304,7 +304,7 @@ class BmpCreater():
                 y_offset += space        
         return new_image
 
-    def create_character(self,vertical=False, text="", ch_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, style = 0):
+    def create_character(self,vertical=False, roll_asc = False, text="", ch_font_size=16, asc_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, y_offset_asc = 0, style = 0):
         IMAGES = []
         tasks = self.find_backtick_strings(text)
         for task in tasks:
@@ -318,13 +318,14 @@ class BmpCreater():
                 font_tasks = list(task)
                 for chr in font_tasks:
                     if chr.isascii():
-                        ch = self.ASC_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,100)
+                        ch = self.ASC_Reader.get_text_bmp(chr,y_offset_asc,asc_font_size,ch_bold_size_x,ch_bold_size_y,100)
                     else:
                         if scale_sys_font_only:
                             sscale = scale
                         else:
                             sscale = 100
                         ch = self.Ch_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,sscale)
+
                     if self.color_type == "RGB":
                         # 创建一个新的彩色图像，模式为RGB，大小与原图相同
                         cch = Image.new("RGB", ch.size, self.color)                        
@@ -336,7 +337,8 @@ class BmpCreater():
                                 else:  # 黑色部分，保持透明或设为其他颜色
                                     cch.putpixel((x, y), (0, 0, 0))  # 这里设置为黑色
                         ch = cch
-                    if chr.isascii() and vertical:
+
+                    if chr.isascii() and vertical and roll_asc:
                         ch = ch.transpose(Image.ROTATE_270)
 
                     IMAGES.append(ch)
@@ -358,8 +360,8 @@ class BmpCreater():
 if __name__ == "__main__":
     ch_font="微软雅黑"
     asc_font=ch_font
-    FontCreater = BmpCreater(Manager=FontManager(),color_type="1",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, text="铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=20, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, style = 0)
+    FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
+    font_img = FontCreater.create_character(vertical=0, roll_asc = False, text="`wheelchair32x32`铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=20, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, y_offset_asc = 0, style = 0)
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]
