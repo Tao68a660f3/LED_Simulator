@@ -206,8 +206,8 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         #获取显示器分辨率大小
         self.desktop = QApplication.desktop()
         self.screenRect = self.desktop.screenGeometry()
-        self.height = int(self.screenRect.height()*850/1620)
-        self.width = int(self.height*1500/850)
+        self.height = int(self.screenRect.height()*985/1648)
+        self.width = int(self.height*1648/985)
         # self.setMaximumSize(self.screenRect.width(),self.screenRect.height())
         self.setMinimumSize(self.width,self.height)
         self.initUI()
