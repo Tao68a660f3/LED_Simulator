@@ -1330,6 +1330,7 @@ class LineController():
             self.parent.LineEditor.LineInfoList[row]["lineName"] = n
             self.parent.LineEditor.LineInfoList[row]["flushRate"] = f
             self.parent.flush_table(self.parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.parent.LineEditor.LineInfoList])
+            self.parent.tableWidget_lineChoose.setCurrentItem(self.parent.tableWidget_lineChoose.item(row,0))
 
 
     def new_line(self):
