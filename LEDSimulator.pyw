@@ -2,7 +2,7 @@ import sys, os, ast, copy, datetime, gc
 from PyQt5.QtWidgets import QApplication, QWidget, QDialog, QMainWindow, QAbstractItemView, QTableWidgetItem, QHeaderView, QFileDialog, QPushButton, QLabel, QColorDialog, QMenu, QAction, QMessageBox
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import pyqtSignal, Qt, QCoreApplication
-from BmpCreater import FontManager
+from BmpCreater import FontManager, BmpCreater
 from ControlPanel import Ui_ControlPanel
 from NewALine import Ui_NewALine
 from SelfDefineScreenDialog import Ui_SelfDefineScreen
@@ -632,14 +632,15 @@ class ProgramSettler():
 
     def initUI(self):
         # 屏幕分区管理表格
-        self.parent.tableWidget_Screens.setColumnCount(3)
+        self.parent.tableWidget_Screens.setColumnCount(4)
         self.parent.tableWidget_Screens.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.parent.tableWidget_Screens.setSelectionMode(QAbstractItemView.SingleSelection)
         self.parent.tableWidget_Screens.verticalHeader().setVisible(False)
-        self.parent.tableWidget_Screens.setHorizontalHeaderLabels(["屏幕名称","屏幕规格","灯珠规格"])
+        self.parent.tableWidget_Screens.setHorizontalHeaderLabels(["屏幕名称","屏幕规格","灯珠规格","内容大小"])
         self.parent.tableWidget_Screens.setColumnWidth(0,120)
         self.parent.tableWidget_Screens.setColumnWidth(1,100)
         self.parent.tableWidget_Screens.setColumnWidth(2,100)
+        self.parent.tableWidget_Screens.setColumnWidth(3,100)
         self.parent.tableWidget_Screens.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.parent.tableWidget_Screens.verticalHeader().setDefaultSectionSize(18)
 
@@ -652,10 +653,15 @@ class ProgramSettler():
         self.parent.spin_FontSize.setMaximum(64)
         self.parent.spin_FontSize.setMinimum(6)
         self.parent.spin_FontSize.setValue(16)
+        self.parent.spin_FontSize_2.setMaximum(64)
+        self.parent.spin_FontSize_2.setMinimum(6)
+        self.parent.spin_FontSize_2.setValue(16)
         self.parent.spinBox_Argv_1.setMaximum(60)
         self.parent.spinBox_Argv_1.setMinimum(1)
         self.parent.spinBox_Argv_2.setMaximum(60)
         self.parent.spinBox_Argv_2.setMinimum(1)
+        self.parent.spinBox_Argv_3.setMaximum(60)
+        self.parent.spinBox_Argv_3.setMinimum(0)
         self.parent.spinBox_WordSpace.setMaximum(100)
         self.parent.spinBox_WordSpace.setMinimum(0)
         self.parent.spinBox_BoldSizeX.setMaximum(4)
@@ -664,13 +670,17 @@ class ProgramSettler():
         self.parent.spinBox_BoldSizeY.setMinimum(1)
         self.parent.spinBox_Y_Offset.setMaximum(64)
         self.parent.spinBox_Y_Offset.setMinimum(-64)
+        self.parent.spinBox_Y_Offset_2.setMaximum(64)
+        self.parent.spinBox_Y_Offset_2.setMinimum(-64)
+        self.parent.spinBox_X_Offset.setMaximum(65536)
+        self.parent.spinBox_X_Offset.setMinimum(-65536)
         self.parent.spinBox_Align_x.setMaximum(1)
         self.parent.spinBox_Align_x.setMinimum(-1)
         self.parent.spinBox_Align_y.setMaximum(1)
         self.parent.spinBox_Align_y.setMinimum(-1)
         self.parent.spinBox_Zoom.setMaximum(200)
         self.parent.spinBox_Zoom.setMinimum(40)
-        self.parent.spinBox_Zoom.setValue(100)       
+        self.parent.spinBox_Zoom.setValue(100)   
 
         self.parent.tableWidget_lineChoose.itemSelectionChanged.connect(self.init_ProgramSetting)
         self.parent.tableWidget_ProgramSheet.itemSelectionChanged.connect(self.show_scnUnit)
@@ -678,8 +688,10 @@ class ProgramSettler():
         self.parent.combo_LineScreens.currentTextChanged.connect(self.show_scnUnit)
         self.parent.btn_ok.clicked.connect(self.save_progArgv)
         self.parent.btn_Colorful_ChooseColor.clicked.connect(self.get_color)
-        self.parent.combo_Show.currentTextChanged.connect(self.update_two_argv)
+        self.parent.combo_Show.currentTextChanged.connect(self.update_argv)
         self.parent.checkBox_sysFont.stateChanged.connect(self.change_EngFont_set)
+        
+        self.parent.lineEdit_Text.editingFinished.connect(self.save_progArgv)
 
         self.parent.btn_ok.setShortcut(Qt.Key_Return)
 
@@ -713,62 +725,89 @@ class ProgramSettler():
         return screen
         
     def show_scnUnit(self):
+        data = []
         row = self.parent.selected_row(self.parent.tableWidget_ProgramSheet)
         if isinstance(row,int):
             screen = self.get_currentScreen()
             screenUnitList = self.parent.ProgramSheetManager.programSheet[row][2][screen][0]
-            data = [[i+1,str(screenUnitList[i]["pointNum"]),str(screenUnitList[i]["pointSize"])] for i in range(len(screenUnitList))]
+            screenProgList = self.parent.ProgramSheetManager.programSheet[row][2][screen][1]
+            for i in range(min(len(screenProgList),len(screenUnitList))):
+                p = screenProgList[i]
+                Creater = BmpCreater(self.parent.IconManager.FontMgr,"1",(255,255,255),p["font"],p["ascFont"],p["sysFontOnly"],)
+                try:
+                    bmp = Creater.create_character(vertical=p["vertical"], roll_asc = p["rollAscii"], text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["ascFontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset_asc"], style = p["align"][1])
+                except:
+                    bmp = Creater.create_character(vertical=p["vertical"], roll_asc = True, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["fontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset"], style = p["align"][1])
+                data.append([i+1,str(screenUnitList[i]["pointNum"]),str(screenUnitList[i]["pointSize"]),bmp.size])
+
             self.parent.flush_table(self.parent.tableWidget_Screens,data)
         else:
             self.parent.flush_table(self.parent.tableWidget_Screens,[])
 
         ## 添加节目的地方和更改布局的地方
             
-    def update_two_argv(self):
+    def update_argv(self):
         mode = self.parent.combo_Show.currentText()
         self.parent.spinBox_Argv_1.setEnabled(True)
         self.parent.spinBox_Argv_2.setEnabled(True)
+        self.parent.spinBox_Argv_3.setEnabled(True)
         if "滚动" in mode:
             self.parent.label_Argv_1.setText("移动速度")
             self.parent.label_Argv_2.setText("滚动对象间距")
+            self.parent.label_Argv_3.setText("步长")
             self.parent.spinBox_Argv_1.setMaximum(60)
             self.parent.spinBox_Argv_1.setMinimum(1)
             self.parent.spinBox_Argv_2.setMaximum(256)
             self.parent.spinBox_Argv_2.setMinimum(-1)
             self.parent.spinBox_Argv_2.setValue(-1)
+            self.parent.spinBox_Argv_3.setMaximum(60)
+            self.parent.spinBox_Argv_3.setMinimum(1)
         elif "移到" in mode:
             self.parent.label_Argv_1.setText("移动速度")
             self.parent.label_Argv_2.setText("时间")
+            self.parent.label_Argv_3.setText("步长")
             self.parent.spinBox_Argv_1.setMaximum(60)
             self.parent.spinBox_Argv_1.setMinimum(1)
             self.parent.spinBox_Argv_2.setMaximum(60)
             self.parent.spinBox_Argv_2.setMinimum(1)
+            self.parent.spinBox_Argv_3.setMaximum(60)
+            self.parent.spinBox_Argv_3.setMinimum(1)
         elif "移开" in mode:
             self.parent.label_Argv_1.setText("移动速度")
             self.parent.label_Argv_2.setText("时间")
+            self.parent.label_Argv_3.setText("步长")
             self.parent.spinBox_Argv_1.setMaximum(60)
             self.parent.spinBox_Argv_1.setMinimum(1)
             self.parent.spinBox_Argv_2.setMaximum(60)
             self.parent.spinBox_Argv_2.setMinimum(1)
+            self.parent.spinBox_Argv_3.setMaximum(60)
+            self.parent.spinBox_Argv_3.setMinimum(1)
         elif "跳跃" in mode:
             self.parent.label_Argv_1.setText("移动速度")
             self.parent.label_Argv_2.setText("移动步长")
+            self.parent.label_Argv_3.setText("停靠时间")
             self.parent.spinBox_Argv_1.setMaximum(60)
             self.parent.spinBox_Argv_1.setMinimum(1)
             self.parent.spinBox_Argv_2.setMaximum(32)
             self.parent.spinBox_Argv_2.setMinimum(1)
+            self.parent.spinBox_Argv_3.setMaximum(60)
+            self.parent.spinBox_Argv_3.setMinimum(0)
         elif mode == "闪烁":
             self.parent.label_Argv_1.setText("亮时长")
             self.parent.label_Argv_2.setText("灭时长")
+            self.parent.label_Argv_3.setText("")
             self.parent.spinBox_Argv_1.setMaximum(60)
             self.parent.spinBox_Argv_1.setMinimum(1)
             self.parent.spinBox_Argv_2.setMaximum(60)
             self.parent.spinBox_Argv_2.setMinimum(1)
+            self.parent.spinBox_Argv_3.setEnabled(False)
         elif mode == "静止":
             self.parent.label_Argv_1.setText("")
             self.parent.label_Argv_2.setText("")
+            self.parent.label_Argv_3.setText("")
             self.parent.spinBox_Argv_1.setEnabled(False)
             self.parent.spinBox_Argv_2.setEnabled(False)
+            self.parent.spinBox_Argv_3.setEnabled(False)
 
     def show_progArgv(self):
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
@@ -786,11 +825,11 @@ class ProgramSettler():
                 self.screenProgList = self.parent.ProgramSheetManager.programSheet[row][2][screen][1]
                 row = self.parent.selected_row(self.parent.tableWidget_Screens)
                 if isinstance(row,int):
-                    self.update_two_argv()
+                    self.update_argv()
                     self.parent.combo_Font.setCurrentText(self.screenProgList[row]["font"])
                     self.parent.spin_FontSize.setValue(self.screenProgList[row]["fontSize"])
-                    self.parent.checkBox_sysFont.setChecked(self.screenProgList[row]["sysFontOnly"])
                     self.parent.combo_ASCII_Font.setCurrentText(self.screenProgList[row]["ascFont"])
+                    self.parent.checkBox_sysFont.setChecked(self.screenProgList[row]["sysFontOnly"])
                     self.parent.combo_Show.setCurrentText(self.screenProgList[row]["appearance"])
                     self.parent.combo_TextDirect.setCurrentText("竖向" if self.screenProgList[row]["vertical"] else "横向")
                     self.parent.spinBox_Argv_1.setValue(self.screenProgList[row]["argv_1"])
@@ -809,6 +848,19 @@ class ProgramSettler():
                     color = (self.screenProgList[row]["color_RGB"][0], self.screenProgList[row]["color_RGB"][1], self.screenProgList[row]["color_RGB"][2])
                     self.parent.btn_Colorful_ChooseColor.setStyleSheet(f"background-color: rgb{color}")
 
+                    try:
+                        self.parent.spin_FontSize_2.setValue(self.screenProgList[row]["ascFontSize"])
+                        self.parent.checkBox_rollAscii.setChecked(self.screenProgList[row]["rollAscii"])
+                        self.parent.spinBox_Argv_3.setValue(self.screenProgList[row]["argv_3"])
+                        self.parent.spinBox_Y_Offset_2.setValue(self.screenProgList[row]["y_offset_asc"])
+                        self.parent.spinBox_X_Offset.setValue(self.screenProgList[row]["x_offset"])
+                    except:
+                        print("尝试读取旧版数据")
+                        self.screenProgList[row]["ascFontSize"] = 16
+                        self.screenProgList[row]["argv_3"] = 1
+                        self.screenProgList[row]["y_offset_asc"] = 0
+                        self.screenProgList[row]["x_offset"] = 0
+
     def save_progArgv(self):
         row = self.parent.selected_row(self.parent.tableWidget_ProgramSheet)
         if isinstance(row,int):
@@ -817,15 +869,20 @@ class ProgramSettler():
                 self.screenProgList[row]["font"] = self.parent.combo_Font.currentText()
                 self.screenProgList[row]["fontSize"] = self.parent.spin_FontSize.value()
                 self.screenProgList[row]["ascFont"] = self.parent.combo_ASCII_Font.currentText()
+                self.screenProgList[row]["ascFontSize"] = self.parent.spin_FontSize_2.value()
                 self.screenProgList[row]["sysFontOnly"] = self.parent.checkBox_sysFont.isChecked()
+                self.screenProgList[row]["rollAscii"] = self.parent.checkBox_rollAscii.isChecked()
                 self.screenProgList[row]["appearance"] = self.parent.combo_Show.currentText()
                 self.screenProgList[row]["vertical"] = False if self.parent.combo_TextDirect.currentText() == "横向" else True 
                 self.screenProgList[row]["argv_1"] = self.parent.spinBox_Argv_1.value()
                 self.screenProgList[row]["argv_2"] = self.parent.spinBox_Argv_2.value()
+                self.screenProgList[row]["argv_3"] = self.parent.spinBox_Argv_3.value()
                 self.screenProgList[row]["spacing"] = self.parent.spinBox_WordSpace.value()
                 self.screenProgList[row]["bold"][0] = self.parent.spinBox_BoldSizeX.value()
                 self.screenProgList[row]["bold"][1] = self.parent.spinBox_BoldSizeY.value()
                 self.screenProgList[row]["y_offset"] = self.parent.spinBox_Y_Offset.value()
+                self.screenProgList[row]["y_offset_asc"] = self.parent.spinBox_Y_Offset_2.value()
+                self.screenProgList[row]["x_offset"] = self.parent.spinBox_X_Offset.value()
                 self.screenProgList[row]["align"][0] = self.parent.spinBox_Align_x.value()
                 self.screenProgList[row]["align"][1] = self.parent.spinBox_Align_y.value()
                 self.screenProgList[row]["scale"] = self.parent.spinBox_Zoom.value()
@@ -1248,10 +1305,32 @@ class LineController():
         self.parent.tableWidget_lineChoose.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
         self.parent.tableWidget_lineChoose.verticalHeader().setDefaultSectionSize(18)
 
+        self.parent.combo_FlushRate.addItems(["60","54","50","48","30","24","18","15"])
+
+        self.parent.LineNameEdit.editingFinished.connect(self.change_name_time)
+        self.parent.combo_FlushRate.currentTextChanged.connect(self.change_name_time)
+        self.parent.tableWidget_lineChoose.clicked.connect(self.show_name_time)
         self.parent.btn_newLine.clicked.connect(self.new_busLine_openDialog)
         self.parent.btn_delLine.clicked.connect(self.del_busLine)
         self.parent.btn_MvUp_BusLine.clicked.connect(self.mv_up_busLine)
         self.parent.btn_MvDn_BusLine.clicked.connect(self.mv_dn_busLine)
+
+    def show_name_time(self):
+        row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
+        if isinstance(row,int):
+            dt = self.parent.LineEditor.LineInfoList[row]
+            self.parent.LineNameEdit.setText(dt["lineName"])
+            self.parent.combo_FlushRate.setCurrentText(str(dt["flushRate"]))
+
+    def change_name_time(self):
+        row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
+        if isinstance(row,int):
+            n = self.parent.LineNameEdit.text()
+            f = int(self.parent.combo_FlushRate.currentText())
+            self.parent.LineEditor.LineInfoList[row]["lineName"] = n
+            self.parent.LineEditor.LineInfoList[row]["flushRate"] = f
+            self.parent.flush_table(self.parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.parent.LineEditor.LineInfoList])
+
 
     def new_line(self):
         self.parent.LineEditor.LineInfoList = []
