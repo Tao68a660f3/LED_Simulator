@@ -254,11 +254,11 @@ class ScreenController(QWidget):
     def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
+        self.flushScreen()
         self.drawBackground(qp)
         for s in self.units:
             self.drawScreen(s,qp)
         qp.end()
-        self.flushScreen()
         if self.gifRecording and self.isVisible():
             self.capture_screen()
         
@@ -706,7 +706,7 @@ class ScreenUnit():
         except:
             pass
             # print("旧版程序不可设置出现位置")
-
+        
         if not self.progSheet["vertical"]:
             align = self.progSheet["align"]
         else:
@@ -725,6 +725,7 @@ class ScreenUnit():
             self.x = 0
         if align[1] > 0:
             self.y = 0
+
         if "滚动" in self.progSheet["appearance"]:
             self.rollSpace = self.progSheet["argv_2"]
             if ("左" in self.appearance or "右"  in self.appearance):
