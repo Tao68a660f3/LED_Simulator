@@ -646,7 +646,7 @@ class ProgramSettler():
 
         self.parent.combo_Font.addItems(self.ChFont)
         self.parent.combo_ASCII_Font.addItems(self.EngFont)
-        self.parent.combo_Show.addItems(["静止","闪烁","向左滚动","向左移到中间","向上移到中间","中间向左移开","中间向上移开","跳跃向左移动","跳跃向上移动","向右滚动","向右移到中间","向下移到中间","中间向右移开","中间向下移开","跳跃向右移动","跳跃向下移动","上下反复跳跃移动",])
+        self.parent.combo_Show.addItems(["静止","闪烁","向左滚动","向上滚动","向左移到中间","向上移到中间","中间向左移开","中间向上移开","跳跃向左移动","跳跃向上移动","向右滚动","向下滚动","向右移到中间","向下移到中间","中间向右移开","中间向下移开","跳跃向右移动","跳跃向下移动","上下反复跳跃移动",])
         self.parent.combo_TextDirect.addItems(["横向","竖向"])
         self.parent.combo_SingleColorChoose.addItems(template_monochromeColors.keys())
 
