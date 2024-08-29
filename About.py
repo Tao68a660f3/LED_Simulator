@@ -81,4 +81,4 @@ class Ui_Form(object):
         self.label_2.setText(_translate("Form", "<a href=\"https://github.com/Tao68a660f3/LED_Simulator\">GitHub"))
         self.label_3.setText(_translate("Form", "<a href=\"https://space.bilibili.com/1051238382\">bilibili"))
         self.label_5.setText(_translate("Form", "本软件为开源软件，不得售卖"))
-        self.label_7.setText(_translate("Form", "20240829"))
+        self.label_7.setText(_translate("Form", "20240830"))
