@@ -83,6 +83,8 @@ class HZK_Font_Reader():
     def __init__(self,relative_path,fontPath):
         self.fontPath = fontPath
         self.fontPath = relative_path + self.fontPath
+        f = open(self.fontPath, "rb")
+        f.close()
         self.KEYS = [0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01]
 
     def get_char_map(self,text):
@@ -243,16 +245,22 @@ class BmpCreater():
         asc_font_type = self.asc_font.split(".")[-1].lower()
         ch_font_type = self.ch_font.split(".")[-1].lower()
         # if not self.only_sysfont:
-        if asc_font_type == "font":
-            self.ASC_Reader = ASC_font_Reader(self.relative_path,self.asc_font)
-        elif asc_font_type == "bmp":
-            self.ASC_Reader = ASC_Bmp_Reader(self.relative_path,self.asc_font)
-        else:
+        try:
+            if asc_font_type == "font":
+                self.ASC_Reader = ASC_font_Reader(self.relative_path,self.asc_font)
+            elif asc_font_type == "bmp":
+                self.ASC_Reader = ASC_Bmp_Reader(self.relative_path,self.asc_font)
+            else:
+                self.ASC_Reader = Sys_Font_Reader(self.asc_font)
+        except:
             self.ASC_Reader = Sys_Font_Reader(self.asc_font)
-        if ch_font_type == "bin":
-            self.Ch_Reader = HZK_Font_Reader(self.relative_path,self.ch_font)
-        else:
-            self.Ch_Reader = Sys_Font_Reader(self.ch_font)
+        try:
+            if ch_font_type == "bin":
+                self.Ch_Reader = HZK_Font_Reader(self.relative_path,self.ch_font)
+            else:
+                self.Ch_Reader = Sys_Font_Reader(self.ch_font)
+        except:
+            self.Ch_Reader = Sys_Font_Reader(self.asc_font)  
 
     def find_backtick_strings(self,s):
         ordered_strings = []
@@ -312,11 +320,14 @@ class BmpCreater():
         tasks = self.find_backtick_strings(text)
         for task in tasks:
             if task in self.FontManager.icon_dict.keys():
-                ico = Image.open(self.relative_path+self.FontManager.icon_dict[task])
-                if self.color_type == "1":
-                    ico = ImageChops.invert(ico)
-                    ico = ico.convert('1')
-                IMAGES.append(ico)
+                try:
+                    ico = Image.open(self.relative_path+self.FontManager.icon_dict[task])
+                    if self.color_type == "1":
+                        ico = ImageChops.invert(ico)
+                        ico = ico.convert('1')
+                    IMAGES.append(ico)
+                except:
+                    pass     
             else:
                 font_tasks = list(task)
                 for chr in font_tasks:
