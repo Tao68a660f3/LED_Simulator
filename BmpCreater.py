@@ -132,7 +132,10 @@ class Sys_Font_Reader():
         return False
 
     def get_text_bmp(self,text,y_offset=0,font_size=16,xb=1,yb=1,scale=100):
-        self.font = ImageFont.truetype(self.font_path, font_size)
+        try:
+            self.font = ImageFont.truetype(self.font_path, font_size)
+        except:    # 字体打不开时暂时用宋体代替
+            self.font = ImageFont.truetype("simsun", font_size)
         x_offseted_font = {"arial":2,"ARIALN":1,}
         scaled_font = {"FZYTK":72,}
         extra_size = int(0.2*font_size) if text.isascii() else 0
