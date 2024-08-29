@@ -254,6 +254,7 @@ class ScreenController(QWidget):
     def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
+        qp.setPen(Qt.NoPen)
         self.flushScreen()
         self.drawBackground(qp)
         for s in self.units:
