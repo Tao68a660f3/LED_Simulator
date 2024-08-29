@@ -237,8 +237,14 @@ class BmpCreater():
         self.FontManager = Manager
         self.only_sysfont = only_sysfont
         self.relative_path = relative_path
-        self.ch_font = self.FontManager.font_dict[ch_font]
-        self.asc_font = self.FontManager.font_dict[asc_font]
+        try:
+            self.ch_font = self.FontManager.font_dict[ch_font]
+        except:
+            self.ch_font = self.FontManager.font_dict["宋体"]
+        try:
+            self.asc_font = self.FontManager.font_dict[asc_font]
+        except:
+            self.asc_font = self.FontManager.font_dict["宋体"]
         self.color_type = color_type
         self.color = (color[0],color[1],color[2])
 
