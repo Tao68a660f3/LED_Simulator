@@ -140,10 +140,11 @@ class Sys_Font_Reader():
             self.font = ImageFont.truetype("simsun", font_size)
         x_offseted_font = {"arial":2,"ARIALN":1,}
         scaled_font = {"FZYTK":72,}
-        extra_size = int(0.2*font_size) if text.isascii() else 0
+        extra_size = int(0.2*font_size) if text.isascii() else 0  # 加高ASCII字体以防止字符不完整
         s = text
-        s = "█| "+s+" |█"
-        ss = "█|  |█"
+        s = "+ "+s
+        ss = "+ "
+        adjusted_height = [0,0]
 
         # 创建一个Image对象
         image = Image.new("1", (1, 1))  # 1-bit image (black and white)
@@ -154,13 +155,30 @@ class Sys_Font_Reader():
         text_height = bbox[3] - bbox[1]
         # 多余的宽度
         bbox = draw.textbbox((0, 0), ss, font=self.font)
-        delta_width = int((bbox[2] - bbox[0])*0.5)
+        delta_width = bbox[2] - bbox[0]
         # delta_height = font_size-text_height
 
         offset = int(0.5*font_size)+int(0.5*extra_size)
         # print(s,offset,font_size,text_height,delta_y)
- 
-        image = Image.new("1", (text_width-2*delta_width, font_size+extra_size))#
+
+        # 获取参考字符的高度
+        chars = [s,ss]
+        for i in range(len(chars)):
+            t = chars[i]
+            image = Image.new("1", (text_width-delta_width, font_size+extra_size))
+            # 获取新的Draw对象
+            draw = ImageDraw.Draw(image)
+            draw.text((0, offset-y_offset), t, font=self.font, fill=1, anchor="lm")
+            for x in range(image.width):
+                for y in range(image.height):
+                    if image.getpixel((x,y)):
+                        adjusted_height[i] = y
+                        break
+                else:
+                    continue
+                break
+
+        image = Image.new("1", (text_width-delta_width, font_size+extra_size))
         # 获取新的Draw对象
         draw = ImageDraw.Draw(image)
 
@@ -170,21 +188,11 @@ class Sys_Font_Reader():
         # 设置字体，绘制文本，加粗
         for i in range(xb):
             for j in range(yb):
-                draw.text((i-delta_width, j+offset-y_offset), s, font=self.font, fill=1, anchor="lm")
+                draw.text((i-delta_width, j+offset-y_offset+(-adjusted_height[0]+adjusted_height[1])), s, font=self.font, fill=1, anchor="lm")
 
         for fnt in scaled_font.keys():
             if fnt in self.font_path and self.is_Chinese(text):
                 image = image.crop((int(image.width*(1-scaled_font[fnt]/100)*0.5),0,int(image.width*(1-(1-scaled_font[fnt]/100)*0.5)),image.height))
-
-        ########################################
-        # for x in range(image.width):
-        #     print(int(delta_height/2),int(delta_height/2)+text_height-1)
-        #     # x=0
-        #     if int(delta_height/2) > 0:
-        #         image.putpixel((x, int(delta_height/2)), 1)
-        #     if int(delta_height/2)+text_height-1 < image.height:
-        #         image.putpixel((x, int(delta_height/2)+text_height-1), 1)
-        ########################################
 
         image = image.resize((int(image.width*scale/100),image.height),resample=Image.LANCZOS)
 
@@ -378,10 +386,10 @@ class BmpCreater():
         return new_image
     
 if __name__ == "__main__":
-    ch_font="微软雅黑"
+    ch_font="等线"
     asc_font=ch_font
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, roll_asc = False, text="`wheelchair32x32`铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=20, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, y_offset_asc = 0, style = 0)
+    font_img = FontCreater.create_character(vertical=0, roll_asc = False, text="`wheelchair32x32`铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=24, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, y_offset_asc = 0, style = 0)
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]
