@@ -138,7 +138,6 @@ class Sys_Font_Reader():
             self.font = ImageFont.truetype(self.font_path, font_size)
         except:    # 字体打不开时暂时用宋体代替
             self.font = ImageFont.truetype("simsun", font_size)
-        x_offseted_font = {"arial":2,"ARIALN":1,}
         scaled_font = {"FZYTK":72,}
         extra_size = int(0.2*font_size) if text.isascii() else 0  # 加高ASCII字体以防止字符不完整
         s = text
@@ -182,9 +181,6 @@ class Sys_Font_Reader():
         # 获取新的Draw对象
         draw = ImageDraw.Draw(image)
 
-        for fnt in x_offseted_font.keys():
-            if fnt in self.font_path:
-                delta_width = delta_width - x_offseted_font[fnt]
         # 设置字体，绘制文本，加粗
         for i in range(xb):
             for j in range(yb):
@@ -387,7 +383,7 @@ class BmpCreater():
     
 if __name__ == "__main__":
     ch_font="等线"
-    asc_font=ch_font
+    asc_font="Arial"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
     font_img = FontCreater.create_character(vertical=0, roll_asc = False, text="`wheelchair32x32`铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=24, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, y_offset_asc = 0, style = 0)
     font_img.save("混合字体测试生成.bmp")
