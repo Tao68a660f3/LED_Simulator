@@ -905,6 +905,8 @@ class ProgramSettler():
                 self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
                 self.screenProgList[row]["color_1"] = self.parent.combo_SingleColorChoose.currentText()
 
+        self.parent.change_program()
+
     def get_color(self):
         row = self.parent.selected_row(self.parent.tableWidget_Screens)
         if isinstance(row,int):
