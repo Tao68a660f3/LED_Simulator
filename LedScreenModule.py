@@ -1,4 +1,4 @@
-﻿import sys, time, datetime, os, imageio, random
+﻿import sys, time, datetime, os, imageio, random, re
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction
 from PyQt5.QtGui import QPainter, QColor, QImage
@@ -204,6 +204,7 @@ class ScreenController(QWidget):
                 now = datetime.datetime.now()
                 oldStr = s.progSheet["text"]
                 chWeekday = now.strftime("%A")
+                newStr = re.sub(r"(?<!%)(%A)", chinese_week_day[chWeekday], oldStr )
                 newStr = oldStr.replace("%A",chinese_week_day[chWeekday])
                 newStr = now.strftime(newStr)
                 if newStr != s.tempStr:
