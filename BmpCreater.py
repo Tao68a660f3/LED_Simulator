@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont, ImageChops
 # import numpy as np
-import binascii, re#, freetype
+import binascii, re, os#, freetype
 
 class ASC_font_Reader():
     def __init__(self,relative_path,font_path):
@@ -225,13 +225,19 @@ class FontManager():
             with open(icon_info,"r",encoding="utf-8") as f:
                 file = f.readlines()
                 folder = ""
+                pattern = re.compile(r".*?,.*?,")
                 for i in range(len(file)):
                     if file[i].startswith("ICON"):
                         folder = file[i].split(",")[2][4:]
+                        # print(folder,icon_info)
+                        if folder.lower() == "default":
+                            folder = os.path.dirname(icon_info)
                     else:
-                        icon_name = '`'+file[i].split(",")[0]+'`'
-                        icon_file = file[i].split(",")[1]
-                        self.icon_dict[icon_name] = folder+icon_file
+                        match_result = pattern.match(file[i])[0]
+                        icon_name = '`'+match_result.split(",")[0]+'`'
+                        icon_file = match_result.split(",")[1]
+                        self.icon_dict[icon_name] = os.path.join(folder,icon_file)
+                        # print(icon_file,self.icon_dict[icon_name])
         # print(self.icon_dict)
 
 class BmpCreater():
