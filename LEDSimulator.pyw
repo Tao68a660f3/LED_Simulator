@@ -930,6 +930,7 @@ class LineSettler():
         self.parent.statusBar().showMessage("请先添加线路，然后为各个路牌设置布局，再添加节目，选择节目后，再为屏幕的每个分区设置显示的内容！")
         self.parent.btn_SaveChange.clicked.connect(self.ok_layout)
         self.parent.tableWidget_lineChoose.itemSelectionChanged.connect(self.init_LineSetting)
+        self.parent.combo_LayoutChoose.highlighted.connect(self.set_linemode_pixmap)
         self.parent.combo_LayoutChoose.currentTextChanged.connect(self.flush_width_height_spinbox)
         self.parent.combo_LineScreensForLayout.currentTextChanged.connect(self.flush_width_height_spinbox)
         self.parent.btn_LineSet.clicked.connect(lambda:self.reset_layout(True))
@@ -985,6 +986,19 @@ class LineSettler():
                 self.show_custom_layout_btn()
                 self.layoutHistory.append(copy.deepcopy(self.customLayouts))
 
+    def set_linemode_pixmap(self):
+        row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
+        if isinstance(row,int):
+            mode = self.parent.LineEditor.LineInfoList[row]["preset"]
+            if mode == "北京公交":
+                pixmap = QPixmap("./resources/preset_BeijingBus.png")
+            elif mode == "普通":
+                pixmap = QPixmap("./resources/preset_CommonBus.png")
+            pixmap = pixmap.scaledToWidth(self.parent.BtnWidget.size().width())
+            self.parent.BtnWidget.label = QLabel(parent=self.parent.BtnWidget)
+            self.parent.BtnWidget.label.setPixmap(pixmap)
+            self.parent.BtnWidget.label.show()
+
     def init_LineSetting(self):
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
         if isinstance(row,int):
@@ -1004,14 +1018,7 @@ class LineSettler():
                 self.parent.spin_Height_1.setEnabled(True)
                 self.parent.btn_LineSet.setEnabled(False)
                 self.parent.btn_LineReSet.setEnabled(False)
-                if mode == "北京公交":
-                    pixmap = QPixmap("./resources/preset_BeijingBus.png")
-                elif mode == "普通":
-                    pixmap = QPixmap("./resources/preset_CommonBus.png")
-                pixmap = pixmap.scaledToWidth(self.parent.BtnWidget.size().width())
-                self.parent.BtnWidget.label = QLabel(parent=self.parent.BtnWidget)
-                self.parent.BtnWidget.label.setPixmap(pixmap)
-                self.parent.BtnWidget.label.show()
+                self.set_linemode_pixmap()
                 self.parent.combo_LayoutChoose.setEnabled(True)
                 self.parent.combo_LayoutChoose.addItems(["布局1","布局2","布局3","布局4","布局5","布局6"])    # screen["layout"]
                 self.parent.btn_SaveChange.setEnabled(True)
