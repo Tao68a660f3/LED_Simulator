@@ -205,7 +205,7 @@ class ScreenController(QWidget):
                 oldStr = s.progSheet["text"]
                 chWeekday = now.strftime("%A")
                 newStr = re.sub(r"(?<!%)(%A)", chinese_week_day[chWeekday], oldStr )
-                newStr = oldStr.replace("%A",chinese_week_day[chWeekday])
+                # newStr = oldStr.replace("%A",chinese_week_day[chWeekday])
                 newStr = now.strftime(newStr)
                 if newStr != s.tempStr:
                     s.progSheet["text"] = newStr
