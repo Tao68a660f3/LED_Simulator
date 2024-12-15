@@ -14,6 +14,14 @@ from About import *
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
+# 屏幕尺寸相关信息
+pointKindDict = {"(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled","(6,8)":"midSizeScaled68","(8,10)":"midSizeScaled810","(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled"}
+ledTypes = [i for i in pointKindDict.keys()]
+scales = [ast.literal_eval(i) for i in ledTypes]
+
+screenLink = {"前路牌":"frontScreen","后路牌":"backScreen","前侧路牌":"frontSideScreen","后侧路牌":"backSideScreen"}
+
+
 class AboutWindow(QWidget,Ui_Form):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -38,7 +46,6 @@ class NewALine(QDialog,Ui_NewALine):
     def initUI(self):
         self.buttonBox.accepted.connect(self.onOk)
         colors = ["彩色屏幕","单色屏幕"]
-        ledTypes = ["(6,6)","(8,8)","(8,12)","(3,3)","(4,4)","(4,6)"]
         self.combo_Preset.addItems(["自定义","北京公交","普通"])
         self.combo_FlushRate.addItems(["60","54","50","48","30","24","18","15"])
         self.chk_FrontScreen.setChecked(True)
@@ -53,7 +60,7 @@ class NewALine(QDialog,Ui_NewALine):
             combo.addItems(ledTypes)
         for spin in widthSpin:
             spin.setMaximum(512)
-            spin.setMinimum(32)
+            spin.setMinimum(16)
             spin.setValue(224)
         for spin in heightSpin:
             spin.setMaximum(256)
@@ -128,7 +135,6 @@ class NewALine(QDialog,Ui_NewALine):
         flush = int(self.combo_FlushRate.currentText())
         ledTypeCombo = [self.combo_FLedTyoe,self.combo_BLedTyoe,self.combo_FSLedTyoe,self.combo_BSLedTyoe]
         scale = [item.currentIndex() for item in ledTypeCombo]
-        scales = [(6,6),(8,8),(8,12),(3,3),(4,4),(4,6)]
         f_enabled = self.chk_FrontScreen.isChecked()
         f_color = "RGB" if self.combo_FrontColor.currentText() == "彩色屏幕" else "1"
         f_w = self.spin_FrontWidth.value()
@@ -162,7 +168,7 @@ class SelfDefineLayout(QDialog,Ui_SelfDefineScreen):
     def initUI(self):
         self.setWindowTitle("选择要添加的屏幕")
         self.combo_Layout.addItems(["更改屏幕","水平布局","垂直布局"])
-        self.combo_PointKind.addItems(["(6,6)","(8,8)","(8,12)","(3,3)","(4,4)","(4,6)"])
+        self.combo_PointKind.addItems(ledTypes)
 
         self.combo_PointKind.currentTextChanged.connect(self.can_w_h)
         self.combo_Layout.currentTextChanged.connect(self.can_w_h)
@@ -374,7 +380,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
     def get_currentScreen(self):
         screen = self.combo_LineScreens.currentText()  # 获取正在编辑的屏幕
-        screenLink = {"前路牌":"frontScreen","后路牌":"backScreen","前侧路牌":"frontSideScreen","后侧路牌":"backSideScreen"}
+        
         if screen not in screenLink.keys():
             screen = "前路牌"
         screen = screenLink[screen]
@@ -385,7 +391,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         row = self.selected_row(self.tableWidget_lineChoose)
         h = 0
         if isinstance(row,int):
-            screenLink = {"前路牌":"frontScreen","后路牌":"backScreen","前侧路牌":"frontSideScreen","后侧路牌":"backSideScreen"}
+            
             for screen in screenLink.values():
                 try:
                     screen.close()
@@ -424,7 +430,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             programSheet = self.LineEditor.LineInfoList[line_row]["programSheet"]
             row = self.selected_row(self.tableWidget_ProgramSheet)
             if isinstance(row,int):
-                screenLink = {"前路牌":"frontScreen","后路牌":"backScreen","前侧路牌":"frontSideScreen","后侧路牌":"backSideScreen"}
+                
                 for screen in screenLink.values():
                     try:
                         if self.LineEditor.LineInfoList[line_row][screen]["enabled"]:
@@ -576,7 +582,7 @@ class ProgramSheetManager():
     def new_program(self,):
         progName = self.parent.lineEdit_ProgramName.text()
         sec = self.parent.spinBox.value()
-        screenLink = {"前路牌":"frontScreen","后路牌":"backScreen","前侧路牌":"frontSideScreen","后侧路牌":"backSideScreen"}
+        
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
         if isinstance(row,int):
             sbp = [[],[]]
@@ -718,7 +724,7 @@ class ProgramSettler():
 
     def get_currentScreen(self):
         screen = self.parent.combo_LineScreens.currentText()
-        screenLink = {"前路牌":"frontScreen","后路牌":"backScreen","前侧路牌":"frontSideScreen","后侧路牌":"backSideScreen"}
+        
         if screen not in screenLink.keys():
             screen = "前路牌"
         screen = screenLink[screen]
@@ -731,6 +737,13 @@ class ProgramSettler():
             screen = self.get_currentScreen()
             screenUnitList = self.parent.ProgramSheetManager.programSheet[row][2][screen][0]
             screenProgList = self.parent.ProgramSheetManager.programSheet[row][2][screen][1]
+
+            # 更改线路默认屏幕布局
+            progrow = self.parent.selected_row(self.parent.tableWidget_lineChoose)  # 当前选择的线路 注意变量为 progrow
+            self.parent.LineEditor.LineInfoList[progrow][screen]["screenUnit"] = copy.deepcopy(screenUnitList)
+            self.parent.combo_LineScreensForLayout.setCurrentText(self.parent.combo_LineScreens.currentText())  # 当节目内容编辑的屏幕改变时，保持线路设置中的屏幕同步
+            self.parent.LineSettler.show_custom_layout_btn()
+
             for i in range(min(len(screenProgList),len(screenUnitList))):
                 p = screenProgList[i]
                 Creater = BmpCreater(self.parent.IconManager.FontMgr,"1",(255,255,255),p["font"],p["ascFont"],p["sysFontOnly"],)
@@ -741,6 +754,7 @@ class ProgramSettler():
                 data.append([i+1,str(screenUnitList[i]["pointNum"]),str(screenUnitList[i]["pointSize"]),bmp.size])
 
             self.parent.flush_table(self.parent.tableWidget_Screens,data)
+            self.parent.tableWidget_Screens.setCurrentItem(self.parent.tableWidget_Screens.item(0,0))
         else:
             self.parent.flush_table(self.parent.tableWidget_Screens,[])
 
@@ -941,7 +955,7 @@ class LineSettler():
 
     def get_currentScreen(self):
         screen = self.parent.combo_LineScreensForLayout.currentText()
-        screenLink = {"前路牌":"frontScreen","后路牌":"backScreen","前侧路牌":"frontSideScreen","后侧路牌":"backSideScreen"}
+        
         if screen not in screenLink.keys():
             screen = "前路牌"
         screen = screenLink[screen]
@@ -1017,13 +1031,12 @@ class LineSettler():
 
     def retranslate_screenUnit_size(self):
         row = -1    # 只在添加线路后使用一次
-        screenLink = {"前路牌":"frontScreen","后路牌":"backScreen","前侧路牌":"frontSideScreen","后侧路牌":"backSideScreen"}
+        
         if isinstance(row,int):            
             for scn in screenLink.values():
                 colorMode = self.parent.LineEditor.LineInfoList[row][scn]["colorMode"]
                 scnSize = self.parent.LineEditor.LineInfoList[row][scn]["screenSize"]
                 pointKind = str(self.parent.LineEditor.LineInfoList[row][scn]["screenSize"][2]).replace(" ","")
-                pointKindDict = {"(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled","(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled"}
                 pointKind = pointKindDict[pointKind]
                 newScn = copy.deepcopy(template_screenInfo[pointKind+"_"+colorMode])
                 newScn["pointNum"] = [scnSize[0],scnSize[1]]
@@ -1039,12 +1052,12 @@ class LineSettler():
             screenScale = self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][2]
             colorMode = self.parent.LineEditor.LineInfoList[row][screen]["colorMode"]
             self.btn_w = widgetSize[0]
-            self.btn_h = int(self.btn_w*screenSize[1]/screenSize[0])
+            self.btn_h = int((self.btn_w * screenSize[1] * screenScale[1]) / (screenSize[0] * screenScale[0]))
             if self.btn_h > widgetSize[1]:
                 self.btn_w = int(self.btn_w * widgetSize[1] / self.btn_h)
                 self.btn_h = widgetSize[1]
             if len(self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"]) != 0:
-                self.customLayouts = self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"]
+                self.customLayouts = self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"]   # 该线路的默认屏幕布局
 
             if len(self.customLayouts) == 0:
                 self.customLButtons = []
@@ -1066,7 +1079,7 @@ class LineSettler():
                     self.customLButtons[-1].clicked.connect(lambda: self.onButtonClick(colorMode))
                     self.customLButtons[-1].setGeometry(x,y,w,h)
                     self.customLButtons[-1].show()
-            self.parent.ProgramSettler.show_scnUnit()
+            # self.parent.ProgramSettler.show_scnUnit()
 
     def init_layout(self):
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
@@ -1076,7 +1089,6 @@ class LineSettler():
             screenSize = [self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
             screenScale = self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][2]
             pointKind = str(screenScale).replace(" ","")
-            pointKindDict = {"(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled","(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled"}
             pointKind = pointKindDict[pointKind]
             layout = []
             layout.append(copy.deepcopy(template_screenInfo[pointKind+"_"+colorMode]))
@@ -1096,8 +1108,11 @@ class LineSettler():
             self.customLButtons = []
             screen = self.get_currentScreen()
             if len(self.layoutHistory) > 0:
-                self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = copy.deepcopy(self.layoutHistory[self.layoutHistoryCount])
-                self.customLayouts = self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"]
+                try:
+                    self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = copy.deepcopy(self.layoutHistory[self.layoutHistoryCount])
+                    self.customLayouts = self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"]
+                except:
+                    print("撤回出错")
 
             self.show_custom_layout_btn()
 
@@ -1165,7 +1180,6 @@ class LineSettler():
                 self.layoutHistory = self.layoutHistory[0:self.layoutHistoryCount+1]
                 layout = SelfDefineLayoutDialog.combo_Layout.currentText()
                 pointKind = SelfDefineLayoutDialog.combo_PointKind.currentText()
-                pointKindDict = {"(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled","(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled"}
                 pointKind = pointKindDict[pointKind]
                 w = SelfDefineLayoutDialog.spin_SetWidth.value()
                 h = SelfDefineLayoutDialog.spin_SetHeight.value()
