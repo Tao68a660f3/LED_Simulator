@@ -1,6 +1,6 @@
 import sys, os, ast, copy, datetime, gc
 from PyQt5.QtWidgets import QApplication, QWidget, QDialog, QMainWindow, QAbstractItemView, QTableWidgetItem, QHeaderView, QFileDialog, QPushButton, QLabel, QColorDialog, QMenu, QAction, QMessageBox
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtGui import QPixmap, QIcon, QTextCharFormat
 from PyQt5.QtCore import pyqtSignal, Qt, QCoreApplication
 from BmpCreater import FontManager, BmpCreater
 from ControlPanel import Ui_ControlPanel
@@ -10,6 +10,7 @@ from ScreenInfo import *
 from LineInfo import *
 from LedScreenModule import *
 from About import *
+from ColorMultiLine import *
 
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
@@ -201,6 +202,143 @@ class SelfDefineLayout(QDialog,Ui_SelfDefineScreen):
             if self.combo_Layout.currentText() == "垂直布局":
                 self.spin_SetWidth.setEnabled(False)
                 self.spin_SetHeight.setEnabled(True)
+
+class ColorMultiLine(QDialog,Ui_ColorMultiLine):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.initUI()
+        self.text = ""
+        self.multiLine = False
+        self.lineSpace = 0
+        self.colorMode = "1"
+        self.richText = [False,False]  # 第一项：富文本 第二项：文本是否有背景
+
+    def initUI(self):
+        self.setWindowTitle("设置字符串颜色及多行")
+
+        self.textEdit.setStyleSheet("background-color: black;")
+
+        self.foreground_btn.clicked.connect(self.setTextColor)
+        self.background_btn.clicked.connect(self.setBackgroundColor)
+        self.checkBox_multiLine.stateChanged.connect(self.checkBox_changed)
+        self.checkBox_bgcolor.stateChanged.connect(self.checkBox_changed)
+
+    def checkBox_changed(self):
+        self.point_spinBox.setEnabled(self.checkBox_multiLine.isChecked())
+        self.richText[1] = self.checkBox_bgcolor.isChecked()
+        self.background_btn.setEnabled(self.richText[1])
+        
+    def set_value(self,text = "", multiLine = False, lineSpace = 0,colorMode = "1", richText = [False,False]):
+        self.text = text
+        self.multiLine = multiLine
+        self.lineSpace = lineSpace
+        self.colorMode = colorMode
+        self.richText = richText
+        self.checkBox_multiLine.setChecked(self.multiLine)
+        self.checkBox_bgcolor.setChecked(self.richText[1])
+        self.point_spinBox.setEnabled(self.multiLine)
+        self.background_btn.setEnabled(self.richText[1])
+        self.point_spinBox.setValue(self.lineSpace)
+        self.set_textEditor()
+
+    def set_textEditor(self):
+        self.textEdit.clear()
+        cursor = self.textEdit.textCursor()
+        fmt = QTextCharFormat()
+        fmt.setForeground(QColor("#ffffff"))
+        if self.colorMode == "1":            
+            cursor.insertText(self.text, fmt)
+            self.textEdit.setEnabled(False)
+        if self.colorMode == "RGB":
+            if self.richText[0]:
+                data = ast.literal_eval(self.text)
+                for char_data in data:
+                    char = char_data['char']                    
+                    cursor.movePosition(cursor.End)
+                    foreground = QColor(char_data['foreground'])
+                    fmt.setForeground(foreground)
+                    if char_data['background'] == "0" or not self.richText[1]:
+                        background = QColor("#000000")
+                    else:
+                        background = QColor(char_data['background'])
+                    fmt.setBackground(background)
+                    cursor.insertText(char, fmt)
+            else:
+                cursor.insertText(self.text, fmt)
+
+    def setTextColor(self):
+        if self.colorMode == "RGB":
+            self.richText[0] = True
+            color = QColorDialog.getColor(
+                    initial=Qt.white,  # 初始颜色，可选
+                    options=QColorDialog.ShowAlphaChannel  # 显示透明度选择
+                )
+            if color.isValid():
+                cursor = self.textEdit.textCursor()
+                fmt = QTextCharFormat()
+                fmt.setForeground(color)
+                cursor.mergeCharFormat(fmt)
+
+    def setBackgroundColor(self):
+        if self.colorMode == "RGB":
+            self.richText[0] = True
+            color = QColorDialog.getColor(
+                    initial=Qt.white,  # 初始颜色，可选
+                    options=QColorDialog.ShowAlphaChannel  # 显示透明度选择
+                )
+            if color.isValid():
+                cursor = self.textEdit.textCursor()
+                fmt = QTextCharFormat()
+                fmt.setBackground(color)
+                cursor.mergeCharFormat(fmt)
+
+    def translate_to_str(self):
+        if self.richText[0]:
+            data = []
+            cursor = self.textEdit.textCursor()
+            cursor.select(cursor.Document)
+            text = cursor.selectedText()
+            for i in range(len(text)):
+                cursor.setPosition(i)
+                cursor.movePosition(cursor.Right, cursor.KeepAnchor, 1)
+                char_format = cursor.charFormat()
+                if self.richText[1]:
+                    char_data = {
+                        'char': text[i],
+                        'foreground': char_format.foreground().color().name(),
+                        'background': char_format.background().color().name()
+                    }
+                else:
+                    char_data = {
+                        'char': text[i],
+                        'foreground': char_format.foreground().color().name(),
+                        'background': '0'
+                    }
+                data.append(char_data)
+
+            # 催化重整，把颜色，背景色一样的字符合成一个字符串
+            s_d = []
+            for d in data:
+                if len(s_d) >= 1:
+                    if d['foreground'] == s_d[-1]['foreground'] and d['background'] == s_d[-1]['background']:
+                        s_d[-1]['char'] += d['char']
+                    else:
+                        s_d.append(d)
+                else:
+                    s_d.append(d)
+
+            colorstr = str(s_d)
+            return colorstr
+        else:
+            return self.text
+
+    def get_edit_result(self):
+        self.multiLine = self.checkBox_multiLine.isChecked()
+        self.lineSpace = self.point_spinBox.value()
+        self.text = self.translate_to_str()
+
+        return [self.text, self.multiLine, self.lineSpace, self.richText]
 
 class MainWindow(QMainWindow, Ui_ControlPanel):
     def __init__(self, parent=None):
@@ -599,7 +737,7 @@ class ProgramSheetManager():
             self.parent.lineEdit_ProgramName.setText("")
             self.parent.spinBox.setValue(0)
             self.show_program()
-            # # # print(self.programSheet)
+            # print(self.programSheet)
 
     def del_program(self):
         row = self.parent.selected_row(self.parent.tableWidget_ProgramSheet)
@@ -699,10 +837,46 @@ class ProgramSettler():
         self.parent.btn_Colorful_ChooseColor.clicked.connect(self.get_color)
         self.parent.combo_Show.currentTextChanged.connect(self.update_argv)
         self.parent.checkBox_sysFont.stateChanged.connect(self.change_EngFont_set)
+        self.parent.btn_textSetting.clicked.connect(self.set_colorstr_multiLine)
         
         self.parent.lineEdit_Text.editingFinished.connect(self.save_progArgv)
 
         self.parent.btn_ok.setShortcut(Qt.Key_Return)
+
+    def set_colorstr_multiLine(self):
+        colorMode = "1"
+        multiLine = False
+        lineSpace = 0
+        richText = [False,False]
+        text = ""
+        row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
+        if isinstance(row,int):
+            screen = self.get_currentScreen()
+            colorMode = self.parent.LineEditor.LineInfoList[row][screen]["colorMode"]
+            row = self.parent.selected_row(self.parent.tableWidget_ProgramSheet)
+            if isinstance(row,int):
+                self.screenProgList = self.parent.ProgramSheetManager.programSheet[row][2][screen][1]
+                row = self.parent.selected_row(self.parent.tableWidget_Screens)
+                if isinstance(row,int):
+                    try:
+                        text = self.screenProgList[row]["text"]
+                        multiLine = self.screenProgList[row]["multiLine"]
+                        lineSpace = self.screenProgList[row]["lineSpace"]
+                        richText = self.screenProgList[row]["richText"]
+                    except:
+                        pass
+                    ColorMultiLineDialog = ColorMultiLine()
+                    ColorMultiLineDialog.show()
+                    ColorMultiLineDialog.set_value(text,multiLine,lineSpace,colorMode,richText)
+                    if ColorMultiLineDialog.exec_() == QDialog.Accepted:
+                        text, multiLine, lineSpace, richText = ColorMultiLineDialog.get_edit_result()
+
+                        self.screenProgList[row]["text"] = text
+                        self.screenProgList[row]["multiLine"] = multiLine
+                        self.screenProgList[row]["lineSpace"] = lineSpace
+                        self.screenProgList[row]["richText"] = richText
+        
+        self.show_progArgv()
 
     def change_EngFont_set(self):
         if self.parent.checkBox_sysFont.isChecked():
@@ -883,6 +1057,17 @@ class ProgramSettler():
                     except:
                         print("尝试读取2版数据") # 尚未开发完成
 
+                    try:
+                        if self.screenProgList[row]["richText"][0]:
+                            o_str = self.screenProgList[row]["text"]
+                            items = ast.literal_eval(o_str)
+                            n_str = ""
+                            for c in items:
+                                n_str += c['char']
+                            self.parent.lineEdit_Text.setText(n_str)
+                    except:
+                        print("未找到富文本选项")
+
     def save_progArgv(self):
         row = self.parent.selected_row(self.parent.tableWidget_ProgramSheet)
         if isinstance(row,int):
@@ -911,8 +1096,38 @@ class ProgramSettler():
                 self.screenProgList[row]["scale"] = self.parent.spinBox_Zoom.value()
                 self.screenProgList[row]["autoScale"] = self.parent.chk_AutoZoom.isChecked()
                 self.screenProgList[row]["scaleSysFontOnly"] = self.parent.chk_Argv1.isChecked()
-                self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
+                # self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()  # 见下
                 self.screenProgList[row]["color_1"] = self.parent.combo_SingleColorChoose.currentText()
+
+                #为适应彩色字符串修改
+                simple_origin_text = self.parent.lineEdit_Text.text()
+                text_list_str = ""
+                try:
+                    if self.screenProgList[row]["richText"][0]:    # 支持富文本
+                        text_list = ast.literal_eval(self.screenProgList[row]["text"])  # 并且实际上已经是字符串形式的列表，不然进入except
+                        # print("text_list:",text_list)
+                        # print(self.screenProgList[row]["text"])
+                        for i in text_list:
+                            text_list_str += i["char"]
+                            # print("i:",i,"text_list_str:",text_list_str)
+                        if text_list_str == simple_origin_text:
+                            pass
+                        else:
+                            color = [text_list[0]["foreground"],text_list[0]["background"]]  # 如果一级界面上的字符串被再次编辑了，重新生成字符串列表，并保存为字符串形式，以第一个字符的颜色为基准
+                            text_list = []
+                            for ch in simple_origin_text:
+                                char_data = {
+                                    'char': ch,
+                                    'foreground': color[0],
+                                    'background': color[1]
+                                }
+                                text_list.append(char_data)
+                            self.screenProgList[row]["text"] = str(text_list)
+                    else:
+                        self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
+                except:   # 支持富文本，但字符串似乎不能转换为列表
+                    self.screenProgList[row]["richText"][0] = False
+                    self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
 
         self.parent.change_program()
 
@@ -1122,7 +1337,7 @@ class LineSettler():
                 self.layoutHistoryCount-=1
             if not p and self.layoutHistoryCount < len(self.layoutHistory)-1:
                 self.layoutHistoryCount+=1
-            print(self.layoutHistoryCount,self.layoutHistory,"\n\n")
+            # print(self.layoutHistoryCount,self.layoutHistory,"\n\n")
             self.customLButtons = []
             screen = self.get_currentScreen()
             if len(self.layoutHistory) > 0:

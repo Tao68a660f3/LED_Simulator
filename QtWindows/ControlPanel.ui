@@ -901,7 +901,7 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="1,0">
+             <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="4,1,2">
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_9">
                 <item>
@@ -914,7 +914,14 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="combo_SingleColorChoose"/>
+                   <widget class="QComboBox" name="combo_SingleColorChoose">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
                   </item>
                  </layout>
                 </item>
@@ -929,6 +936,12 @@
                   </item>
                   <item>
                    <widget class="QPushButton" name="btn_Colorful_ChooseColor">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
                     <property name="text">
                      <string>选择颜色</string>
                     </property>
@@ -937,6 +950,25 @@
                  </layout>
                 </item>
                </layout>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_textSetting">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>颜色/多行</string>
+                </property>
+               </widget>
               </item>
               <item>
                <widget class="QPushButton" name="btn_ok">
@@ -949,7 +981,7 @@
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>66</height>
+                  <height>16777215</height>
                  </size>
                 </property>
                 <property name="text">

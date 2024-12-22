@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont, ImageChops
 # import numpy as np
-import binascii, re, os#, freetype
+import binascii, re, os, ast #, freetype
 
 class ASC_font_Reader():
     def __init__(self,relative_path,font_path):
@@ -355,47 +355,78 @@ class BmpCreater():
 
     def create_character(self,vertical=False, roll_asc = False, text="", ch_font_size=16, asc_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, y_offset_asc = 0, style = 0):
         IMAGES = []
-        tasks = self.find_backtick_strings(text)
+        tasks = []
+        try:
+            coloredstritems = ast.literal_eval(text)
+            for coloredstr in coloredstritems:
+                task = [self.find_backtick_strings(coloredstr['char']),coloredstr['foreground'],coloredstr['background']]
+                tasks.append(task)
+        except:
+            tasks = [[self.find_backtick_strings(text),"0","0"]]  # [任务列表，前景色，背景色]
+        # print(tasks)
         for task in tasks:
-            if task in self.FontManager.icon_dict.keys():
-                try:
-                    ico = Image.open(self.relative_path+self.FontManager.icon_dict[task])
-                    if self.color_type == "1":
-                        ico = ImageChops.invert(ico)
-                        ico = ico.convert('1')
-                    elif self.color_type == "RGB":
-                        ico = ico.convert("RGBA")
-                    IMAGES.append(ico)
-                except:
-                    pass     
-            else:
-                font_tasks = list(task)
-                for chr in font_tasks:
-                    if chr.isascii():
-                        ch = self.ASC_Reader.get_text_bmp(chr,y_offset_asc,asc_font_size,ch_bold_size_x,ch_bold_size_y,100)
-                    else:
-                        if scale_sys_font_only:
-                            sscale = scale
+            # 获取前景色背景色
+            if task[1] != "0":
+                foc = tuple(int(task[1][i:i+2], 16) for i in (1, 3, 5))
+                if task[2] != "0":
+                    bac = tuple(int(task[2][i:i+2], 16) for i in (1, 3, 5))
+                else:
+                    bac = (0, 0, 0, 0)
+
+            # print(task)
+            # print(self.FontManager.icon_dict.keys())
+
+            for sub_task in task[0]:   # sub_task：剪开了的字符串
+                # print(sub_task)
+                if sub_task in self.FontManager.icon_dict.keys():
+                    try:
+                        ico = Image.open(self.relative_path+self.FontManager.icon_dict[sub_task])
+                        if self.color_type == "1":
+                            ico = ImageChops.invert(ico)
+                            ico = ico.convert('1')
+                        elif self.color_type == "RGB":
+                            ico = ico.convert("RGBA")
+                        IMAGES.append(ico)
+                    except:
+                        pass     
+                else:
+                    font_tasks = list(sub_task)
+                    for chr in font_tasks:
+                        if chr.isascii():
+                            ch = self.ASC_Reader.get_text_bmp(chr,y_offset_asc,asc_font_size,ch_bold_size_x,ch_bold_size_y,100)
                         else:
-                            sscale = 100
-                        ch = self.Ch_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,sscale)
+                            if scale_sys_font_only:
+                                sscale = scale
+                            else:
+                                sscale = 100
+                            ch = self.Ch_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,sscale)
 
-                    if self.color_type == "RGB":
-                        # 创建一个新的彩色图像，模式为RGB，大小与原图相同
-                        cch = Image.new("RGBA", ch.size, self.color)                        
-                        # 将原图的非黑色部分（即白色部分）用指定颜色替换
-                        for x in range(ch.width):
-                            for y in range(ch.height):
-                                if ch.getpixel((x, y)) != 0:  # 白色部分
-                                    cch.putpixel((x, y), self.color)
-                                else:  # 黑色部分，保持透明或设为其他颜色
-                                    cch.putpixel((x, y), (0, 0, 0, 0))  # 这里设置为黑色
-                        ch = cch
+                        if self.color_type == "RGB":
+                            # 创建一个新的彩色图像，模式为RGB，大小与原图相同
+                            cch = Image.new("RGBA", ch.size, self.color)
+                            if task[1] == "0":
+                                # 将原图的非黑色部分（即白色部分）用指定颜色替换
+                                for x in range(ch.width):
+                                    for y in range(ch.height):
+                                        if ch.getpixel((x, y)) != 0:  # 白色部分
+                                            cch.putpixel((x, y), self.color)
+                                        else:  # 黑色部分，保持透明或设为其他颜色
+                                            cch.putpixel((x, y), (0, 0, 0, 0))  # 这里设置为黑色
+                            else:
+                                # 将原图的非黑色部分（即白色部分）用指定颜色替换
+                                for x in range(ch.width):
+                                    for y in range(ch.height):
+                                        if ch.getpixel((x, y)) != 0:  # 白色部分
+                                            cch.putpixel((x, y), foc)
+                                        else:  # 黑色部分，保持透明或设为其他颜色
+                                            cch.putpixel((x, y), bac)  # 这里设置为黑色
+                                
+                            ch = cch
 
-                    if chr.isascii() and vertical and roll_asc:
-                        ch = ch.transpose(Image.ROTATE_270)
+                        if chr.isascii() and vertical and roll_asc:
+                            ch = ch.transpose(Image.ROTATE_270)
 
-                    IMAGES.append(ch)
+                        IMAGES.append(ch)
         # 拼接图像
         new_image = self.hconcat_images(IMAGES,vertical,space,style)
         img_width = new_image.width
@@ -412,10 +443,11 @@ class BmpCreater():
         return new_image
     
 if __name__ == "__main__":
+    t = "[{'char': '在本文中，', 'foreground': '#ffffff', 'background': '0'}, {'char': '我们', 'foreground': '#ffab81', 'background': '0'}, {'char': '介绍了', 'foreground': '#75ffca', 'background': '0'}, {'char': '四种', 'foreground': '#395dff', 'background': '0'}, {'char': '将单个文件', 'foreground': '#ffffff', 'background': '0'}, {'char': '恢复到', 'foreground': '#ff40b6', 'background': '0'}, {'char': '以前版本', 'foreground': '#ffff00', 'background': '0'}, {'char': '的方法', 'foreground': '#ffffff', 'background': '0'}]"
     ch_font="等线"
     asc_font="Arial"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, roll_asc = False, text="`wheelchair32x32`铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=24, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=-50, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, y_offset_asc = 0, style = 0)
+    font_img = FontCreater.create_character(vertical=0, roll_asc = False, text=t, ch_font_size=24, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=-50, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, y_offset_asc = 0, style = 0)
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]
