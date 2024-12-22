@@ -41,7 +41,7 @@ class ScreenController(QWidget):
             for s in {"frontScreen","backScreen","frontSideScreen","backSideScreen"}:
                 self.screenProgramSheet[0][2][s][0][0]["pointNum"] = self.screenSize
                 self.screenProgramSheet[0][2][s][0][0]["scale"] = self.screenScale
-                self.screenProgramSheet[0][2][s][0][0]["pointSize"] = int(self.screenScale[0]*0.8)
+                # self.screenProgramSheet[0][2][s][0][0]["pointSize"] = int(self.screenScale[0]*0.8)   #应该有误，不需要这行代码
 
         self.timer1 = QTimer(self)
         self.timer1.timeout.connect(self.update)
@@ -706,8 +706,7 @@ class ScreenUnit():
         try:
             self.x_offset = self.progSheet["x_offset"]
         except:
-            pass
-            # print("旧版程序不可设置出现位置")
+            print("显示屏模块尝试读取1版设置")
         
         if not self.progSheet["vertical"]:
             align = self.progSheet["align"]
@@ -741,6 +740,11 @@ class ScreenUnit():
             elif ("上" in self.appearance or "下"  in self.appearance):
                 self.y += self.x_offset
 
+        try:
+            self.y += self.progSheet["y_offset_global"]
+        except:
+            print("显示屏模块尝试读取2版设置") # 尚未开发完成
+
     def createFontImg(self):
         try:
             self.Bitmap = self.BmpCreater.create_character(vertical=self.progSheet["vertical"], roll_asc = self.progSheet["rollAscii"], text=self.progSheet["text"], ch_font_size=self.progSheet["fontSize"], asc_font_size=self.progSheet["ascFontSize"], ch_bold_size_x=self.progSheet["bold"][0], ch_bold_size_y=self.progSheet["bold"][1], space=self.progSheet["spacing"], scale=self.progSheet["scale"], auto_scale=self.progSheet["autoScale"], scale_sys_font_only=self.progSheet["scaleSysFontOnly"], new_width = self.pointNum[0], new_height = self.pointNum[1], y_offset = self.progSheet["y_offset"], y_offset_asc = self.progSheet["y_offset_asc"], style = self.progSheet["align"][1])
@@ -760,7 +764,7 @@ if __name__ == '__main__':
     }
     screenInfomation["screenProgramSheet"][0][2]["frontScreen"][0][0]["pointNum"] = screenInfomation['screenInfo']['screenSize'][:2]
     screenInfomation["screenProgramSheet"][0][2]["frontScreen"][0][0]["scale"] = screenInfomation['screenInfo']['screenSize'][2]
-    screenInfomation["screenProgramSheet"][0][2]["frontScreen"][0][0]["pointSize"] = int(screenInfomation['screenInfo']['screenSize'][2][0]*0.8)
+    # screenInfomation["screenProgramSheet"][0][2]["frontScreen"][0][0]["pointSize"] = int(screenInfomation['screenInfo']['screenSize'][2][0]*0.8) #应该有误，不需要这行代码
     app = QApplication(sys.argv)
     ex = ScreenController(flushRate=screenInfomation["flushRate"],screenInfo=screenInfomation["screenInfo"],screenProgramSheet=[],FontIconMgr=FontManager(),toDisplay="frontScreen")
     sys.exit(app.exec_())

@@ -423,6 +423,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             scn = ScreenController(flushRate=self.LineEditor.LineInfoList[row]["flushRate"],screenInfo={"colorMode":self.LineEditor.LineInfoList[row][screen]["colorMode"],"screenSize":self.LineEditor.LineInfoList[row][screen]["screenSize"]},screenProgramSheet=self.LineEditor.LineInfoList[row]["programSheet"],FontIconMgr=self.IconManager.FontMgr,toDisplay=screen)
             scn.move(100,100)
             self.LedScreens[screen] = scn
+        self.change_program()
 
     def change_program(self):
         line_row = self.selected_row(self.tableWidget_lineChoose)
@@ -669,7 +670,7 @@ class ProgramSettler():
         self.parent.spinBox_Argv_3.setMaximum(60)
         self.parent.spinBox_Argv_3.setMinimum(0)
         self.parent.spinBox_WordSpace.setMaximum(100)
-        self.parent.spinBox_WordSpace.setMinimum(0)
+        self.parent.spinBox_WordSpace.setMinimum(-100)
         self.parent.spinBox_BoldSizeX.setMaximum(4)
         self.parent.spinBox_BoldSizeX.setMinimum(1)
         self.parent.spinBox_BoldSizeY.setMaximum(4)
@@ -680,6 +681,8 @@ class ProgramSettler():
         self.parent.spinBox_Y_Offset_2.setMinimum(-64)
         self.parent.spinBox_X_Offset.setMaximum(65536)
         self.parent.spinBox_X_Offset.setMinimum(-65536)
+        self.parent.spinBox_Y_GlobalOffset.setMaximum(65536)
+        self.parent.spinBox_Y_GlobalOffset.setMinimum(-65536)
         self.parent.spinBox_Align_x.setMaximum(1)
         self.parent.spinBox_Align_x.setMinimum(-1)
         self.parent.spinBox_Align_y.setMaximum(1)
@@ -869,11 +872,16 @@ class ProgramSettler():
                         self.parent.spinBox_Y_Offset_2.setValue(self.screenProgList[row]["y_offset_asc"])
                         self.parent.spinBox_X_Offset.setValue(self.screenProgList[row]["x_offset"])
                     except:
-                        print("尝试读取旧版数据")
+                        print("尝试读取1版数据")
                         self.screenProgList[row]["ascFontSize"] = 16
                         self.screenProgList[row]["argv_3"] = 1
                         self.screenProgList[row]["y_offset_asc"] = 0
                         self.screenProgList[row]["x_offset"] = 0
+
+                    try:
+                        self.parent.spinBox_Y_GlobalOffset.setValue(self.screenProgList[row]["y_offset_global"])
+                    except:
+                        print("尝试读取2版数据") # 尚未开发完成
 
     def save_progArgv(self):
         row = self.parent.selected_row(self.parent.tableWidget_ProgramSheet)
@@ -897,6 +905,7 @@ class ProgramSettler():
                 self.screenProgList[row]["y_offset"] = self.parent.spinBox_Y_Offset.value()
                 self.screenProgList[row]["y_offset_asc"] = self.parent.spinBox_Y_Offset_2.value()
                 self.screenProgList[row]["x_offset"] = self.parent.spinBox_X_Offset.value()
+                self.screenProgList[row]["y_offset_global"] = self.parent.spinBox_Y_GlobalOffset.value()
                 self.screenProgList[row]["align"][0] = self.parent.spinBox_Align_x.value()
                 self.screenProgList[row]["align"][1] = self.parent.spinBox_Align_y.value()
                 self.screenProgList[row]["scale"] = self.parent.spinBox_Zoom.value()
@@ -1313,6 +1322,7 @@ class LineSettler():
             else:
                 self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = [copy.deepcopy(template_screenInfo["midSize_1"])]
             self.parent.ProgramSettler.show_scnUnit()
+        self.set_linemode_pixmap()
 
 class LineController():
     def __init__(self, parent):
