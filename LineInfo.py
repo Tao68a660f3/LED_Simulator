@@ -362,6 +362,7 @@ template_program_show = {
         "y_offset":0,
         "y_offset_asc":0,
         "x_offset":0,
+        "y_offset_global":0,
         "align":[0,0], # x对齐，y对齐
         "scale":100,
         "autoScale":False,

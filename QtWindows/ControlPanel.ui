@@ -809,12 +809,22 @@
                 <item>
                  <widget class="QLabel" name="label_Y_Offset_3">
                   <property name="text">
-                   <string>水平偏移（出现位置）</string>
+                   <string>水平位置</string>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QSpinBox" name="spinBox_X_Offset"/>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_Y_Offset_4">
+                  <property name="text">
+                   <string>竖直位置</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="spinBox_Y_GlobalOffset"/>
                 </item>
                </layout>
               </item>
