@@ -256,7 +256,7 @@ class BmpCreater():
         except:
             self.asc_font = self.FontManager.font_dict["宋体"]
         self.color_type = color_type
-        self.color = (color[0],color[1],color[2])
+        self.color = (color[0],color[1],color[2],255)
 
         asc_font_type = self.asc_font.split(".")[-1].lower()
         ch_font_type = self.ch_font.split(".")[-1].lower()
@@ -302,11 +302,27 @@ class BmpCreater():
             total_height = max(image.height for image in image_list)
             total_width = sum(image.width for image in image_list)
             # 创建一个新的图像作为画布，背景为白色
-            new_image = Image.new(self.color_type, (total_width+space*(len(image_list)-1), total_height))
+            if space >= 0:
+                new_image = Image.new(self.color_type, (total_width+space*(len(image_list)-1), total_height))
+            elif space >= -100:
+                if len(image_list) > 1:
+                    total_width = 0
+                    for im in image_list[:-1]:
+                        total_width += int(im.width * (100 + space) / 100)
+                    total_width += image_list[-1].width
+                new_image = Image.new(self.color_type, (total_width, total_height))
         else:
             total_height = sum(image.height for image in image_list)
             total_width = max(image.width for image in image_list)
-            new_image = Image.new(self.color_type, (total_width, total_height+space*(len(image_list)-1)))        
+            if space >= 0:
+                new_image = Image.new(self.color_type, (total_width, total_height+space*(len(image_list)-1)))
+            elif space >= -100:
+                if len(image_list) > 1:
+                    total_height = 0
+                    for im in image_list[:-1]:
+                        total_height += int(im.height * (100 + space) / 100)
+                    total_height += image_list[-1].height
+                new_image = Image.new(self.color_type, (total_width, total_height))
         # 在新图像上依次粘贴每个图像
         x_offset = 0
         y_offset = 0
@@ -321,14 +337,20 @@ class BmpCreater():
                 x_offset = int(k*(total_width-image.width))
             else:
                 y_offset = int(k*(total_height-image.height))
-            # 计算每个图像粘贴的位置，使其顶部对齐
-            new_image.paste(image, (x_offset, y_offset))
+            # 计算每个图像粘贴的位置
+            new_image.paste(image, (x_offset, y_offset), image)
             if not vertical:
-                x_offset += image.width
-                x_offset += space
+                if space >= 0:
+                    x_offset += image.width
+                    x_offset += space
+                elif space >= -100:
+                    x_offset += int(image.width * (100 + space) / 100)
             else:
-                y_offset += image.height
-                y_offset += space        
+                if space >= 0:
+                    y_offset += image.height
+                    y_offset += space
+                elif space >= -100:
+                    y_offset += int(image.height * (100 + space) / 100)
         return new_image
 
     def create_character(self,vertical=False, roll_asc = False, text="", ch_font_size=16, asc_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, y_offset_asc = 0, style = 0):
@@ -341,6 +363,8 @@ class BmpCreater():
                     if self.color_type == "1":
                         ico = ImageChops.invert(ico)
                         ico = ico.convert('1')
+                    elif self.color_type == "RGB":
+                        ico = ico.convert("RGBA")
                     IMAGES.append(ico)
                 except:
                     pass     
@@ -358,14 +382,14 @@ class BmpCreater():
 
                     if self.color_type == "RGB":
                         # 创建一个新的彩色图像，模式为RGB，大小与原图相同
-                        cch = Image.new("RGB", ch.size, self.color)                        
+                        cch = Image.new("RGBA", ch.size, self.color)                        
                         # 将原图的非黑色部分（即白色部分）用指定颜色替换
                         for x in range(ch.width):
                             for y in range(ch.height):
                                 if ch.getpixel((x, y)) != 0:  # 白色部分
                                     cch.putpixel((x, y), self.color)
                                 else:  # 黑色部分，保持透明或设为其他颜色
-                                    cch.putpixel((x, y), (0, 0, 0))  # 这里设置为黑色
+                                    cch.putpixel((x, y), (0, 0, 0, 0))  # 这里设置为黑色
                         ch = cch
 
                     if chr.isascii() and vertical and roll_asc:
@@ -391,7 +415,7 @@ if __name__ == "__main__":
     ch_font="等线"
     asc_font="Arial"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, roll_asc = False, text="`wheelchair32x32`铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=24, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, y_offset_asc = 0, style = 0)
+    font_img = FontCreater.create_character(vertical=0, roll_asc = False, text="`wheelchair32x32`铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=24, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=-50, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, y_offset_asc = 0, style = 0)
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]
