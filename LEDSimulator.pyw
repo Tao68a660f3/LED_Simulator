@@ -1126,8 +1126,11 @@ class ProgramSettler():
                     else:
                         self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
                 except:   # 支持富文本，但字符串似乎不能转换为列表
-                    self.screenProgList[row]["richText"][0] = False
-                    self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
+                    try:
+                        self.screenProgList[row]["richText"][0] = False
+                        self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
+                    except:
+                        print("文件版本过低")
 
         self.parent.change_program()
 
