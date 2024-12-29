@@ -324,8 +324,8 @@ class BmpCreater():
 
             if not vertical:
                 # 计算所有图像的最大高度和宽度之和
-                total_height = max(image.height for image in image_list)
-                total_width = sum(image.width for image in image_list)
+                total_height = max(image["img"].height for image in image_list)
+                total_width = sum(image["img"].width for image in image_list)
                 # 创建一个新的图像作为画布，背景为白色
                 if space >= 0 and not pmc:
                     new_image = Image.new(color_type, (total_width+space*(len(image_list)-1), total_height))
@@ -333,32 +333,32 @@ class BmpCreater():
                     if len(image_list) > 1:
                         if pmc:
                             for im in image_list[:-1]:
-                                total_width += int(im.width * (line_space - 1))
+                                total_width += int(im["img"].width * (line_space - 1))
                             if total_width == 0:
-                                total_width += im.width
+                                total_width += im["img"].width
                         else:
                             total_width = 0
                             for im in image_list[:-1]:
-                                total_width += int(im.width * (100 + space) / 100)
-                            total_width += im.width
+                                total_width += int(im["img"].width * (100 + space) / 100)
+                            total_width += im["img"].width
                     new_image = Image.new(color_type, (total_width, total_height))
             else:
-                total_height = sum(image.height for image in image_list)
-                total_width = max(image.width for image in image_list)
+                total_height = sum(image["img"].height for image in image_list)
+                total_width = max(image["img"].width for image in image_list)
                 if space >= 0 and not pmc:
                     new_image = Image.new(color_type, (total_width, total_height+space*(len(image_list)-1)))
                 elif space >= -100 or pmc:
                     if len(image_list) > 1:                    
                         if pmc:
                             for im in image_list[:-1]:
-                                total_height += int(im.height * (line_space - 1))
+                                total_height += int(im["img"].height * (line_space - 1))
                             if total_height == 0:
-                                total_height += im.height
+                                total_height += im["img"].height
                         else:
                             total_height = 0
                             for im in image_list[:-1]:
-                                total_height += int(im.height * (100 + space) / 100)
-                            total_height += im.height
+                                total_height += int(im["img"].height * (100 + space) / 100)
+                            total_height += im["img"].height
                     new_image = Image.new(color_type, (total_width, total_height))
             # 在新图像上依次粘贴每个图像
             x_offset = 0
@@ -373,16 +373,16 @@ class BmpCreater():
                 k = 1
             for image in image_list:
                 if vertical:
-                    x_offset = int(k*(total_width-image.width))
+                    x_offset = int(k*(total_width-image["img"].width))
                 else:
-                    y_offset = int(k*(total_height-image.height))
+                    y_offset = int(k*(total_height-image["img"].height))
 
                 if reverse and len(exp_size) == 1:
                     if vertical:
-                        real_y = total_height - image.height - y_offset
+                        real_y = total_height - image["img"].height - y_offset
                         real_x = x_offset
                     else:
-                        real_x = total_width - image.width - x_offset
+                        real_x = total_width - image["img"].width - x_offset
                         real_y = y_offset
                 else:
                     real_y = y_offset
@@ -391,23 +391,23 @@ class BmpCreater():
                 print(reverse and len(exp_size) == 1, x_offset,y_offset," ",real_x,real_y)
 
                 # 计算每个图像粘贴的位置
-                new_image.paste(image, (real_x, real_y), image)
+                new_image.paste(image["img"], (real_x, real_y), image["img"])
                 if not vertical:
                     if space >= 0 and not pmc:
-                        x_offset += image.width
+                        x_offset += image["img"].width
                         x_offset += space
                     elif space >= -100 and not pmc:
-                        x_offset += int(image.width * (100 + space) / 100)
+                        x_offset += int(image["img"].width * (100 + space) / 100)
                     if pmc:
-                        x_offset += int(im.width * line_space)
+                        x_offset += int(image["img"].width * line_space)
                 else:
                     if space >= 0 and not pmc:
-                        y_offset += image.height
+                        y_offset += image["img"].height
                         y_offset += space
                     elif space >= -100 and not pmc:
-                        y_offset += int(image.height * (100 + space) / 100)
+                        y_offset += int(image["img"].height * (100 + space) / 100)
                     if pmc:
-                        y_offset += int(im.height * line_space)
+                        y_offset += int(image["img"].height * line_space)
 
             return new_image
         
@@ -422,14 +422,14 @@ class BmpCreater():
                 exps = exp_size[1]
             for i in range(len(image_list)):
                 if not vertical:    # 水平排列分成多行
-                    current_size = image_list[i].width
+                    current_size = image_list[i]["img"].width
                 else:    # 垂直排列为多列
-                    current_size = image_list[i].height
+                    current_size = image_list[i]["img"].height
 
                 # print(i)
 
                 if t_li_size < exps:
-                    t_li.append(image_list[i])
+                    t_li.append({"img": image_list[i]["img"], "chr": None})
                     t_li_size += current_size
                     if space > 0:
                         t_li_size += space
@@ -438,8 +438,9 @@ class BmpCreater():
                         if v > 0:
                             t_li_size = v
 
-                if t_li_size + current_size > exps or i+1 == len(image_list):
-                    li.append(self.hconcat_images(t_li, vertical, space, style, {"stat": False, "line_space": line_space, "exp_size": exp_size}))
+                if t_li_size + current_size > exps or i+1 == len(image_list) or image_list[i]["chr"] in ["\n","\u2029"]:
+                    line_img = self.hconcat_images(t_li, vertical, space, style, {"stat": False, "line_space": line_space, "exp_size": exp_size})
+                    li.append({"img": line_img, "chr": None})
                     t_li = []
                     t_li_size = 0
 
@@ -534,7 +535,7 @@ class BmpCreater():
                         if chr.isascii() and vertical and roll_asc:
                             ch = ch.transpose(Image.ROTATE_270)
 
-                        IMAGES.append(ch)
+                        IMAGES.append({"img": ch, "chr": chr})
         # 拼接图像
         if new_width != None and new_height != None and not auto_scale:
             exp_size = [new_width, new_height]
@@ -556,11 +557,12 @@ class BmpCreater():
         return new_image
     
 if __name__ == "__main__":
-    t = "[{'char': '在本文中，', 'foreground': '#ffffff', 'background': '0'}, {'char': '我们', 'foreground': '#ffab81', 'background': '0'}, {'char': '介绍了', 'foreground': '#75ffca', 'background': '0'}, {'char': '四种', 'foreground': '#395dff', 'background': '0'}, {'char': '将单个文件', 'foreground': '#ffffff', 'background': '0'}, {'char': '恢复到', 'foreground': '#ff40b6', 'background': '0'}, {'char': '以前版本', 'foreground': '#ffff00', 'background': '0'}, {'char': '的方法', 'foreground': '#ffffff', 'background': '0'}]"
+    # t = "[{'char': '在本文中，', 'foreground': '#ffffff', 'background': '0'}, {'char': '我们', 'foreground': '#ffab81', 'background': '0'}, {'char': '介绍了', 'foreground': '#75ffca', 'background': '0'}, {'char': '四种', 'foreground': '#395dff', 'background': '0'}, {'char': '将单个文件', 'foreground': '#ffffff', 'background': '0'}, {'char': '恢复到', 'foreground': '#ff40b6', 'background': '0'}, {'char': '以前版本', 'foreground': '#ffff00', 'background': '0'}, {'char': '的方法', 'foreground': '#ffffff', 'background': '0'}]"
+    t = "欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播\n放而不是第三方弹窗。[doge][doge]"
     ch_font="等线"
     asc_font="Arial"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=True, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=12, scale=100, auto_scale=0, scale_sys_font_only=0, new_width = 128, new_height = 64, y_offset = 0, y_offset_asc = 0, style = [0,0], multi_line = {"stat":True, "line_space": -1.5 })
+    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=2, scale=100, auto_scale=0, scale_sys_font_only=0, new_width = 128, new_height = 64, y_offset = 0, y_offset_asc = 0, style = [0,0], multi_line = {"stat":True, "line_space": 1.5 })
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]

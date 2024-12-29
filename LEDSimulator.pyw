@@ -226,6 +226,7 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
 
         self.point_spinBox.setMaximum(5)
         self.point_spinBox.setMinimum(-5)
+        self.point_spinBox.setValue(1)
 
         self.foreground_btn.clicked.connect(self.setTextColor)
         self.background_btn.clicked.connect(self.setBackgroundColor)
