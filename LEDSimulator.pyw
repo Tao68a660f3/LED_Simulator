@@ -1147,14 +1147,19 @@ class ProgramSettler():
                                 }
                             text_list.append(char_data)
                             self.screenProgList[row]["text"] = str(text_list)
+                            
                     else:
                         self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
+                    print(self.screenProgList[row]["text"])
                 except:   # 支持富文本，但字符串似乎不能转换为列表
                     try:
                         self.screenProgList[row]["richText"][0] = False
                         self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
-                    except:
+                        print(self.screenProgList[row]["text"])
+                    except Exception as e:
+                        print(e)
                         print("文件版本过低")
+                        self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
 
         self.parent.change_program()     # 不可改变顺序
         self.show_scnUnit()
