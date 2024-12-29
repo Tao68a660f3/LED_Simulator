@@ -496,7 +496,8 @@ class BmpCreater():
                             ico = ico.convert('1')
                         elif self.color_type == "RGB":
                             ico = ico.convert("RGBA")
-                        IMAGES.append(ico)
+                        icon = {"img": ico, "chr": None}
+                        IMAGES.append(icon)
                     except:
                         pass     
                 else:
@@ -558,7 +559,7 @@ class BmpCreater():
     
 if __name__ == "__main__":
     # t = "[{'char': '在本文中，', 'foreground': '#ffffff', 'background': '0'}, {'char': '我们', 'foreground': '#ffab81', 'background': '0'}, {'char': '介绍了', 'foreground': '#75ffca', 'background': '0'}, {'char': '四种', 'foreground': '#395dff', 'background': '0'}, {'char': '将单个文件', 'foreground': '#ffffff', 'background': '0'}, {'char': '恢复到', 'foreground': '#ff40b6', 'background': '0'}, {'char': '以前版本', 'foreground': '#ffff00', 'background': '0'}, {'char': '的方法', 'foreground': '#ffffff', 'background': '0'}]"
-    t = "欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播\n放而不是第三方弹窗。[doge][doge]"
+    t = "欢迎使用音乐播`dnArrow2`放器 真正的“电脑爱好者”都应该用自动播\n放而不是第三方弹窗。[doge][doge]"
     ch_font="等线"
     asc_font="Arial"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
