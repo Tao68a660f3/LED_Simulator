@@ -261,6 +261,8 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
             self.textEdit.clear()         
             cursor.insertText(self.text, fmt)
             self.textEdit.setEnabled(False)
+            self.foreground_btn.setEnabled(False)
+            self.background_btn.setEnabled(False)
         if self.colorMode == "RGB":
             if self.richText[0]:
                 try:
@@ -284,7 +286,7 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
                 cursor.insertText(self.text, fmt)
 
     def setTextColor(self):
-        self.richText[0] = True
+        # self.richText[0] = True
         color = QColorDialog.getColor(
             initial=Qt.white,
             options=QColorDialog.ShowAlphaChannel
@@ -310,42 +312,44 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
             cursor.mergeCharFormat(fmt)
 
     def translate_to_str(self):
-        self.richText[0] = True
-        data = []
-        cursor = self.textEdit.textCursor()
-        cursor.select(cursor.Document)
-        text = cursor.selectedText()
-        for i in range(len(text)):
-            cursor.setPosition(i)
-            cursor.movePosition(cursor.Right, cursor.KeepAnchor, 1)
-            char_format = cursor.charFormat()
-            if self.richText[1]:
-                char_data = {
-                    'char': text[i],
-                    'foreground': char_format.foreground().color().name(QColor.HexArgb),
-                    'background': char_format.background().color().name(QColor.HexArgb)
-                }
-            else:
-                char_data = {
-                    'char': text[i],
-                    'foreground': char_format.foreground().color().name(QColor.HexArgb),
-                    'background': '0'
-                }
-            data.append(char_data)
+        if self.richText[0]:
+            data = []
+            cursor = self.textEdit.textCursor()
+            cursor.select(cursor.Document)
+            text = cursor.selectedText()
+            for i in range(len(text)):
+                cursor.setPosition(i)
+                cursor.movePosition(cursor.Right, cursor.KeepAnchor, 1)
+                char_format = cursor.charFormat()
+                if self.richText[1]:
+                    char_data = {
+                        'char': text[i],
+                        'foreground': char_format.foreground().color().name(QColor.HexArgb),
+                        'background': char_format.background().color().name(QColor.HexArgb)
+                    }
+                else:
+                    char_data = {
+                        'char': text[i],
+                        'foreground': char_format.foreground().color().name(QColor.HexArgb),
+                        'background': '0'
+                    }
+                data.append(char_data)
 
-        # 催化重整，把颜色，背景色一样的字符合成一个字符串
-        s_d = []
-        for d in data:
-            if len(s_d) >= 1:
-                if d['foreground'] == s_d[-1]['foreground'] and d['background'] == s_d[-1]['background']:
-                    s_d[-1]['char'] += d['char']
+            # 催化重整，把颜色，背景色一样的字符合成一个字符串
+            s_d = []
+            for d in data:
+                if len(s_d) >= 1:
+                    if d['foreground'] == s_d[-1]['foreground'] and d['background'] == s_d[-1]['background']:
+                        s_d[-1]['char'] += d['char']
+                    else:
+                        s_d.append(d)
                 else:
                     s_d.append(d)
-            else:
-                s_d.append(d)
 
-        colorstr = str(s_d)
-        return colorstr
+            colorstr = str(s_d)
+            return colorstr
+        else:
+            return self.text
 
     def get_edit_result(self):
         self.multiLine = self.checkBox_multiLine.isChecked()

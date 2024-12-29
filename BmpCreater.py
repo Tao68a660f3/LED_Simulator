@@ -563,7 +563,7 @@ if __name__ == "__main__":
     ch_font="等线"
     asc_font="Arial"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=2, scale=100, auto_scale=0, scale_sys_font_only=0, new_width = 128, new_height = 64, y_offset = 0, y_offset_asc = 0, style = [0,0], multi_line = {"stat":True, "line_space": 1.5 })
+    font_img = FontCreater.create_character(vertical=True, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=2, scale=100, auto_scale=0, scale_sys_font_only=0, new_width = 128, new_height = 64, y_offset = 0, y_offset_asc = 0, style = [0,0], multi_line = {"stat":True, "line_space": 1.5 })
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]
