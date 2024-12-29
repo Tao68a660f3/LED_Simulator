@@ -950,8 +950,12 @@ class ProgramSettler():
                     bmp = Creater.create_character(vertical=p["vertical"], roll_asc = True, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["fontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset"], style = p["align"])
                 data.append([i+1,str(screenUnitList[i]["pointNum"]),str(screenUnitList[i]["pointSize"]),bmp.size])
 
+            current_row = self.parent.selected_row(self.parent.tableWidget_Screens)
+            if current_row is None:
+                current_row = 0
+            print(current_row)
             self.parent.flush_table(self.parent.tableWidget_Screens,data)
-            self.parent.tableWidget_Screens.setCurrentItem(self.parent.tableWidget_Screens.item(0,0))
+            self.parent.tableWidget_Screens.setCurrentItem(self.parent.tableWidget_Screens.item(current_row,0))
         else:
             self.parent.flush_table(self.parent.tableWidget_Screens,[])
 
@@ -1152,8 +1156,9 @@ class ProgramSettler():
                     except:
                         print("文件版本过低")
 
+        self.parent.change_program()     # 不可改变顺序
         self.show_scnUnit()
-        self.parent.change_program()
+        
 
 
     def get_color(self):
