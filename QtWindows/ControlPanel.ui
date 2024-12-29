@@ -363,6 +363,25 @@
                 </property>
                </widget>
               </item>
+              <item>
+               <widget class="QPushButton" name="btn_Add">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>添加到节目单&gt;&gt;</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </item>
             <item>
@@ -510,19 +529,6 @@
                 </property>
                 <property name="text">
                  <string>删除</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="btn_Add">
-                <property name="maximumSize">
-                 <size>
-                  <width>60</width>
-                  <height>30</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>添加</string>
                 </property>
                </widget>
               </item>
@@ -943,7 +949,7 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>选择颜色</string>
+                     <string>默认颜色</string>
                     </property>
                    </widget>
                   </item>

@@ -293,83 +293,192 @@ class BmpCreater():
             ordered_strings.append(s[start:])
         return ordered_strings
 
-    def hconcat_images(self,image_list = [], vertical = False, space = 1, style = 0):
-        # style: -1,0,1，对齐方式
-        if len(image_list) == 0:
-            return Image.new(self.color_type,(10,10))
+    def hconcat_images(self,image_list = [], vertical = False, space = 1, style = [0, 0], multi_line = {"stat":False, "line_space": 0, "exp_size": []}):
+        print(multi_line)
+        line_space = multi_line["line_space"]
+        exp_size = multi_line["exp_size"]
+        reverse = False
         if not vertical:
-            # 计算所有图像的最大高度和宽度之和
-            total_height = max(image.height for image in image_list)
-            total_width = sum(image.width for image in image_list)
-            # 创建一个新的图像作为画布，背景为白色
-            if space >= 0:
-                new_image = Image.new(self.color_type, (total_width+space*(len(image_list)-1), total_height))
-            elif space >= -100:
-                if len(image_list) > 1:
-                    total_width = 0
-                    for im in image_list[:-1]:
-                        total_width += int(im.width * (100 + space) / 100)
-                    total_width += image_list[-1].width
-                new_image = Image.new(self.color_type, (total_width, total_height))
+            sstyle = style[1]
         else:
-            total_height = sum(image.height for image in image_list)
-            total_width = max(image.width for image in image_list)
-            if space >= 0:
-                new_image = Image.new(self.color_type, (total_width, total_height+space*(len(image_list)-1)))
-            elif space >= -100:
-                if len(image_list) > 1:
-                    total_height = 0
-                    for im in image_list[:-1]:
-                        total_height += int(im.height * (100 + space) / 100)
-                    total_height += image_list[-1].height
-                new_image = Image.new(self.color_type, (total_width, total_height))
-        # 在新图像上依次粘贴每个图像
-        x_offset = 0
-        y_offset = 0
-        if style > 0:
-            k = 0
-        elif style == 0:
-            k = 0.5
-        else:
-            k = 1
-        for image in image_list:
-            if vertical:
-                x_offset = int(k*(total_width-image.width))
-            else:
-                y_offset = int(k*(total_height-image.height))
-            # 计算每个图像粘贴的位置
-            new_image.paste(image, (x_offset, y_offset), image)
-            if not vertical:
-                if space >= 0:
-                    x_offset += image.width
-                    x_offset += space
-                elif space >= -100:
-                    x_offset += int(image.width * (100 + space) / 100)
-            else:
-                if space >= 0:
-                    y_offset += image.height
-                    y_offset += space
-                elif space >= -100:
-                    y_offset += int(image.height * (100 + space) / 100)
-        return new_image
+            sstyle = style[0]
+        
 
-    def create_character(self,vertical=False, roll_asc = False, text="", ch_font_size=16, asc_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, y_offset_asc = 0, style = 0):
+        if line_space < 0 and len(exp_size) == 1:
+            reverse = True
+            line_space = -line_space
+
+        if self.color_type == "RGB":
+            color_type = "RGBA"
+        elif self.color_type == "1":
+            color_type = "1"
+        # style: -1,0,1，对齐方式 左中右或上中下
+        if len(image_list) == 0:
+            return Image.new(color_type,(10,10))
+        
+        if multi_line["stat"] == False:  # 自身调用时，"stat"定义为False，"line_space"为原先值（再传过来），"exp_size"定义为[multi_line["line_space"]]， 这样其长度为1，与不使用多行，但传递了"line_space"的情况分开
+            print("拼图第1种情况",len(image_list))
+            pmc = False   # percented_multiline_combine，以百分数表示的行距，如1.5->150%
+            if len(exp_size) == 1 :
+                pmc = True          # 表示第二次把每一行的图片拼合
+
+            if not vertical:
+                # 计算所有图像的最大高度和宽度之和
+                total_height = max(image.height for image in image_list)
+                total_width = sum(image.width for image in image_list)
+                # 创建一个新的图像作为画布，背景为白色
+                if space >= 0 and not pmc:
+                    new_image = Image.new(color_type, (total_width+space*(len(image_list)-1), total_height))
+                elif space >= -100 or pmc:
+                    if len(image_list) > 1:
+                        if pmc:
+                            for im in image_list[:-1]:
+                                total_width += int(im.width * (line_space - 1))
+                            if total_width == 0:
+                                total_width += im.width
+                        else:
+                            total_width = 0
+                            for im in image_list[:-1]:
+                                total_width += int(im.width * (100 + space) / 100)
+                            total_width += im.width
+                    new_image = Image.new(color_type, (total_width, total_height))
+            else:
+                total_height = sum(image.height for image in image_list)
+                total_width = max(image.width for image in image_list)
+                if space >= 0 and not pmc:
+                    new_image = Image.new(color_type, (total_width, total_height+space*(len(image_list)-1)))
+                elif space >= -100 or pmc:
+                    if len(image_list) > 1:                    
+                        if pmc:
+                            for im in image_list[:-1]:
+                                total_height += int(im.height * (line_space - 1))
+                            if total_height == 0:
+                                total_height += im.height
+                        else:
+                            total_height = 0
+                            for im in image_list[:-1]:
+                                total_height += int(im.height * (100 + space) / 100)
+                            total_height += im.height
+                    new_image = Image.new(color_type, (total_width, total_height))
+            # 在新图像上依次粘贴每个图像
+            x_offset = 0
+            y_offset = 0
+            real_x = 0
+            real_y = 0
+            if sstyle > 0:    # style指定图片的对齐方式
+                k = 0
+            elif sstyle == 0:
+                k = 0.5
+            else:
+                k = 1
+            for image in image_list:
+                if vertical:
+                    x_offset = int(k*(total_width-image.width))
+                else:
+                    y_offset = int(k*(total_height-image.height))
+
+                if reverse and len(exp_size) == 1:
+                    if vertical:
+                        real_y = total_height - image.height - y_offset
+                        real_x = x_offset
+                    else:
+                        real_x = total_width - image.width - x_offset
+                        real_y = y_offset
+                else:
+                    real_y = y_offset
+                    real_x = x_offset
+                        
+                print(reverse and len(exp_size) == 1, x_offset,y_offset," ",real_x,real_y)
+
+                # 计算每个图像粘贴的位置
+                new_image.paste(image, (real_x, real_y), image)
+                if not vertical:
+                    if space >= 0 and not pmc:
+                        x_offset += image.width
+                        x_offset += space
+                    elif space >= -100 and not pmc:
+                        x_offset += int(image.width * (100 + space) / 100)
+                    if pmc:
+                        x_offset += int(im.width * line_space)
+                else:
+                    if space >= 0 and not pmc:
+                        y_offset += image.height
+                        y_offset += space
+                    elif space >= -100 and not pmc:
+                        y_offset += int(image.height * (100 + space) / 100)
+                    if pmc:
+                        y_offset += int(im.height * line_space)
+
+            return new_image
+        
+        elif multi_line["stat"] == True and len(exp_size) == 2:
+            print("拼图第2种情况",len(image_list))
+            li = []
+            t_li = []
+            t_li_size = 0
+            if not vertical:    # 水平排列分成多行
+                exps = exp_size[0]
+            else:    # 垂直排列为多列
+                exps = exp_size[1]
+            for i in range(len(image_list)):
+                if not vertical:    # 水平排列分成多行
+                    current_size = image_list[i].width
+                else:    # 垂直排列为多列
+                    current_size = image_list[i].height
+
+                # print(i)
+
+                if t_li_size < exps:
+                    t_li.append(image_list[i])
+                    t_li_size += current_size
+                    if space > 0:
+                        t_li_size += space
+                    elif space >= -100:
+                        v = t_li_size + int(current_size * (space / 100))
+                        if v > 0:
+                            t_li_size = v
+
+                if t_li_size + current_size > exps or i+1 == len(image_list):
+                    li.append(self.hconcat_images(t_li, vertical, space, style, {"stat": False, "line_space": line_space, "exp_size": exp_size}))
+                    t_li = []
+                    t_li_size = 0
+
+            return self.hconcat_images(li, not vertical, space, style, {"stat": False, "line_space": line_space, "exp_size": [line_space]})
+            
+        else:
+            # print("拼图第3种情况")
+            return Image.new(color_type,(10,10))
+
+    def create_character(self,vertical=False, roll_asc = False, text="", ch_font_size=16, asc_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, y_offset_asc = 0, style = [0, 0], multi_line = {"stat":False, "line_space": 0 }):
         IMAGES = []
         tasks = []
+        if text == "":
+            text = " "
         try:
             coloredstritems = ast.literal_eval(text)
+            s = ""
             for coloredstr in coloredstritems:
                 task = [self.find_backtick_strings(coloredstr['char']),coloredstr['foreground'],coloredstr['background']]
                 tasks.append(task)
+                s += coloredstr['char']
+            text = s    # 将有颜色的字符串提取出来给缩放部分使用
         except:
             tasks = [[self.find_backtick_strings(text),"0","0"]]  # [任务列表，前景色，背景色]
         # print(tasks)
         for task in tasks:
             # 获取前景色背景色
             if task[1] != "0":
-                foc = tuple(int(task[1][i:i+2], 16) for i in (1, 3, 5))
+                if len(task[1]) == 7 :
+                    tup = (1, 3, 5)
+                elif len(task[1]) == 9:
+                    tup = (3, 5, 7, 1)
+                foc = tuple(int(task[1][i:i+2], 16) for i in tup)
                 if task[2] != "0":
-                    bac = tuple(int(task[2][i:i+2], 16) for i in (1, 3, 5))
+                    if len(task[2]) == 7 :
+                        tup = (1, 3, 5)
+                    elif len(task[2]) == 9:
+                        tup = (3, 5, 7, 1)
+                    bac = tuple(int(task[2][i:i+2], 16) for i in tup)
                 else:
                     bac = (0, 0, 0, 0)
 
@@ -413,13 +522,12 @@ class BmpCreater():
                                         else:  # 黑色部分，保持透明或设为其他颜色
                                             cch.putpixel((x, y), (0, 0, 0, 0))  # 这里设置为黑色
                             else:
-                                # 将原图的非黑色部分（即白色部分）用指定颜色替换
                                 for x in range(ch.width):
                                     for y in range(ch.height):
-                                        if ch.getpixel((x, y)) != 0:  # 白色部分
+                                        if ch.getpixel((x, y)) != 0:
                                             cch.putpixel((x, y), foc)
-                                        else:  # 黑色部分，保持透明或设为其他颜色
-                                            cch.putpixel((x, y), bac)  # 这里设置为黑色
+                                        else:
+                                            cch.putpixel((x, y), bac)
                                 
                             ch = cch
 
@@ -428,7 +536,12 @@ class BmpCreater():
 
                         IMAGES.append(ch)
         # 拼接图像
-        new_image = self.hconcat_images(IMAGES,vertical,space,style)
+        if new_width != None and new_height != None and not auto_scale:
+            exp_size = [new_width, new_height]
+        else:
+            exp_size = []
+        multi_line["exp_size"] = exp_size
+        new_image = self.hconcat_images(IMAGES,vertical,space,style,multi_line)
         img_width = new_image.width
         img_height = new_image.height
         # 缩放图像横向宽度
@@ -447,7 +560,7 @@ if __name__ == "__main__":
     ch_font="等线"
     asc_font="Arial"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, roll_asc = False, text=t, ch_font_size=24, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=-50, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, y_offset_asc = 0, style = 0)
+    font_img = FontCreater.create_character(vertical=True, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=12, scale=100, auto_scale=0, scale_sys_font_only=0, new_width = 128, new_height = 64, y_offset = 0, y_offset_asc = 0, style = [0,0], multi_line = {"stat":True, "line_space": -1.5 })
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]

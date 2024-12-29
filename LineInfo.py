@@ -368,7 +368,7 @@ template_program_show = {
         "autoScale":False,
         "scaleSysFontOnly":False,
         "multiLine":False,
-        "lineSpace":0,
+        "lineSpace":1,
         "richText":[False,False],
         "text":"",
         "color_1":"white",
