@@ -1,8 +1,9 @@
-﻿import sys, time, datetime, os
+﻿import sys, time, datetime, os, imageio
+import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction
-from PyQt5.QtGui import QPainter, QColor
+from PyQt5.QtGui import QPainter, QColor, QImage
 from PyQt5.QtCore import QTimer, Qt
-from PIL import Image, ImageGrab
+from PIL import Image
 from ScreenInfo import *
 from LineInfo import *
 from BmpCreater import *
@@ -12,6 +13,8 @@ undefinedProgramSheet = [['测试信息', 900, {'frontScreen': [[{'position': [0
 class ScreenController(QWidget):
     def __init__(self,flushRate,screenInfo,screenProgramSheet,toDisplay,FontIconMgr):
         super().__init__()
+        self.window_handle = self.winId()
+        self.screen = QApplication.primaryScreen()
         self.offset = 16
         self.flushRate = int(1000/flushRate)
         self.colorMode = screenInfo["colorMode"]
@@ -26,10 +29,11 @@ class ScreenController(QWidget):
         self.runningTime = 0
         self.performFinish = False
         self.gifRecording = False
-        self.endGifFrame = 0
+        # self.endGifFrame = 0
         self.fpsCounter = 0
         self.units = []
         self.gifFrames = []
+        self.tmpGifNames = []
 
         if len(self.screenProgramSheet) == 0:
             self.screenProgramSheet = undefinedProgramSheet
@@ -63,24 +67,31 @@ class ScreenController(QWidget):
     def showContextMenu(self, pos):
         contextMenu = QMenu(self)
         newAction = QAction('关闭窗口', self)
-        newAction.triggewhite.connect(self.close)
+        newAction.triggered.connect(self.close)
+        contextMenu.addAction(newAction)
+        newAction = QAction('窗口置顶', self)
+        newAction.triggered.connect(self.top_most)
         contextMenu.addAction(newAction)
         newAction = QAction('屏幕截图', self)
-        newAction.triggewhite.connect(self.screen_shot)
+        newAction.triggered.connect(self.screen_shot)
         contextMenu.addAction(newAction)
         if not self.gifRecording:
             newAction = QAction('开始录制GIF', self)
-            newAction.triggewhite.connect(self.start_recording_gif)
+            newAction.triggered.connect(self.start_recording_gif)
+            contextMenu.addAction(newAction)
         else:
             newAction = QAction('结束录制GIF', self)
-            newAction.triggewhite.connect(self.stop_recording_gif)
-        contextMenu.addAction(newAction)
+            newAction.triggered.connect(self.stop_recording_gif)
+            contextMenu.addAction(newAction)
+            newAction = QAction('结束请耐心等待(^_^)', self)
+            newAction.triggered.connect(self.stop_recording_gif)
+            contextMenu.addAction(newAction)
 
         contextMenu.exec_(self.mapToGlobal(pos))
 
     def mousePressEvent(self, e):
-        if self.gifRecording:
-            self.endGifFrame = len(self.gifFrames)
+        # if self.gifRecording:
+        #     self.endGifFrame = len(self.gifFrames)
         if e.buttons() == Qt.LeftButton:
             try:
                 print(e.pos())
@@ -96,12 +107,42 @@ class ScreenController(QWidget):
         except:
             pass
 
+    def top_most(self):
+        try:
+            flags = self.windowFlags()
+            if flags & Qt.WindowStaysOnTopHint:
+                self.setWindowFlags(flags & ~Qt.WindowStaysOnTopHint)
+            else:
+                self.setWindowFlags(flags | Qt.WindowStaysOnTopHint)
+            self.show()
+            self.show()
+        except Exception as e:
+            pass
+
     def capture_screen(self):
-        bbox = (self.frameGeometry().x(), self.frameGeometry().y(), 
-                self.frameGeometry().x() + self.frameGeometry().width(), 
-                self.frameGeometry().y() + self.frameGeometry().height())
-        img = ImageGrab.grab(bbox)
-        self.gifFrames.append(img)
+        pixmap = self.screen.grabWindow(self.window_handle)
+        # 将 QPixmap 转换为 QImage
+        qimage = pixmap.toImage()
+        # 确保 qimage 是 ARGB32 格式
+        if qimage.format() != QImage.Format_ARGB32:
+            qimage = qimage.convertToFormat(QImage.Format_ARGB32)
+        
+        # 获取 QImage 的字节数据
+        ptr = qimage.bits()
+        ptr.setsize(qimage.byteCount())
+        arr = np.array(ptr).reshape(qimage.height(), qimage.width(), 4)  # 4通道 (RGBA)
+
+        # 转换通道顺序从 ARGB 到 RGBA
+        arr = arr[..., [2, 1, 0, 3]]  # 将通道顺序从 ARGB 转换为 RGBA
+        
+        # 使用 PIL Image 从 NumPy 数组中读取图像
+        pil_image = Image.fromarray(arr, 'RGBA')
+
+        # img = ImageQt.fromqpixmap(pixmap)
+        # print(type(pil_image))
+        self.gifFrames.append(pil_image)
+        if len(self.gifFrames) >= 200:
+            self.save_gif(True)
 
     def screen_shot(self):
         self.capture_screen()
@@ -109,6 +150,11 @@ class ScreenController(QWidget):
         self.gifFrames[0].save(os.path.join("./ScreenShots",fileName))
 
     def start_recording_gif(self):
+        try:
+            os.makedirs("./ScreenShots")
+        except Exception as e:
+            pass
+        self.tmpGifNames = []
         self.gifFrames = []
         self.gifRecording = True
 
@@ -116,10 +162,29 @@ class ScreenController(QWidget):
         self.gifRecording = False
         self.save_gif()
 
-    def save_gif(self):
-        fileName = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S.gif")
-        self.gifFrames[0].save(os.path.join("./ScreenShots",fileName), save_all=True, append_images=self.gifFrames[1:self.endGifFrame], optimize=False, duration=self.flushRate, loop=0)
-        self.gifFrames = []
+    def save_gif(self, temp = False):
+        if temp:
+            fileName = datetime.datetime.now().strftime(f"temp_{self.toDisplay}_%Y%m%d%H%M%S.gif")
+            self.gifFrames[0].save(os.path.join("./ScreenShots",fileName), save_all=True, append_images=self.gifFrames[1:], optimize=False, duration=self.flushRate, loop=0)
+            self.gifFrames = []
+            self.tmpGifNames.append(fileName)
+        else:
+            self.save_gif(True)
+            fileName = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S_output.gif")
+            combined_gif = imageio.get_writer(os.path.join("./ScreenShots",fileName), fps = int(1000/self.flushRate), loop = 0)
+            print(self.tmpGifNames)
+            for g in self.tmpGifNames:
+                g = os.path.join("./ScreenShots",g)
+                gif = imageio.get_reader(g)
+                for frame in gif:
+                    combined_gif.append_data(frame)
+                gif.close()
+            
+            combined_gif.close()
+
+            for g in self.tmpGifNames:
+                g = os.path.join("./ScreenShots",g)
+                os.remove(g)
 
     def checkTimeStr(self):
         chinese_week_day = {
@@ -202,6 +267,9 @@ class ScreenController(QWidget):
     def get_fps(self):
         fps = self.fpsCounter
         self.fpsCounter = 0
+        fps = str(fps)
+        if self.gifRecording:
+            fps += f"  {self.toDisplay} 正在录制GIF  "
         self.setWindowTitle(f'{self.toDisplay} @ {fps} FPS')
         return fps
 
@@ -406,6 +474,33 @@ class ScreenController(QWidget):
                     if obj.y-arg2 < 0:
                         obj.counter += 1
                     obj.y = obj.y-arg2 if obj.y-arg2 >= 0 else -obj.pointNum[1]+obj.Bitmap.size[1]
+        elif appearance == "上下反复跳跃移动":
+            obj.appear = True
+            obj.x = pos0
+            if obj.rollCounter < arg1:
+                pass
+            else:
+                if obj.pointNum[1] > obj.Bitmap.size[1]:
+                    if (obj.counter+1) % 2:
+                        if obj.y >= 0 and obj.rollCounter >= int(1000/self.flushRate):
+                            obj.counter += 1
+                        obj.y = obj.y+arg2 if obj.y <= 0 else obj.y
+                    else:
+                        if obj.y <= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
+                            obj.counter += 1
+                        obj.y = obj.y-arg2 if obj.y >= -obj.pointNum[1]+obj.Bitmap.size[1] else obj.y
+                else:
+                    if (obj.counter+1) % 2:
+                        if obj.y >= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter >= int(1000/self.flushRate):
+                            obj.counter += 1
+                        obj.y = obj.y+arg2 if obj.y <= -obj.pointNum[1]+obj.Bitmap.size[1] else obj.y
+                    else:
+                        if obj.y <= 0 and obj.rollCounter >= int(1000/self.flushRate):
+                            obj.counter += 1
+                        obj.y = obj.y-arg2 if obj.y >= 0 else obj.y
+                if obj.rollCounter <= int(1000/self.flushRate):
+                    return
+                obj.rollCounter = 0
 
     def drawBackground(self,qp):
         qp.setBrush(QColor(25,25,25))

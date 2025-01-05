@@ -283,6 +283,19 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         exitAction.triggered.connect(self.close)
         fileMenu.addAction(exitAction)
 
+    def closeEvent(self,event):
+        self.save_file()
+        # 删除屏幕截图文件夹中可能存在的GIF临时文件
+        try:
+            figure = os.listdir("./ScreenShots")
+            for f in figure:
+                if f.startswith("temp"):
+                    tempGIF = os.path.join("./ScreenShots",f)
+                    os.remove(tempGIF)
+        except:
+            pass
+        self.close()
+
     def getFps(self):
         fps = []
         for s in self.LedScreens.values():
@@ -295,7 +308,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         if len(fps) != 0:
             msg = ""
             for i in range(len(fps)):
-                msg+=f"FPS{i+1}: {fps[i]}  "
+                msg+=f" FPS{i+1}: {fps[i]} "
             self.statusBar().showMessage(msg)
 
     def flush_table(self,tableWidgetObject,data):
@@ -330,12 +343,12 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             with open(filedir,'w',encoding = 'utf-8') as w:
                 w.write(str(self.LineEditor.LineInfoList))
 
-        self.statusBar().showMessage(datetime.datetime.now().strftime(f"%Y年%#m月%#d日 %H:%M 文件已保存到{self.currentFileDir}"))
+        self.statusBar().showMessage(datetime.datetime.now().strftime("%Y%m%d %H:%M") + f"文件已保存到{self.currentFileDir}")
     
     def save_file(self):
         button = QMessageBox.question(self, "对话框", "确定要保存吗？")
         if button == QMessageBox.No:
-            return
+            return False
         if os.path.exists(self.currentFileDir):
             filedir = self.currentFileDir
             with open(filedir,'w',encoding = 'utf-8') as w:
@@ -343,7 +356,8 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         else:
             self.save_another()
 
-        self.statusBar().showMessage(datetime.datetime.now().strftime(f"%Y年%#m月%#d日 %H:%M 文件已保存到{self.currentFileDir}"))
+        self.statusBar().showMessage(datetime.datetime.now().strftime("%Y%m%d %H:%M") + f"文件已保存到{self.currentFileDir}")
+        return True
 
     def open_file(self):
         if os.path.exists(self.currentFileDir):
@@ -631,7 +645,7 @@ class ProgramSettler():
 
         self.parent.combo_Font.addItems(self.ChFont)
         self.parent.combo_ASCII_Font.addItems(self.EngFont)
-        self.parent.combo_Show.addItems(["静止","闪烁","向左滚动","向左移到中间","向上移到中间","中间向左移开","中间向上移开","跳跃向左移动","跳跃向上移动","向右滚动","向右移到中间","向下移到中间","中间向右移开","中间向下移开","跳跃向右移动","跳跃向下移动",])
+        self.parent.combo_Show.addItems(["静止","闪烁","向左滚动","向左移到中间","向上移到中间","中间向左移开","中间向上移开","跳跃向左移动","跳跃向上移动","向右滚动","向右移到中间","向下移到中间","中间向右移开","中间向下移开","跳跃向右移动","跳跃向下移动","上下反复跳跃移动",])
         self.parent.combo_TextDirect.addItems(["横向","竖向"])
         self.parent.combo_SingleColorChoose.addItems(template_monochromeColors.keys())
 
@@ -833,6 +847,8 @@ class ProgramSettler():
 class LineSettler():
     def __init__(self, parent):
         self.parent = parent
+        self.layoutHistoryCount = 0
+        self.layoutHistory = []
         self.customLayouts = []
         self.customLButtons = []
         self.btn_w = 600
@@ -845,7 +861,8 @@ class LineSettler():
         self.parent.tableWidget_lineChoose.itemSelectionChanged.connect(self.init_LineSetting)
         self.parent.combo_LayoutChoose.currentTextChanged.connect(self.flush_width_height_spinbox)
         self.parent.combo_LineScreensForLayout.currentTextChanged.connect(self.flush_width_height_spinbox)
-        self.parent.btn_LineSet.clicked.connect(self.reset_layout)
+        self.parent.btn_LineSet.clicked.connect(lambda:self.reset_layout(True))
+        self.parent.btn_LineReSet.clicked.connect(lambda:self.reset_layout(False))
 
         self.parent.spin_Width_1.setMinimum(4)
         self.parent.spin_Width_2.setMinimum(4)
@@ -891,7 +908,11 @@ class LineSettler():
             self.parent.spin_Height_1.setMaximum(screenSize[1])
 
             if self.parent.LineEditor.LineInfoList[row]["preset"] == "自定义":
+                self.layoutHistory = []
+                layout = self.init_layout()
+                self.layoutHistory.append(layout)
                 self.show_custom_layout_btn()
+                self.layoutHistory.append(copy.deepcopy(self.customLayouts))
 
     def init_LineSetting(self):
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
@@ -911,6 +932,7 @@ class LineSettler():
                 self.parent.spin_Width_1.setEnabled(True)
                 self.parent.spin_Height_1.setEnabled(True)
                 self.parent.btn_LineSet.setEnabled(False)
+                self.parent.btn_LineReSet.setEnabled(False)
                 if mode == "北京公交":
                     pixmap = QPixmap("./resources/preset_BeijingBus.png")
                 elif mode == "普通":
@@ -929,8 +951,11 @@ class LineSettler():
                 self.parent.spin_Height_2.setEnabled(False)
                 self.parent.combo_LayoutChoose.setEnabled(False)
                 self.parent.btn_LineSet.setEnabled(True)
+                self.parent.btn_LineReSet.setEnabled(True)
                 self.parent.btn_SaveChange.setEnabled(False)
-                self.show_custom_layout_btn()
+                self.layoutHistoryCount = 0
+                self.layoutHistory = []
+                
             self.flush_width_height_spinbox()
 
     def retranslate_screenUnit_size(self):
@@ -986,22 +1011,37 @@ class LineSettler():
                     self.customLButtons[-1].show()
             self.parent.ProgramSettler.show_scnUnit()
 
-    def reset_layout(self):
+    def init_layout(self):
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
         if isinstance(row,int):
-            self.customLButtons = []
             screen = self.get_currentScreen()
-            self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = []
-            self.customLayouts = self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"]
             colorMode = self.parent.LineEditor.LineInfoList[row][screen]["colorMode"]
             screenSize = [self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
             screenScale = self.parent.LineEditor.LineInfoList[row][screen]["screenSize"][2]
             pointKind = str(screenScale).replace(" ","")
             pointKindDict = {"(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled","(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled"}
             pointKind = pointKindDict[pointKind]
-            self.customLayouts.append(copy.deepcopy(template_screenInfo[pointKind+"_"+colorMode]))
-            self.customLayouts[-1]["position"] = [0,0]
-            self.customLayouts[-1]["pointNum"] = [screenSize[0],screenSize[1]]
+            layout = []
+            layout.append(copy.deepcopy(template_screenInfo[pointKind+"_"+colorMode]))
+            layout[-1]["position"] = [0,0]
+            layout[-1]["pointNum"] = [screenSize[0],screenSize[1]]
+
+            return layout
+
+    def reset_layout(self,p):
+        row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
+        if isinstance(row,int):
+            if p and self.layoutHistoryCount > 0:
+                self.layoutHistoryCount-=1
+            if not p and self.layoutHistoryCount < len(self.layoutHistory)-1:
+                self.layoutHistoryCount+=1
+            print(self.layoutHistoryCount,self.layoutHistory,"\n\n")
+            self.customLButtons = []
+            screen = self.get_currentScreen()
+            if len(self.layoutHistory) > 0:
+                self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = copy.deepcopy(self.layoutHistory[self.layoutHistoryCount])
+                self.customLayouts = self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"]
+
             self.show_custom_layout_btn()
 
     def add_custom_layout_pre(self,index):
@@ -1065,6 +1105,7 @@ class LineSettler():
             SelfDefineLayoutDialog.set_value(opn,ops)
             SelfDefineLayoutDialog.can_w_h()
             if SelfDefineLayoutDialog.exec_() == QDialog.Accepted:
+                self.layoutHistory = self.layoutHistory[0:self.layoutHistoryCount+1]
                 layout = SelfDefineLayoutDialog.combo_Layout.currentText()
                 pointKind = SelfDefineLayoutDialog.combo_PointKind.currentText()
                 pointKindDict = {"(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled","(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled"}
@@ -1077,6 +1118,8 @@ class LineSettler():
                     self.add_custom_layout(index,pointKind,colormode,"h",w,h)
                 elif layout == "水平布局":
                     self.add_custom_layout(index,pointKind,colormode,"w",w,h)
+                self.layoutHistory.append(copy.deepcopy(self.customLayouts))
+                self.layoutHistoryCount = len(self.layoutHistory)-1
                 self.show_custom_layout_btn()
 
     def get_scn_pos_size(self,row,screen,w1,h1,enable_mode = True):
