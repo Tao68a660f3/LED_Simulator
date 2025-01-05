@@ -16,13 +16,15 @@ class Thread_BmpUpdater(QThread):
     def __init__(self, parent = None):
         super(Thread_BmpUpdater, self).__init__(parent)
         self.myparent = parent
+        self.is_running = True
 
     def run(self):
-        print(self.myparent)
-        while self.myparent.isVisible():
+        while self.myparent.isVisible() and self.is_running:
             self.myparent.checkTimeStr()
             time.sleep(0.5)
 
+    def stop(self):
+        self.is_running = False
 
 class ScreenController(QWidget):
     def __init__(self,flushRate,screenInfo,screenProgramSheet,toDisplay,FontIconMgr):
@@ -30,6 +32,7 @@ class ScreenController(QWidget):
         self.window_handle = self.winId()
         self.screen = QApplication.primaryScreen()
         self.BmpUpdater = Thread_BmpUpdater(self)
+        self.BmpUpdater.finished.connect(self.BmpUpdater.deleteLater)
         self.offset = 16
         self.flushRate = int(1000/flushRate)
         self.colorMode = screenInfo["colorMode"]
@@ -76,6 +79,12 @@ class ScreenController(QWidget):
         self.setContextMenuPolicy(Qt.CustomContextMenu) # 右键菜单
         self.customContextMenuRequested.connect(self.showContextMenu)
 
+    def stopThread_BmpUpdater(self):
+        if self.BmpUpdater.isRunning():
+            self.BmpUpdater.stop()
+            self.BmpUpdater.quit()
+            self.BmpUpdater.wait()
+
     def showContextMenu(self, pos):
         contextMenu = QMenu(self)
         newAction = QAction('关闭窗口', self)
@@ -118,6 +127,10 @@ class ScreenController(QWidget):
             e.accept()
         except:
             pass
+
+    def closeEvent(self, event):
+        self.stopThread_BmpUpdater()
+        event.accept()
 
     def top_most(self):
         try:
