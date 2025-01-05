@@ -329,6 +329,8 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             self.currentFileDir = filedir
             with open(filedir,'w',encoding = 'utf-8') as w:
                 w.write(str(self.LineEditor.LineInfoList))
+
+        self.statusBar().showMessage(datetime.datetime.now().strftime(f"%Y年%#m月%#d日 %H:%M 文件已保存到{self.currentFileDir}"))
     
     def save_file(self):
         button = QMessageBox.question(self, "对话框", "确定要保存吗？")
@@ -340,6 +342,8 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                 w.write(str(self.LineEditor.LineInfoList))
         else:
             self.save_another()
+
+        self.statusBar().showMessage(datetime.datetime.now().strftime(f"%Y年%#m月%#d日 %H:%M 文件已保存到{self.currentFileDir}"))
 
     def open_file(self):
         if os.path.exists(self.currentFileDir):
@@ -377,7 +381,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                     try:
                         scn = ScreenController(flushRate=self.LineEditor.LineInfoList[row]["flushRate"],screenInfo={"colorMode":self.LineEditor.LineInfoList[row][screen]["colorMode"],"screenSize":self.LineEditor.LineInfoList[row][screen]["screenSize"]},screenProgramSheet=self.LineEditor.LineInfoList[row]["programSheet"],FontIconMgr=self.IconManager.FontMgr,toDisplay=screen)
                         scn.move(50,50+h)
-                        h += self.LineEditor.LineInfoList[row][screen]["screenSize"][1]*self.LineEditor.LineInfoList[row][screen]["screenSize"][2][1]+120
+                        h += self.LineEditor.LineInfoList[row][screen]["screenSize"][1]*self.LineEditor.LineInfoList[row][screen]["screenSize"][2][1]+60
                         self.LedScreens[screen] = scn
                     except Exception as e:
                         pass
@@ -836,7 +840,7 @@ class LineSettler():
         self.initUI()
 
     def initUI(self):
-        self.parent.statusBar().showMessage("请先添加线路，然后添加节目，选择节目后为各个路牌设置布局，再设置显示的内容！")
+        self.parent.statusBar().showMessage("请先添加线路，然后为各个路牌设置布局，再添加节目，选择节目后，再为屏幕的每个分区设置显示的内容！")
         self.parent.btn_SaveChange.clicked.connect(self.ok_layout)
         self.parent.tableWidget_lineChoose.itemSelectionChanged.connect(self.init_LineSetting)
         self.parent.combo_LayoutChoose.currentTextChanged.connect(self.flush_width_height_spinbox)
