@@ -1,4 +1,4 @@
-import sys, os, ast, copy, datetime, gc
+import sys, os, ast, copy, datetime
 from PyQt5.QtWidgets import QApplication, QWidget, QDialog, QMainWindow, QAbstractItemView, QTableWidgetItem, QHeaderView, QFileDialog, QPushButton, QLabel, QColorDialog, QMenu, QAction, QMessageBox
 from PyQt5.QtGui import QPixmap, QIcon, QTextCharFormat
 from PyQt5.QtCore import pyqtSignal, Qt, QCoreApplication
@@ -228,39 +228,72 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
         self.point_spinBox.setMinimum(-5)
         self.point_spinBox.setValue(1)
 
+    def connect_signal(self):
         self.foreground_btn.clicked.connect(self.setTextColor)
         self.background_btn.clicked.connect(self.setBackgroundColor)
-        self.checkBox_multiLine.stateChanged.connect(self.checkBox_changed)
-        self.checkBox_bgcolor.stateChanged.connect(self.checkBox_changed)
+        self.checkBox_multiLine.stateChanged.connect(self.ui_value_changed)
+        self.checkBox_bgcolor.stateChanged.connect(self.ui_value_changed)
+        self.point_spinBox.valueChanged.connect(self.ui_value_changed)
+        # print("reconnected")
 
-    def checkBox_changed(self):
-        self.point_spinBox.setEnabled(self.checkBox_multiLine.isChecked())
-        self.richText[1] = self.checkBox_bgcolor.isChecked()
-        self.background_btn.setEnabled(self.richText[1])
+    def disconnect_signal(self):
+        try:
+            self.foreground_btn.clicked.disconnect(self.setTextColor)
+            self.background_btn.clicked.disconnect(self.setBackgroundColor)
+            self.checkBox_multiLine.stateChanged.disconnect(self.ui_value_changed)
+            self.checkBox_bgcolor.stateChanged.disconnect(self.ui_value_changed)
+            self.point_spinBox.valueChanged.disconnect(self.ui_value_changed)
+        except Exception as e:
+            print("disconnect_signal: ", e)
 
-        self.set_textEditor()
-        
-    def set_value(self,text = "", multiLine = False, lineSpace = 0,colorMode = "1", richText = [False,False]):
+    def set_value(self,text = "", multiLine = False, lineSpace = 1,colorMode = "1", richText = [False,False]):
         self.text = text
         self.multiLine = multiLine
         self.lineSpace = lineSpace
         self.colorMode = colorMode
         self.richText = richText
+
+        self.set_ui_value()
+        self.set_textEditor()
+
+    def set_ui_value(self):
+        self.disconnect_signal()
+        # print("set_ui_value: ", self.multiLine,self.richText,self.lineSpace)
+
         self.checkBox_multiLine.setChecked(self.multiLine)
         self.checkBox_bgcolor.setChecked(self.richText[1])
         self.point_spinBox.setEnabled(self.multiLine)
         self.background_btn.setEnabled(self.richText[1])
         self.point_spinBox.setValue(self.lineSpace)
-        self.set_textEditor()
+
+        if self.colorMode == "1":
+            self.checkBox_bgcolor.setEnabled(False)
+            self.foreground_btn.setEnabled(False)
+            self.background_btn.setEnabled(False)
+
+        QTimer.singleShot(0, self.connect_signal)
+        
+    def ui_value_changed(self):
+        self.multiLine = self.checkBox_multiLine.isChecked()
+        self.richText[1] = self.checkBox_bgcolor.isChecked()
+        self.lineSpace = self.point_spinBox.value()
+
+        # print("ui_value_changed: ", self.multiLine,self.richText,self.lineSpace)
+
+        self.set_ui_value()
+        # self.set_textEditor()
 
     def set_textEditor(self):
         cursor = self.textEdit.textCursor()
         fmt = QTextCharFormat()
+        fmt.setForeground(QColor("#ffffffff"))
+        fmt.setBackground(QColor("#00000000"))
 
         if self.colorMode == "1":   
             self.textEdit.clear()         
             cursor.insertText(self.text, fmt)
-            self.textEdit.setEnabled(False)
+            # self.textEdit.setEnabled(False)  # 单色也应该可使用文本框添加换行、编辑等，因此注释掉这行代码
+
         if self.colorMode == "RGB":
             if self.richText[0]:
                 try:
@@ -277,8 +310,8 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
                             background = QColor(char_data['background'])
                         fmt.setBackground(background)
                         cursor.insertText(char, fmt)
-                except:
-                    pass
+                except Exception as e:
+                    print("set_textEditor,", e)
             else:
                 self.textEdit.clear()
                 cursor.insertText(self.text, fmt)
@@ -310,48 +343,48 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
             cursor.mergeCharFormat(fmt)
 
     def translate_to_str(self):
-        self.richText[0] = True
-        data = []
-        cursor = self.textEdit.textCursor()
-        cursor.select(cursor.Document)
-        text = cursor.selectedText()
-        for i in range(len(text)):
-            cursor.setPosition(i)
-            cursor.movePosition(cursor.Right, cursor.KeepAnchor, 1)
-            char_format = cursor.charFormat()
-            if self.richText[1]:
-                char_data = {
-                    'char': text[i],
-                    'foreground': char_format.foreground().color().name(QColor.HexArgb),
-                    'background': char_format.background().color().name(QColor.HexArgb)
-                }
-            else:
-                char_data = {
-                    'char': text[i],
-                    'foreground': char_format.foreground().color().name(QColor.HexArgb),
-                    'background': '0'
-                }
-            data.append(char_data)
-
-        # 催化重整，把颜色，背景色一样的字符合成一个字符串
-        s_d = []
-        for d in data:
-            if len(s_d) >= 1:
-                if d['foreground'] == s_d[-1]['foreground'] and d['background'] == s_d[-1]['background']:
-                    s_d[-1]['char'] += d['char']
+        txt = self.textEdit.toPlainText()
+        if self.richText[0]:
+            data = []
+            cursor = self.textEdit.textCursor()
+            cursor.select(cursor.Document)
+            text = cursor.selectedText()
+            for i in range(len(text)):
+                cursor.setPosition(i)
+                cursor.movePosition(cursor.Right, cursor.KeepAnchor, 1)
+                char_format = cursor.charFormat()
+                if self.richText[1]:
+                    char_data = {
+                        'char': text[i],
+                        'foreground': char_format.foreground().color().name(QColor.HexArgb),
+                        'background': char_format.background().color().name(QColor.HexArgb)
+                    }
+                else:
+                    char_data = {
+                        'char': text[i],
+                        'foreground': char_format.foreground().color().name(QColor.HexArgb),
+                        'background': '0'
+                    }
+                data.append(char_data)
+            # 催化重整，把颜色，背景色一样的字符合成一个字符串
+            s_d = []
+            for d in data:
+                if len(s_d) >= 1:
+                    if d['foreground'] == s_d[-1]['foreground'] and d['background'] == s_d[-1]['background']:
+                        s_d[-1]['char'] += d['char']
+                    else:
+                        s_d.append(d)
                 else:
                     s_d.append(d)
-            else:
-                s_d.append(d)
 
-        colorstr = str(s_d)
-        return colorstr
+            colorstr = str(s_d)
+            return colorstr
+        else:
+            return txt
 
     def get_edit_result(self):
-        self.multiLine = self.checkBox_multiLine.isChecked()
-        self.lineSpace = self.point_spinBox.value()
         self.text = self.translate_to_str()
-        print(self.text)
+        # print("get_edit_result: ", self.text)
 
         return [self.text, self.multiLine, self.lineSpace, self.richText]
 
@@ -463,7 +496,6 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                     fps.append(s.get_fps())
             except Exception as e:
                 pass
-                # pass
         if len(fps) != 0:
             msg = ""
             for i in range(len(fps)):
@@ -549,7 +581,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                 try:
                     screen.close()
                 except Exception as e:
-                    pass
+                    print("turn_on_all_screen: ", e)
                 if self.LineEditor.LineInfoList[row][screen]["enabled"]:
                     try:
                         scn = ScreenController(flushRate=self.LineEditor.LineInfoList[row]["flushRate"],screenInfo={"colorMode":self.LineEditor.LineInfoList[row][screen]["colorMode"],"screenSize":self.LineEditor.LineInfoList[row][screen]["screenSize"]},screenProgramSheet=self.LineEditor.LineInfoList[row]["programSheet"],FontIconMgr=self.IconManager.FontMgr,toDisplay=screen)
@@ -563,8 +595,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         for s in self.LedScreens.values():
             try:
                 s.close()
-                del s
-                gc.collect()
+                s.deleteLater()
             except Exception as e:
                 pass
 
@@ -861,7 +892,7 @@ class ProgramSettler():
     def set_colorstr_multiLine(self):
         colorMode = "1"
         multiLine = False
-        lineSpace = 0
+        lineSpace = 1
         richText = [False,False]
         text = ""
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
@@ -873,13 +904,14 @@ class ProgramSettler():
                 self.screenProgList = self.parent.ProgramSheetManager.programSheet[row][2][screen][1]
                 row = self.parent.selected_row(self.parent.tableWidget_Screens)
                 if isinstance(row,int):
-                    try:
-                        text = self.screenProgList[row]["text"]
+                    text = self.screenProgList[row]["text"]
+                    if "multiLine" in self.screenProgList[row].keys():
                         multiLine = self.screenProgList[row]["multiLine"]
+                    if "lineSpace" in self.screenProgList[row].keys():
                         lineSpace = self.screenProgList[row]["lineSpace"]
+                    if "richText" in self.screenProgList[row].keys():
                         richText = self.screenProgList[row]["richText"]
-                    except:
-                        pass
+
                     ColorMultiLineDialog = ColorMultiLine()
                     ColorMultiLineDialog.show()
                     ColorMultiLineDialog.set_value(text,multiLine,lineSpace,colorMode,richText)
@@ -940,14 +972,21 @@ class ProgramSettler():
             for i in range(min(len(screenProgList),len(screenUnitList))):
                 p = screenProgList[i]
                 Creater = BmpCreater(self.parent.IconManager.FontMgr,"1",(255,255,255),p["font"],p["ascFont"],p["sysFontOnly"],)
-                try:
-                    bmp = Creater.create_character(vertical=p["vertical"], roll_asc = p["rollAscii"], text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["ascFontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset_asc"], style = p["align"], multi_line={"stat":p["multiLine"], "line_space": p["lineSpace"] })
-                except:
-                    bmp = Creater.create_character(vertical=p["vertical"], roll_asc = True, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["fontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset"], style = p["align"])
+                _roll_asc = True
+                if "rollAscii" in p.keys():
+                    _roll_asc = p["rollAscii"]
+                if "multiLine" in p.keys() and "lineSpace" in p.keys():
+                    bmp = Creater.create_character(vertical=p["vertical"], roll_asc = _roll_asc, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["ascFontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset_asc"], style = p["align"], multi_line={"stat":p["multiLine"], "line_space": p["lineSpace"] })
+                else:
+                    bmp = Creater.create_character(vertical=p["vertical"], roll_asc = _roll_asc, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["fontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset"], style = p["align"])
                 data.append([i+1,str(screenUnitList[i]["pointNum"]),str(screenUnitList[i]["pointSize"]),bmp.size])
 
+            current_row = self.parent.selected_row(self.parent.tableWidget_Screens)
+            if current_row is None:
+                current_row = 0
+            # print(current_row)
             self.parent.flush_table(self.parent.tableWidget_Screens,data)
-            self.parent.tableWidget_Screens.setCurrentItem(self.parent.tableWidget_Screens.item(0,0))
+            self.parent.tableWidget_Screens.setCurrentItem(self.parent.tableWidget_Screens.item(current_row,0))
         else:
             self.parent.flush_table(self.parent.tableWidget_Screens,[])
 
@@ -1119,37 +1158,68 @@ class ProgramSettler():
                 #为适应彩色字符串修改
                 simple_origin_text = self.parent.lineEdit_Text.text()
                 text_list_str = ""
-                try:
+
+                if "richText" in self.screenProgList[row].keys():
                     if self.screenProgList[row]["richText"][0]:    # 支持富文本
-                        text_list = ast.literal_eval(self.screenProgList[row]["text"])  # 并且实际上已经是字符串形式的列表，不然进入except
-                        # print("text_list:",text_list)
-                        # print(self.screenProgList[row]["text"])
-                        for i in text_list:
-                            text_list_str += i["char"]
-                            # print("i:",i,"text_list_str:",text_list_str)
-                        if text_list_str == simple_origin_text:
-                            pass
-                        else:
-                            color = ['#ff{:02X}{:02X}{:02X}'.format(r, g, b),text_list[0]["background"]]  # 如果一级界面上的字符串被再次编辑了，重新生成字符串列表，并保存为字符串形式，以第一个字符的颜色为基准
-                            text_list = []
-                            char_data = {
-                                    'char': simple_origin_text,
-                                    'foreground': color[0],
-                                    'background': color[1]
-                                }
-                            text_list.append(char_data)
-                            self.screenProgList[row]["text"] = str(text_list)
+                        try:
+                            text_list = ast.literal_eval(self.screenProgList[row]["text"])  # 并且实际上已经是字符串形式的列表
+                            for i in text_list:
+                                text_list_str += i["char"]
+                                # print("i:",i,"text_list_str:",text_list_str)
+                            if text_list_str != simple_origin_text:
+                                color = ['#ff{:02X}{:02X}{:02X}'.format(r, g, b),text_list[0]["background"]]  # 如果一级界面上的字符串被再次编辑了，重新生成字符串列表，并保存为字符串形式，以第一个字符的颜色为基准
+                                text_list = []
+                                char_data = {
+                                        'char': simple_origin_text,
+                                        'foreground': color[0],
+                                        'background': color[1]
+                                    }
+                                text_list.append(char_data)
+                                self.screenProgList[row]["text"] = str(text_list)
+                        except Exception as e:
+                            print(e)
                     else:
                         self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
-                except:   # 支持富文本，但字符串似乎不能转换为列表
-                    try:
-                        self.screenProgList[row]["richText"][0] = False
-                        self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
-                    except:
-                        print("文件版本过低")
+                else:
+                    self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
 
+                # try:
+                #     if self.screenProgList[row]["richText"][0]:    # 支持富文本
+                #         text_list = ast.literal_eval(self.screenProgList[row]["text"])  # 并且实际上已经是字符串形式的列表，不然进入except
+                #         # print("text_list:",text_list)
+                #         # print(self.screenProgList[row]["text"])
+                #         for i in text_list:
+                #             text_list_str += i["char"]
+                #             # print("i:",i,"text_list_str:",text_list_str)
+                #         if text_list_str == simple_origin_text:
+                #             pass
+                #         else:
+                #             color = ['#ff{:02X}{:02X}{:02X}'.format(r, g, b),text_list[0]["background"]]  # 如果一级界面上的字符串被再次编辑了，重新生成字符串列表，并保存为字符串形式，以第一个字符的颜色为基准
+                #             text_list = []
+                #             char_data = {
+                #                     'char': simple_origin_text,
+                #                     'foreground': color[0],
+                #                     'background': color[1]
+                #                 }
+                #             text_list.append(char_data)
+                #             self.screenProgList[row]["text"] = str(text_list)
+                            
+                #     else:
+                #         self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
+                #     print(self.screenProgList[row]["text"])
+                # except:   # 支持富文本，但字符串似乎不能转换为列表
+                #     try:
+                #         self.screenProgList[row]["richText"][0] = False
+                #         self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
+                #         print(self.screenProgList[row]["text"])
+                #     except Exception as e:
+                #         print(e)
+                #         print("文件版本过低")
+                #         self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
+
+        self.parent.change_program()     # 不可改变顺序
         self.show_scnUnit()
-        self.parent.change_program()
+        
 
 
     def get_color(self):

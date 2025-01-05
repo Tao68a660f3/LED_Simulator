@@ -294,7 +294,7 @@ class BmpCreater():
         return ordered_strings
 
     def hconcat_images(self,image_list = [], vertical = False, space = 1, style = [0, 0], multi_line = {"stat":False, "line_space": 0, "exp_size": []}):
-        print(multi_line)
+        # print(multi_line)
         line_space = multi_line["line_space"]
         exp_size = multi_line["exp_size"]
         reverse = False
@@ -317,7 +317,7 @@ class BmpCreater():
             return Image.new(color_type,(10,10))
         
         if multi_line["stat"] == False:  # 自身调用时，"stat"定义为False，"line_space"为原先值（再传过来），"exp_size"定义为[multi_line["line_space"]]， 这样其长度为1，与不使用多行，但传递了"line_space"的情况分开
-            print("拼图第1种情况",len(image_list))
+            # print("拼图第1种情况",len(image_list))
             pmc = False   # percented_multiline_combine，以百分数表示的行距，如1.5->150%
             if len(exp_size) == 1 :
                 pmc = True          # 表示第二次把每一行的图片拼合
@@ -388,7 +388,7 @@ class BmpCreater():
                     real_y = y_offset
                     real_x = x_offset
                         
-                print(reverse and len(exp_size) == 1, x_offset,y_offset," ",real_x,real_y)
+                # print(reverse and len(exp_size) == 1, x_offset,y_offset," ",real_x,real_y)
 
                 # 计算每个图像粘贴的位置
                 new_image.paste(image["img"], (real_x, real_y), image["img"])
@@ -412,7 +412,7 @@ class BmpCreater():
             return new_image
         
         elif multi_line["stat"] == True and len(exp_size) == 2:
-            print("拼图第2种情况",len(image_list))
+            # print("拼图第2种情况",len(image_list))
             li = []
             t_li = []
             t_li_size = 0
@@ -496,7 +496,8 @@ class BmpCreater():
                             ico = ico.convert('1')
                         elif self.color_type == "RGB":
                             ico = ico.convert("RGBA")
-                        IMAGES.append(ico)
+                        icon = {"img": ico, "chr": None}
+                        IMAGES.append(icon)
                     except:
                         pass     
                 else:
@@ -558,11 +559,11 @@ class BmpCreater():
     
 if __name__ == "__main__":
     # t = "[{'char': '在本文中，', 'foreground': '#ffffff', 'background': '0'}, {'char': '我们', 'foreground': '#ffab81', 'background': '0'}, {'char': '介绍了', 'foreground': '#75ffca', 'background': '0'}, {'char': '四种', 'foreground': '#395dff', 'background': '0'}, {'char': '将单个文件', 'foreground': '#ffffff', 'background': '0'}, {'char': '恢复到', 'foreground': '#ff40b6', 'background': '0'}, {'char': '以前版本', 'foreground': '#ffff00', 'background': '0'}, {'char': '的方法', 'foreground': '#ffffff', 'background': '0'}]"
-    t = "欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播\n放而不是第三方弹窗。[doge][doge]"
+    t = "欢迎使用音乐播`dnArrow2`放器 真正的“电脑爱好者”都应该用自动播\n放而不是第三方弹窗。[doge][doge]"
     ch_font="等线"
     asc_font="Arial"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=2, scale=100, auto_scale=0, scale_sys_font_only=0, new_width = 128, new_height = 64, y_offset = 0, y_offset_asc = 0, style = [0,0], multi_line = {"stat":True, "line_space": 1.5 })
+    font_img = FontCreater.create_character(vertical=True, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=2, scale=100, auto_scale=0, scale_sys_font_only=0, new_width = 128, new_height = 64, y_offset = 0, y_offset_asc = 0, style = [0,0], multi_line = {"stat":True, "line_space": 1.5 })
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]

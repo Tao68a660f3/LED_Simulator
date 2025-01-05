@@ -2,7 +2,7 @@
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction
 from PyQt5.QtGui import QPainter, QColor, QImage
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import QTimer, Qt, QThread
 from PIL import Image
 from ScreenInfo import *
 from LineInfo import *
@@ -10,11 +10,26 @@ from BmpCreater import *
 
 undefinedProgramSheet = [['测试信息', 900, {'frontScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'frontSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]]}]]
 
+
+
+class Thread_BmpUpdater(QThread):
+    def __init__(self, parent = None):
+        super(Thread_BmpUpdater, self).__init__(parent)
+        self.myparent = parent
+
+    def run(self):
+        print(self.myparent)
+        while self.myparent.isVisible():
+            self.myparent.checkTimeStr()
+            time.sleep(0.5)
+
+
 class ScreenController(QWidget):
     def __init__(self,flushRate,screenInfo,screenProgramSheet,toDisplay,FontIconMgr):
         super().__init__()
         self.window_handle = self.winId()
         self.screen = QApplication.primaryScreen()
+        self.BmpUpdater = Thread_BmpUpdater(self)
         self.offset = 16
         self.flushRate = int(1000/flushRate)
         self.colorMode = screenInfo["colorMode"]
@@ -43,16 +58,14 @@ class ScreenController(QWidget):
                 self.screenProgramSheet[0][2][s][0][0]["scale"] = self.screenScale
                 # self.screenProgramSheet[0][2][s][0][0]["pointSize"] = int(self.screenScale[0]*0.8)   #应该有误，不需要这行代码
 
+        self.BmpUpdater.start()
+
         self.timer1 = QTimer(self)
         self.timer1.timeout.connect(self.update)
         self.timer1.start(self.flushRate)
         self.timer2 = QTimer(self)
         self.timer2.timeout.connect(self.checkProgramTimeout)
         self.timer2.start(200)
-        self.timer3 = QTimer(self)
-        self.timer3.timeout.connect(self.checkTimeStr)
-        self.timer3.start(1000)
-
 
         self.setWindowTitle(self.toDisplay)
         self.setWindowFlags(Qt.FramelessWindowHint) # 隐藏边框
@@ -746,11 +759,13 @@ class ScreenUnit():
             print("显示屏模块尝试读取2版设置") # 尚未开发完成
 
     def createFontImg(self):
-        try:
-            self.Bitmap = self.BmpCreater.create_character(vertical=self.progSheet["vertical"], roll_asc = self.progSheet["rollAscii"], text=self.progSheet["text"], ch_font_size=self.progSheet["fontSize"], asc_font_size=self.progSheet["ascFontSize"], ch_bold_size_x=self.progSheet["bold"][0], ch_bold_size_y=self.progSheet["bold"][1], space=self.progSheet["spacing"], scale=self.progSheet["scale"], auto_scale=self.progSheet["autoScale"], scale_sys_font_only=self.progSheet["scaleSysFontOnly"], new_width = self.pointNum[0], new_height = self.pointNum[1], y_offset = self.progSheet["y_offset"], y_offset_asc = self.progSheet["y_offset_asc"], style = self.progSheet["align"], multi_line={"stat":self.progSheet["multiLine"], "line_space": self.progSheet["lineSpace"] })
-        except:
-            # print("旧版节目单")
-            self.Bitmap = self.BmpCreater.create_character(vertical=self.progSheet["vertical"], roll_asc = True, text=self.progSheet["text"], ch_font_size=self.progSheet["fontSize"], asc_font_size=self.progSheet["fontSize"], ch_bold_size_x=self.progSheet["bold"][0], ch_bold_size_y=self.progSheet["bold"][1], space=self.progSheet["spacing"], scale=self.progSheet["scale"], auto_scale=self.progSheet["autoScale"], scale_sys_font_only=self.progSheet["scaleSysFontOnly"], new_width = self.pointNum[0], new_height = self.pointNum[1], y_offset = self.progSheet["y_offset"], y_offset_asc = self.progSheet["y_offset"], style = self.progSheet["align"])
+        _roll_asc = True
+        if "rollAscii" in self.progSheet.keys():
+            _roll_asc = self.progSheet["rollAscii"]
+        if "multiLine" in self.progSheet.keys() and "lineSpace" in self.progSheet.keys():
+            self.Bitmap = self.BmpCreater.create_character(vertical=self.progSheet["vertical"], roll_asc = _roll_asc, text=self.progSheet["text"], ch_font_size=self.progSheet["fontSize"], asc_font_size=self.progSheet["ascFontSize"], ch_bold_size_x=self.progSheet["bold"][0], ch_bold_size_y=self.progSheet["bold"][1], space=self.progSheet["spacing"], scale=self.progSheet["scale"], auto_scale=self.progSheet["autoScale"], scale_sys_font_only=self.progSheet["scaleSysFontOnly"], new_width = self.pointNum[0], new_height = self.pointNum[1], y_offset = self.progSheet["y_offset"], y_offset_asc = self.progSheet["y_offset_asc"], style = self.progSheet["align"], multi_line={"stat":self.progSheet["multiLine"], "line_space": self.progSheet["lineSpace"] })
+        else:
+            self.Bitmap = self.BmpCreater.create_character(vertical=self.progSheet["vertical"], roll_asc = _roll_asc, text=self.progSheet["text"], ch_font_size=self.progSheet["fontSize"], asc_font_size=self.progSheet["fontSize"], ch_bold_size_x=self.progSheet["bold"][0], ch_bold_size_y=self.progSheet["bold"][1], space=self.progSheet["spacing"], scale=self.progSheet["scale"], auto_scale=self.progSheet["autoScale"], scale_sys_font_only=self.progSheet["scaleSysFontOnly"], new_width = self.pointNum[0], new_height = self.pointNum[1], y_offset = self.progSheet["y_offset"], y_offset_asc = self.progSheet["y_offset"], style = self.progSheet["align"])
 
 
 if __name__ == '__main__':
