@@ -81,14 +81,16 @@ class ScreenController(QWidget):
     def checkProgramTimeout(self):
         try:
             self.runningTime = time.time() - self.currentBeginTime
-            if self.runningTime >= self.currentPtime:
+            if self.runningTime >= self.currentPtime and self.currentPtime >= 0:
                 self.programTimeout()
             index = self.currentIndex-1 if self.currentIndex>0 else len(self.screenProgramSheet)-1
-            if 3 in range(len(self.screenProgramSheet[index])):
+            if 3 in range(len(self.screenProgramSheet[index])) or self.currentPtime < 0:
                 num = []
                 for u in self.units:
                     num.append(u.counter)
-                if max(num) >= self.screenProgramSheet[index][3]:
+                if self.currentPtime < 0 and max(num) >= 1:
+                    self.programTimeout()
+                if max(num) >= self.screenProgramSheet[index][3] and self.currentPtime >= 0:
                     self.programTimeout()
         except Exception as e:
             print(e)

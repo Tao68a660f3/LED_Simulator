@@ -1,15 +1,15 @@
 # Draw ascii fonts
 from PIL import Image, ImageDraw, ImageFont, ImageChops
-font_size = 32
+font_size = 42
 bold_size = 1
 x_offset = 0
-y_offset = -6
-font_path = "arial.ttf"
+y_offset = 0
+font_path = "ARIALN.TTF"
 
 # 创建一个Image对象
 image = Image.new("1", (16*font_size, 16*font_size))  # 1-bit image (black and white)
 # 获取字体对象
-font = ImageFont.truetype(font_path, 36)
+font = ImageFont.truetype(font_path, font_size)
 # 创建一个Draw对象
 draw = ImageDraw.Draw(image)
 
@@ -23,4 +23,4 @@ image = image.convert("L")
 image = ImageChops.invert(image)
 image = image.convert("1")
 
-image.save("font.bmp")
+image.save("font42ARIALN.bmp")
