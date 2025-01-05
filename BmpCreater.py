@@ -428,7 +428,7 @@ class BmpCreater():
 
                 # print(i)
 
-                if t_li_size < exps:
+                if t_li_size < exps and image_list[i]["chr"] not in ["\n","\u2029"]:
                     t_li.append({"img": image_list[i]["img"], "chr": None})
                     t_li_size += current_size
                     if space > 0:
