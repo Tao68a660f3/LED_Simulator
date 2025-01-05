@@ -83,6 +83,8 @@ class HZK_Font_Reader():
     def __init__(self,relative_path,fontPath):
         self.fontPath = fontPath
         self.fontPath = relative_path + self.fontPath
+        f = open(self.fontPath, "rb")
+        f.close()
         self.KEYS = [0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01]
 
     def get_char_map(self,text):
@@ -132,7 +134,10 @@ class Sys_Font_Reader():
         return False
 
     def get_text_bmp(self,text,y_offset=0,font_size=16,xb=1,yb=1,scale=100):
-        self.font = ImageFont.truetype(self.font_path, font_size)
+        try:
+            self.font = ImageFont.truetype(self.font_path, font_size)
+        except:    # 字体打不开时暂时用宋体代替
+            self.font = ImageFont.truetype("simsun", font_size)
         x_offseted_font = {"arial":2,"ARIALN":1,}
         scaled_font = {"FZYTK":72,}
         extra_size = int(0.2*font_size) if text.isascii() else 0
@@ -232,24 +237,36 @@ class BmpCreater():
         self.FontManager = Manager
         self.only_sysfont = only_sysfont
         self.relative_path = relative_path
-        self.ch_font = self.FontManager.font_dict[ch_font]
-        self.asc_font = self.FontManager.font_dict[asc_font]
+        try:
+            self.ch_font = self.FontManager.font_dict[ch_font]
+        except:
+            self.ch_font = self.FontManager.font_dict["宋体"]
+        try:
+            self.asc_font = self.FontManager.font_dict[asc_font]
+        except:
+            self.asc_font = self.FontManager.font_dict["宋体"]
         self.color_type = color_type
         self.color = (color[0],color[1],color[2])
 
         asc_font_type = self.asc_font.split(".")[-1].lower()
         ch_font_type = self.ch_font.split(".")[-1].lower()
         # if not self.only_sysfont:
-        if asc_font_type == "font":
-            self.ASC_Reader = ASC_font_Reader(self.relative_path,self.asc_font)
-        elif asc_font_type == "bmp":
-            self.ASC_Reader = ASC_Bmp_Reader(self.relative_path,self.asc_font)
-        else:
+        try:
+            if asc_font_type == "font":
+                self.ASC_Reader = ASC_font_Reader(self.relative_path,self.asc_font)
+            elif asc_font_type == "bmp":
+                self.ASC_Reader = ASC_Bmp_Reader(self.relative_path,self.asc_font)
+            else:
+                self.ASC_Reader = Sys_Font_Reader(self.asc_font)
+        except:
             self.ASC_Reader = Sys_Font_Reader(self.asc_font)
-        if ch_font_type == "bin":
-            self.Ch_Reader = HZK_Font_Reader(self.relative_path,self.ch_font)
-        else:
-            self.Ch_Reader = Sys_Font_Reader(self.ch_font)
+        try:
+            if ch_font_type == "bin":
+                self.Ch_Reader = HZK_Font_Reader(self.relative_path,self.ch_font)
+            else:
+                self.Ch_Reader = Sys_Font_Reader(self.ch_font)
+        except:
+            self.Ch_Reader = Sys_Font_Reader(self.asc_font)  
 
     def find_backtick_strings(self,s):
         ordered_strings = []
@@ -304,27 +321,31 @@ class BmpCreater():
                 y_offset += space        
         return new_image
 
-    def create_character(self,vertical=False, text="", ch_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, style = 0):
+    def create_character(self,vertical=False, roll_asc = False, text="", ch_font_size=16, asc_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, y_offset_asc = 0, style = 0):
         IMAGES = []
         tasks = self.find_backtick_strings(text)
         for task in tasks:
             if task in self.FontManager.icon_dict.keys():
-                ico = Image.open(self.relative_path+self.FontManager.icon_dict[task])
-                if self.color_type == "1":
-                    ico = ImageChops.invert(ico)
-                    ico = ico.convert('1')
-                IMAGES.append(ico)
+                try:
+                    ico = Image.open(self.relative_path+self.FontManager.icon_dict[task])
+                    if self.color_type == "1":
+                        ico = ImageChops.invert(ico)
+                        ico = ico.convert('1')
+                    IMAGES.append(ico)
+                except:
+                    pass     
             else:
                 font_tasks = list(task)
                 for chr in font_tasks:
                     if chr.isascii():
-                        ch = self.ASC_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,100)
+                        ch = self.ASC_Reader.get_text_bmp(chr,y_offset_asc,asc_font_size,ch_bold_size_x,ch_bold_size_y,100)
                     else:
                         if scale_sys_font_only:
                             sscale = scale
                         else:
                             sscale = 100
                         ch = self.Ch_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,sscale)
+
                     if self.color_type == "RGB":
                         # 创建一个新的彩色图像，模式为RGB，大小与原图相同
                         cch = Image.new("RGB", ch.size, self.color)                        
@@ -336,7 +357,8 @@ class BmpCreater():
                                 else:  # 黑色部分，保持透明或设为其他颜色
                                     cch.putpixel((x, y), (0, 0, 0))  # 这里设置为黑色
                         ch = cch
-                    if chr.isascii() and vertical:
+
+                    if chr.isascii() and vertical and roll_asc:
                         ch = ch.transpose(Image.ROTATE_270)
 
                     IMAGES.append(ch)
@@ -358,8 +380,8 @@ class BmpCreater():
 if __name__ == "__main__":
     ch_font="微软雅黑"
     asc_font=ch_font
-    FontCreater = BmpCreater(Manager=FontManager(),color_type="1",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, text="铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=20, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, style = 0)
+    FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
+    font_img = FontCreater.create_character(vertical=0, roll_asc = False, text="`wheelchair32x32`铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=20, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, y_offset_asc = 0, style = 0)
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]
