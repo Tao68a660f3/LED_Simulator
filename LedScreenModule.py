@@ -80,10 +80,13 @@ class ScreenController(QWidget):
         self.customContextMenuRequested.connect(self.showContextMenu)
 
     def stopThread_BmpUpdater(self):
-        if self.BmpUpdater.isRunning():
-            self.BmpUpdater.stop()
-            self.BmpUpdater.quit()
-            self.BmpUpdater.wait()
+        try:
+            if self.BmpUpdater.isRunning():
+                self.BmpUpdater.stop()
+                self.BmpUpdater.quit()
+                self.BmpUpdater.wait()
+        except Exception as e:
+            print(e)
 
     def showContextMenu(self, pos):
         contextMenu = QMenu(self)
