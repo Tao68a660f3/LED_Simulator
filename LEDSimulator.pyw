@@ -826,14 +826,13 @@ class ProgramSheetManager():
         self.show_program()
 
     def move_program(self,drag,drop):
-        if drag == drop:
-            return
-        self.programSheet.insert(drop,self.programSheet[drag])
-        if drag < drop:
-            self.programSheet.pop(drag)
-        if drag > drop:
-            self.programSheet.pop(drag+1)
-        self.parent.thisFile_saveStat.emit(False)
+        if drag != drop:
+            self.programSheet.insert(drop,self.programSheet[drag])
+            if drag < drop:
+                self.programSheet.pop(drag)
+            if drag > drop:
+                self.programSheet.pop(drag+1)
+            self.parent.thisFile_saveStat.emit(False)
         self.show_program()
 
     def mv_up_program(self):
@@ -918,6 +917,7 @@ class ProgramSettler():
 
         self.parent.tableWidget_lineChoose.itemSelectionChanged.connect(self.init_ProgramSetting)
         self.parent.tableWidget_ProgramSheet.itemSelectionChanged.connect(self.show_scnUnit)
+        self.parent.tableWidget_ProgramSheet.pressed.connect(self.show_scnUnit)
         self.parent.tableWidget_Screens.itemSelectionChanged.connect(self.show_progArgv)
         self.parent.tableWidget_Screens.rowMoved.connect(self.move_scnUnitProg)
         self.parent.combo_LineScreens.currentTextChanged.connect(self.show_scnUnit)
@@ -1005,20 +1005,19 @@ class ProgramSettler():
             screenUnitList = self.parent.ProgramSheetManager.programSheet[row][2][screen][0]
             screenProgList = self.parent.ProgramSheetManager.programSheet[row][2][screen][1]
 
-            if drag == drop:
-                return
-            screenUnitList.insert(drop,screenUnitList[drag])
-            screenProgList.insert(drop,screenProgList[drag])
+            if drag != drop:
+                screenUnitList.insert(drop,screenUnitList[drag])
+                screenProgList.insert(drop,screenProgList[drag])
 
-            if drag < drop:
-                screenUnitList.pop(drag)
-                screenProgList.pop(drag)
+                if drag < drop:
+                    screenUnitList.pop(drag)
+                    screenProgList.pop(drag)
 
-            if drag > drop:
-                screenUnitList.pop(drag+1)
-                screenProgList.pop(drag+1)
+                if drag > drop:
+                    screenUnitList.pop(drag+1)
+                    screenProgList.pop(drag+1)
 
-            self.parent.thisFile_saveStat.emit(False)
+                self.parent.thisFile_saveStat.emit(False)
 
             QTimer.singleShot(0, self.show_scnUnit)
 
