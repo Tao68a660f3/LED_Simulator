@@ -2,6 +2,7 @@ import sys, os, ast, copy, datetime
 from PyQt5.QtWidgets import QApplication, QWidget, QDialog, QMainWindow, QAbstractItemView, QTableWidgetItem, QHeaderView, QFileDialog, QPushButton, QLabel, QColorDialog, QMenu, QAction, QMessageBox
 from PyQt5.QtGui import QPixmap, QIcon, QTextCharFormat
 from PyQt5.QtCore import pyqtSignal, Qt, QCoreApplication
+
 from BmpCreater import FontManager, BmpCreater
 from ControlPanel import Ui_ControlPanel
 from NewALine import Ui_NewALine
@@ -389,10 +390,14 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
         return [self.text, self.multiLine, self.lineSpace, self.richText]
 
 class MainWindow(QMainWindow, Ui_ControlPanel):
+    thisFile_saveStat = pyqtSignal(bool)
+
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
         self.currentFileDir = ""
+        self.currentFileName = ""
+        self.thisFileSaved = True
         self.setWindowTitle("LED模拟器")
         self.setWindowIcon(QIcon("./resources/icon.ico"))
         #获取显示器分辨率大小
@@ -427,10 +432,20 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.tableWidget_ProgramSheet.itemSelectionChanged.connect(self.change_program)
         self.tableWidget_ProgramSheet.pressed.connect(self.change_program)
         self.tableWidget_lineChoose.itemSelectionChanged.connect(self.close_all_screen)
+        self.thisFile_saveStat.connect(self.set_window_title)
 
         self.timer1 = QTimer(self)
         self.timer1.timeout.connect(self.getFps)
         self.timer1.start(1000)
+
+    def set_window_title(self, thisFile_saved = False):
+        self.thisFileSaved = thisFile_saved
+        saved_sign = "[未保存]"
+        if thisFile_saved:
+            saved_sign = "[已保存]"
+        ti = self.currentFileName + " " + saved_sign + " - LED模拟器"
+
+        self.setWindowTitle(ti)
 
     def make_menu(self):
         fileMenu = self.menuBar().addMenu('文件')
@@ -476,7 +491,8 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         fileMenu.addAction(exitAction)
 
     def closeEvent(self,event):
-        self.save_file()
+        if not self.thisFileSaved:
+            self.save_file()
         # 删除屏幕截图文件夹中可能存在的GIF临时文件
         try:
             figure = os.listdir("./ScreenShots")
@@ -509,7 +525,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             for col in range(len(data[0])):
                 item = QTableWidgetItem(str(data[row][col]))
                 item.setTextAlignment(Qt.AlignLeft | Qt.AlignCenter)
-                item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)    #设置为只可选择
+                item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)    #设置为只可选择，但可拖动
                 tableWidgetObject.setItem(row,col,item)
 
     def selected_row(self,tableWidgetObject):
@@ -526,29 +542,30 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                 return
         self.LineController.new_line()
         self.currentFileDir = ""
+        self.currentFileName = "新建文件"
+        self.thisFile_saveStat.emit(False)
     
     def save_another(self):
         filedir,ok = QFileDialog.getSaveFileName(self,'保存','./','路牌文件 (*.bsu)')
         if ok:
             self.currentFileDir = filedir
+            self.currentFileName = os.path.basename(filedir)
+            self.thisFile_saveStat.emit(True)
             with open(filedir,'w',encoding = 'utf-8') as w:
                 w.write(str(self.LineEditor.LineInfoList))
 
         self.statusBar().showMessage(datetime.datetime.now().strftime("%Y%m%d %H:%M") + f"文件已保存到{self.currentFileDir}")
     
     def save_file(self):
-        button = QMessageBox.question(self, "对话框", "确定要保存吗？")
-        if button == QMessageBox.No:
-            return False
         if os.path.exists(self.currentFileDir):
             filedir = self.currentFileDir
             with open(filedir,'w',encoding = 'utf-8') as w:
                 w.write(str(self.LineEditor.LineInfoList))
+            self.thisFile_saveStat.emit(True)
         else:
             self.save_another()
 
         self.statusBar().showMessage(datetime.datetime.now().strftime("%Y%m%d %H:%M") + f"文件已保存到{self.currentFileDir}")
-        return True
 
     def open_file(self):
         if os.path.exists(self.currentFileDir):
@@ -558,10 +575,13 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         file_dir,ok = QFileDialog.getOpenFileName(self,'打开','./','路牌文件 (*.bsu)')
         if ok:
             self.currentFileDir = file_dir
+            self.currentFileName = os.path.basename(file_dir)
+            self.thisFile_saveStat.emit(True)
             with open(file_dir,'r',encoding = 'utf-8') as r:
                 list_str = r.read()
                 self.LineEditor.LineInfoList = ast.literal_eval(list_str)
             self.flush_table(self.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.LineEditor.LineInfoList])
+            self.flush_table(self.tableWidget_ProgramSheet,[])
 
     def get_currentScreen(self):
         screen = self.combo_LineScreens.currentText()  # 获取正在编辑的屏幕
@@ -609,7 +629,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             self.LedScreens[screen] = scn
         self.change_program()
 
-    def change_program(self):
+    def change_program(self):   # 切换正在显示的节目
         line_row = self.selected_row(self.tableWidget_lineChoose)
         if isinstance(line_row,int):
             programSheet = self.LineEditor.LineInfoList[line_row]["programSheet"]
@@ -734,6 +754,7 @@ class ProgramSheetManager():
 
         self.parent.tableWidget_lineChoose.itemSelectionChanged.connect(self.show_program)
         self.parent.tableWidget_ProgramSheet.itemSelectionChanged.connect(self.show_name_time)
+        self.parent.tableWidget_ProgramSheet.rowMoved.connect(self.move_program)
         self.parent.lineEdit_ProgramName.editingFinished.connect(self.change_name_time)
         self.parent.spinBox.editingFinished.connect(self.change_name_time)
         self.parent.btn_Add.clicked.connect(self.new_program)
@@ -758,8 +779,12 @@ class ProgramSheetManager():
     def change_name_time(self):
         row = self.parent.selected_row(self.parent.tableWidget_ProgramSheet)
         if isinstance(row,int):
-            self.programSheet[row][0] = self.parent.lineEdit_ProgramName.text()
-            self.programSheet[row][1] = self.parent.spinBox.value()
+            name = self.parent.lineEdit_ProgramName.text()
+            time = self.parent.spinBox.value()
+            if self.programSheet[row][0] != name or self.programSheet[row][1] != time:
+                self.programSheet[row][0] = self.parent.lineEdit_ProgramName.text()
+                self.programSheet[row][1] = self.parent.spinBox.value()
+                self.parent.thisFile_saveStat.emit(False)
             self.show_program()
             item = self.parent.tableWidget_ProgramSheet.item(row,0)
             self.parent.tableWidget_ProgramSheet.setCurrentItem(item)
@@ -784,17 +809,31 @@ class ProgramSheetManager():
             self.parent.spinBox.setValue(0)
             self.show_program()
             # print(self.programSheet)
+            self.parent.thisFile_saveStat.emit(False)
 
     def del_program(self):
         row = self.parent.selected_row(self.parent.tableWidget_ProgramSheet)
         if isinstance(row,int):
             self.programSheet.pop(row)
+            self.parent.thisFile_saveStat.emit(False)
         self.show_program()
 
     def copy_program(self):
         row = self.parent.selected_row(self.parent.tableWidget_ProgramSheet)
         if isinstance(row,int):
             self.programSheet.append(copy.deepcopy(self.programSheet[row]))
+            self.parent.thisFile_saveStat.emit(False)
+        self.show_program()
+
+    def move_program(self,drag,drop):
+        if drag == drop:
+            return
+        self.programSheet.insert(drop,self.programSheet[drag])
+        if drag < drop:
+            self.programSheet.pop(drag)
+        if drag > drop:
+            self.programSheet.pop(drag+1)
+        self.parent.thisFile_saveStat.emit(False)
         self.show_program()
 
     def mv_up_program(self):
@@ -802,6 +841,7 @@ class ProgramSheetManager():
         if isinstance(row,int):
             if row > 0:
                 self.programSheet[row],self.programSheet[row-1] = self.programSheet[row-1],self.programSheet[row]
+                self.parent.thisFile_saveStat.emit(False)
         self.show_program()
 
     def mv_dn_program(self):
@@ -809,6 +849,7 @@ class ProgramSheetManager():
         if isinstance(row,int):
             if row < len(self.programSheet)-1:
                 self.programSheet[row],self.programSheet[row+1] = self.programSheet[row+1],self.programSheet[row]
+                self.parent.thisFile_saveStat.emit(False)
         self.show_program()
 
 class ProgramSettler():
@@ -878,6 +919,7 @@ class ProgramSettler():
         self.parent.tableWidget_lineChoose.itemSelectionChanged.connect(self.init_ProgramSetting)
         self.parent.tableWidget_ProgramSheet.itemSelectionChanged.connect(self.show_scnUnit)
         self.parent.tableWidget_Screens.itemSelectionChanged.connect(self.show_progArgv)
+        self.parent.tableWidget_Screens.rowMoved.connect(self.move_scnUnitProg)
         self.parent.combo_LineScreens.currentTextChanged.connect(self.show_scnUnit)
         self.parent.btn_ok.clicked.connect(self.save_progArgv)
         self.parent.btn_Colorful_ChooseColor.clicked.connect(self.get_color)
@@ -923,6 +965,7 @@ class ProgramSettler():
                         self.screenProgList[row]["lineSpace"] = lineSpace
                         self.screenProgList[row]["richText"] = richText
                         self.parent.change_program()
+            self.parent.thisFile_saveStat.emit(False)
         
         self.show_progArgv()
 
@@ -954,7 +997,32 @@ class ProgramSettler():
             screen = "前路牌"
         screen = screenLink[screen]
         return screen
-        
+    
+    def move_scnUnitProg(self,drag,drop):
+        row = self.parent.selected_row(self.parent.tableWidget_ProgramSheet)
+        if isinstance(row,int):
+            screen = self.get_currentScreen()
+            screenUnitList = self.parent.ProgramSheetManager.programSheet[row][2][screen][0]
+            screenProgList = self.parent.ProgramSheetManager.programSheet[row][2][screen][1]
+
+            if drag == drop:
+                return
+            screenUnitList.insert(drop,screenUnitList[drag])
+            screenProgList.insert(drop,screenProgList[drag])
+
+            if drag < drop:
+                screenUnitList.pop(drag)
+                screenProgList.pop(drag)
+
+            if drag > drop:
+                screenUnitList.pop(drag+1)
+                screenProgList.pop(drag+1)
+
+            self.parent.thisFile_saveStat.emit(False)
+
+            QTimer.singleShot(0, self.show_scnUnit)
+
+
     def show_scnUnit(self):
         data = []
         row = self.parent.selected_row(self.parent.tableWidget_ProgramSheet)
@@ -965,9 +1033,13 @@ class ProgramSettler():
 
             # 更改线路默认屏幕布局
             progrow = self.parent.selected_row(self.parent.tableWidget_lineChoose)  # 当前选择的线路 注意变量为 progrow
-            self.parent.LineEditor.LineInfoList[progrow][screen]["screenUnit"] = copy.deepcopy(screenUnitList)
-            self.parent.combo_LineScreensForLayout.setCurrentText(self.parent.combo_LineScreens.currentText())  # 当节目内容编辑的屏幕改变时，保持线路设置中的屏幕同步
-            self.parent.LineSettler.show_custom_layout_btn()
+            if isinstance(progrow,int):
+                self.parent.LineEditor.LineInfoList[progrow][screen]["screenUnit"] = copy.deepcopy(screenUnitList)
+                self.parent.combo_LineScreensForLayout.setCurrentText(self.parent.combo_LineScreens.currentText())  # 当节目内容编辑的屏幕改变时，保持线路设置中的屏幕同步
+                self.parent.LineSettler.show_custom_layout_btn()
+            else:
+                self.parent.flush_table(self.parent.tableWidget_ProgramSheet,[])
+                return
 
             for i in range(min(len(screenProgList),len(screenUnitList))):
                 p = screenProgList[i]
@@ -984,7 +1056,7 @@ class ProgramSettler():
             current_row = self.parent.selected_row(self.parent.tableWidget_Screens)
             if current_row is None:
                 current_row = 0
-            # print(current_row)
+            # print(data)
             self.parent.flush_table(self.parent.tableWidget_Screens,data)
             self.parent.tableWidget_Screens.setCurrentItem(self.parent.tableWidget_Screens.item(current_row,0))
         else:
@@ -1183,39 +1255,7 @@ class ProgramSettler():
                 else:
                     self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
 
-                # try:
-                #     if self.screenProgList[row]["richText"][0]:    # 支持富文本
-                #         text_list = ast.literal_eval(self.screenProgList[row]["text"])  # 并且实际上已经是字符串形式的列表，不然进入except
-                #         # print("text_list:",text_list)
-                #         # print(self.screenProgList[row]["text"])
-                #         for i in text_list:
-                #             text_list_str += i["char"]
-                #             # print("i:",i,"text_list_str:",text_list_str)
-                #         if text_list_str == simple_origin_text:
-                #             pass
-                #         else:
-                #             color = ['#ff{:02X}{:02X}{:02X}'.format(r, g, b),text_list[0]["background"]]  # 如果一级界面上的字符串被再次编辑了，重新生成字符串列表，并保存为字符串形式，以第一个字符的颜色为基准
-                #             text_list = []
-                #             char_data = {
-                #                     'char': simple_origin_text,
-                #                     'foreground': color[0],
-                #                     'background': color[1]
-                #                 }
-                #             text_list.append(char_data)
-                #             self.screenProgList[row]["text"] = str(text_list)
-                            
-                #     else:
-                #         self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
-                #     print(self.screenProgList[row]["text"])
-                # except:   # 支持富文本，但字符串似乎不能转换为列表
-                #     try:
-                #         self.screenProgList[row]["richText"][0] = False
-                #         self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
-                #         print(self.screenProgList[row]["text"])
-                #     except Exception as e:
-                #         print(e)
-                #         print("文件版本过低")
-                #         self.screenProgList[row]["text"] = self.parent.lineEdit_Text.text()
+            self.parent.thisFile_saveStat.emit(False)
 
         self.parent.change_program()     # 不可改变顺序
         self.show_scnUnit()
@@ -1439,6 +1479,7 @@ class LineSettler():
                     print("撤回出错")
 
             self.show_custom_layout_btn()
+            self.parent.thisFile_saveStat.emit(False)
 
     def add_custom_layout_pre(self,index):
         old_pointNum = self.customLayouts[index]["pointNum"]
@@ -1521,6 +1562,7 @@ class LineSettler():
                 self.layoutHistory.append(copy.deepcopy(self.customLayouts))
                 self.layoutHistoryCount = len(self.layoutHistory)-1
                 self.show_custom_layout_btn()
+                self.parent.thisFile_saveStat.emit(False)
 
     def get_scn_pos_size(self,row,screen,w1,h1,enable_mode = True):
         mode = self.parent.LineEditor.LineInfoList[row]["preset"]
@@ -1633,6 +1675,8 @@ class LineSettler():
             else:
                 self.parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = [copy.deepcopy(template_screenInfo["midSize_1"])]
             self.parent.ProgramSettler.show_scnUnit()
+
+            self.parent.thisFile_saveStat.emit(False)
         self.set_linemode_pixmap()
 
 class LineController():
@@ -1648,6 +1692,7 @@ class LineController():
         self.parent.tableWidget_lineChoose.setColumnWidth(2,70)
         self.parent.tableWidget_lineChoose.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
         self.parent.tableWidget_lineChoose.verticalHeader().setDefaultSectionSize(18)
+        self.parent.tableWidget_lineChoose.rowMoved.connect(self.onRowMoved)
 
         self.parent.combo_FlushRate.addItems(["60","54","50","48","30","24","18","15"])
 
@@ -1671,15 +1716,18 @@ class LineController():
         if isinstance(row,int):
             n = self.parent.LineNameEdit.text()
             f = int(self.parent.combo_FlushRate.currentText())
-            self.parent.LineEditor.LineInfoList[row]["lineName"] = n
-            self.parent.LineEditor.LineInfoList[row]["flushRate"] = f
+            if self.parent.LineEditor.LineInfoList[row]["lineName"] != n or self.parent.LineEditor.LineInfoList[row]["flushRate"] != f:
+                self.parent.LineEditor.LineInfoList[row]["lineName"] = n
+                self.parent.LineEditor.LineInfoList[row]["flushRate"] = f
+                self.parent.thisFile_saveStat.emit(False)
             self.parent.flush_table(self.parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.parent.LineEditor.LineInfoList])
             self.parent.tableWidget_lineChoose.setCurrentItem(self.parent.tableWidget_lineChoose.item(row,0))
-
 
     def new_line(self):
         self.parent.LineEditor.LineInfoList = []
         self.parent.flush_table(self.parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.parent.LineEditor.LineInfoList])
+
+        self.parent.thisFile_saveStat.emit(False)
 
     def new_busLine_openDialog(self):
         dialog = NewALine(self.parent)
@@ -1690,29 +1738,39 @@ class LineController():
         self.parent.LineEditor.add_data(data)
         self.parent.LineSettler.retranslate_screenUnit_size()
         self.parent.flush_table(self.parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.parent.LineEditor.LineInfoList])
+        self.parent.thisFile_saveStat.emit(False)
 
     def copy_busLine(self):
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
         if row != None:
             self.parent.LineEditor.copy_data(row)
             self.parent.flush_table(self.parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.parent.LineEditor.LineInfoList])
+            self.parent.thisFile_saveStat.emit(False)
 
     def del_busLine(self):
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
         if row != None:
             self.parent.LineEditor.remove_data(row)
             self.parent.flush_table(self.parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.parent.LineEditor.LineInfoList])
+            self.parent.thisFile_saveStat.emit(False)
+
+    def onRowMoved(self,drag,drop):
+        self.parent.LineEditor.move_row(drag,drop)
+        self.parent.thisFile_saveStat.emit(False)
+        self.parent.flush_table(self.parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.parent.LineEditor.LineInfoList])
 
     def mv_up_busLine(self):
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
         if row != None:
             self.parent.LineEditor.mv_up(row)
+            self.parent.thisFile_saveStat.emit(False)
         self.parent.flush_table(self.parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.parent.LineEditor.LineInfoList])
 
     def mv_dn_busLine(self):
         row = self.parent.selected_row(self.parent.tableWidget_lineChoose)
         if row != None:
             self.parent.LineEditor.mv_dn(row)
+            self.parent.thisFile_saveStat.emit(False)
         self.parent.flush_table(self.parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.parent.LineEditor.LineInfoList])
 
 class LineEditor():
@@ -1738,6 +1796,15 @@ class LineEditor():
 
     def copy_data(self,row):
         self.LineInfoList.append(copy.deepcopy(self.LineInfoList[row]))
+
+    def move_row(self,drag,drop):
+        if drag == drop:
+            return
+        self.LineInfoList.insert(drop,self.LineInfoList[drag])
+        if drag < drop:
+            self.LineInfoList.pop(drag)
+        if drag > drop:
+            self.LineInfoList.pop(drag+1)
     
     def mv_up(self,row):
         if row > 0:

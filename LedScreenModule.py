@@ -86,7 +86,7 @@ class ScreenController(QWidget):
                 self.BmpUpdater.quit()
                 self.BmpUpdater.wait()
         except Exception as e:
-            print(e)
+            print("stopThread_BmpUpdater:", e)
 
     def showContextMenu(self, pos):
         contextMenu = QMenu(self)
@@ -199,7 +199,7 @@ class ScreenController(QWidget):
                 self.gifFrames = []
                 self.tmpGifNames.append(fileName)
             except Exception as e:
-                print(e)
+                print("save_gif: ", e)
         else:
             self.save_gif(True)
             fileName = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S_output.gif")
@@ -242,24 +242,23 @@ class ScreenController(QWidget):
                     s.createFontImg()
                     s.progSheet["text"] = oldStr
         except Exception as e:
-            print(e)
+            print("checkTimeStr:", e)
         
     def checkProgramTimeout(self):
         try:
             self.runningTime = time.time() - self.currentBeginTime
             if self.runningTime >= self.currentPtime and self.currentPtime >= 0:
                 self.programTimeout()
-            index = self.currentIndex-1 if self.currentIndex>0 else len(self.screenProgramSheet)-1
-            if 3 in range(len(self.screenProgramSheet[index])) or self.currentPtime < 0:
+
+            if self.currentPtime < 0:
                 num = []
                 for u in self.units:
                     num.append(u.counter)
                 if self.currentPtime < 0 and max(num) >= 1:
                     self.programTimeout()
-                if max(num) >= self.screenProgramSheet[index][3] and self.currentPtime >= 0:
-                    self.programTimeout()
+
         except Exception as e:
-            print(e)
+            print("checkProgramTimeout: ", e)
 
     def programTimeout(self):
         self.currentBeginTime = time.time()
@@ -273,7 +272,7 @@ class ScreenController(QWidget):
                     for i in range(min(len(unitAndProgram[0]),len(unitAndProgram[1]))):
                         self.units.append(ScreenUnit(unitAndProgram[0][i],unitAndProgram[1][i],self.colorMode,self.offset,self.FontIconMgr))
                 except Exception as e:
-                    print(e)
+                    print("programTimeout:", e)
             if self.currentIndex+1 <= len(self.screenProgramSheet)-1:
                 self.currentIndex += 1
             else:
@@ -732,10 +731,8 @@ class ScreenUnit():
         self.BmpCreater = BmpCreater(self.FontIconMgr,self.colorMode,self.progSheet["color_RGB"],self.progSheet["font"],self.progSheet["ascFont"],self.progSheet["sysFontOnly"],)
         self.createFontImg()
 
-        try:
+        if "x_offset" in self.progSheet.keys():
             self.x_offset = self.progSheet["x_offset"]
-        except:
-            print("显示屏模块尝试读取1版设置")
         
         if not self.progSheet["vertical"]:
             align = self.progSheet["align"]
@@ -769,10 +766,8 @@ class ScreenUnit():
             elif ("上" in self.appearance or "下"  in self.appearance):
                 self.y += self.x_offset
 
-        try:
+        if "y_offset_global" in self.progSheet.keys():
             self.y += self.progSheet["y_offset_global"]
-        except:
-            print("显示屏模块尝试读取2版设置") # 尚未开发完成
 
     def createFontImg(self):
         _roll_asc = True

@@ -449,12 +449,37 @@ class BmpCreater():
         else:
             # print("拼图第3种情况")
             return Image.new(color_type,(10,10))
+        
+    def fill_image_with_color(self, task_1 = "0", image = Image.new("1", (10,10)), foc = (255, 255, 255, 255), bac = (0, 0, 0, 0)):
+        # 创建一个新的彩色图像，模式为RGBA，大小与原图相同
+        im = Image.new("RGBA", image.size)
+        if task_1 == "0":
+            # 将原图的非黑色部分（即白色部分）用指定颜色替换
+            for x in range(image.width):
+                for y in range(image.height):
+                    if image.getpixel((x, y)) != 0:  # 白色部分
+                        im.putpixel((x, y), self.color)
+                    else:  # 黑色部分，保持透明或设为其他颜色
+                        im.putpixel((x, y), (0, 0, 0, 0))  # 这里设置为黑色
+        else:
+            for x in range(image.width):
+                for y in range(image.height):
+                    if image.getpixel((x, y)) != 0:
+                        im.putpixel((x, y), foc)
+                    else:
+                        im.putpixel((x, y), bac)
+            
+        return im
 
     def create_character(self,vertical=False, roll_asc = False, text="", ch_font_size=16, asc_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, y_offset_asc = 0, style = [0, 0], multi_line = {"stat":False, "line_space": 0 }):
         IMAGES = []
         tasks = []
+        foc = (255, 255, 255, 255)
+        bac = (0, 0, 0, 0)
+
         if text == "":
             text = " "
+
         try:
             coloredstritems = ast.literal_eval(text)
             s = ""
@@ -469,17 +494,16 @@ class BmpCreater():
         for task in tasks:
             # 获取前景色背景色
             if task[1] != "0":
+                tup = (3, 5, 7, 1)
+                fore_col_hex = task[1]
                 if len(task[1]) == 7 :
-                    tup = (1, 3, 5)
-                elif len(task[1]) == 9:
-                    tup = (3, 5, 7, 1)
-                foc = tuple(int(task[1][i:i+2], 16) for i in tup)
+                    fore_col_hex = "#ff" + fore_col_hex[1:]
+                foc = tuple(int(fore_col_hex[i:i+2], 16) for i in tup)
                 if task[2] != "0":
+                    back_col_hex = task[2]
                     if len(task[2]) == 7 :
-                        tup = (1, 3, 5)
-                    elif len(task[2]) == 9:
-                        tup = (3, 5, 7, 1)
-                    bac = tuple(int(task[2][i:i+2], 16) for i in tup)
+                        back_col_hex = "#ff" + back_col_hex[1:]
+                    bac = tuple(int(back_col_hex[i:i+2], 16) for i in tup)
                 else:
                     bac = (0, 0, 0, 0)
 
@@ -495,7 +519,11 @@ class BmpCreater():
                             ico = ImageChops.invert(ico)
                             ico = ico.convert('1')
                         elif self.color_type == "RGB":
-                            ico = ico.convert("RGBA")
+                            if ico.mode == "1":
+                                ico = ImageChops.invert(ico)
+                                ico = self.fill_image_with_color(task[1], ico, foc, bac)
+                            else:
+                                ico = ico.convert("RGBA")
                         icon = {"img": ico, "chr": None}
                         IMAGES.append(icon)
                     except:
@@ -513,25 +541,26 @@ class BmpCreater():
                             ch = self.Ch_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,sscale)
 
                         if self.color_type == "RGB":
-                            # 创建一个新的彩色图像，模式为RGB，大小与原图相同
-                            cch = Image.new("RGBA", ch.size, self.color)
-                            if task[1] == "0":
-                                # 将原图的非黑色部分（即白色部分）用指定颜色替换
-                                for x in range(ch.width):
-                                    for y in range(ch.height):
-                                        if ch.getpixel((x, y)) != 0:  # 白色部分
-                                            cch.putpixel((x, y), self.color)
-                                        else:  # 黑色部分，保持透明或设为其他颜色
-                                            cch.putpixel((x, y), (0, 0, 0, 0))  # 这里设置为黑色
-                            else:
-                                for x in range(ch.width):
-                                    for y in range(ch.height):
-                                        if ch.getpixel((x, y)) != 0:
-                                            cch.putpixel((x, y), foc)
-                                        else:
-                                            cch.putpixel((x, y), bac)
+                            ch = self.fill_image_with_color(task[1], ch, foc, bac)
+                            # # 创建一个新的彩色图像，模式为RGB，大小与原图相同
+                            # cch = Image.new("RGBA", ch.size, self.color)
+                            # if task[1] == "0":
+                            #     # 将原图的非黑色部分（即白色部分）用指定颜色替换
+                            #     for x in range(ch.width):
+                            #         for y in range(ch.height):
+                            #             if ch.getpixel((x, y)) != 0:  # 白色部分
+                            #                 cch.putpixel((x, y), self.color)
+                            #             else:  # 黑色部分，保持透明或设为其他颜色
+                            #                 cch.putpixel((x, y), (0, 0, 0, 0))  # 这里设置为黑色
+                            # else:
+                            #     for x in range(ch.width):
+                            #         for y in range(ch.height):
+                            #             if ch.getpixel((x, y)) != 0:
+                            #                 cch.putpixel((x, y), foc)
+                            #             else:
+                            #                 cch.putpixel((x, y), bac)
                                 
-                            ch = cch
+                            # ch = cch
 
                         if chr.isascii() and vertical and roll_asc:
                             ch = ch.transpose(Image.ROTATE_270)
@@ -549,11 +578,11 @@ class BmpCreater():
         # 缩放图像横向宽度
         if (auto_scale and not scale_sys_font_only) and new_width != None and new_height != None:
             if len(text) <= 2*new_width/new_height and img_width > new_width:
-                new_image = new_image.resize((new_width,img_height),resample=Image.LANCZOS)
+                new_image = new_image.resize((new_width,img_height),resample=Image.BOX)
             if len(text) > 2*new_width/new_height and img_width > new_width:
-                new_image = new_image.resize((int(img_width*(new_height/2)/ch_font_size),img_height),resample=Image.LANCZOS)
+                new_image = new_image.resize((int(img_width*(new_height/2)/ch_font_size),img_height),resample=Image.BOX)
         if (not auto_scale and not scale_sys_font_only):
-            new_image = new_image.resize((int(img_width*scale/100),img_height),resample=Image.LANCZOS)
+            new_image = new_image.resize((int(img_width*scale/100),img_height),resample=Image.BOX)
         # 保存图像
         return new_image
     
@@ -563,7 +592,7 @@ if __name__ == "__main__":
     ch_font="等线"
     asc_font="Arial"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=True, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=2, scale=100, auto_scale=0, scale_sys_font_only=0, new_width = 128, new_height = 64, y_offset = 0, y_offset_asc = 0, style = [0,0], multi_line = {"stat":True, "line_space": 1.5 })
+    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=24, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=80, auto_scale=0, scale_sys_font_only=0, new_width = 240, new_height = 160, y_offset = 0, y_offset_asc = 0, style = [0,0], multi_line = {"stat":True, "line_space": 1.1 })
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]
