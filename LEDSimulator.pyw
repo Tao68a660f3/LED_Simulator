@@ -491,8 +491,9 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         fileMenu.addAction(exitAction)
 
     def closeEvent(self,event):
+        print(self.thisFileSaved)
         if not self.thisFileSaved:
-            self.save_file()
+            self.save_file(pop=True)
         # 删除屏幕截图文件夹中可能存在的GIF临时文件
         try:
             figure = os.listdir("./ScreenShots")
@@ -556,7 +557,11 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
         self.statusBar().showMessage(datetime.datetime.now().strftime("%Y%m%d %H:%M") + f"文件已保存到{self.currentFileDir}")
     
-    def save_file(self):
+    def save_file(self,pop = False):
+        if pop:
+            button = QMessageBox.question(self, "对话框", "确定要保存吗？")
+            if button == QMessageBox.No:
+                return False
         if os.path.exists(self.currentFileDir):
             filedir = self.currentFileDir
             with open(filedir,'w',encoding = 'utf-8') as w:
@@ -566,6 +571,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             self.save_another()
 
         self.statusBar().showMessage(datetime.datetime.now().strftime("%Y%m%d %H:%M") + f"文件已保存到{self.currentFileDir}")
+        return True
 
     def open_file(self):
         if os.path.exists(self.currentFileDir):
