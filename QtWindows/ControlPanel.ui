@@ -596,6 +596,19 @@
                <widget class="QComboBox" name="combo_LineScreens"/>
               </item>
               <item>
+               <widget class="QPushButton" name="btn_screenSet">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>屏幕设置</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QPushButton" name="btn_showSelectedScreen">
                 <property name="text">
                  <string>预览</string>

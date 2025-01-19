@@ -12,6 +12,7 @@ from LineInfo import *
 from LedScreenModule import *
 from About import *
 from ColorMultiLine import *
+from ProgSettings import *
 
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
@@ -44,6 +45,7 @@ class NewALine(QDialog,Ui_NewALine):
         self.setupUi(self)
         self.initUI()
         self.setWindowTitle("LED模拟器 新建线路")
+        self.setModal(True)
 
     def initUI(self):
         self.buttonBox.accepted.connect(self.onOk)
@@ -168,6 +170,7 @@ class SelfDefineLayout(QDialog,Ui_SelfDefineScreen):
         self.initUI()
 
     def initUI(self):
+        self.setModal(True)
         self.setWindowTitle("选择要添加的屏幕")
         self.combo_Layout.addItems(["更改屏幕","水平布局","垂直布局"])
         self.combo_PointKind.addItems(ledTypes)
@@ -217,7 +220,7 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
 
     def initUI(self):
         self.setWindowTitle("设置字符串颜色及多行")
-
+        self.setModal(True)
         self.textEdit.setStyleSheet("background-color: black; color: white")
 
         default_format = QTextCharFormat()
@@ -388,6 +391,64 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
         # print("get_edit_result: ", self.text)
 
         return [self.text, self.multiLine, self.lineSpace, self.richText]
+
+class ProgramSettings(QDialog,Ui_ProgSet):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.initUI()
+        self.backgroundDescribeText = ""      # no, colorBackground((r,g,b)), imgBackground("img_filename(not dir)","fillMode"), videoBackground("video_filename(not dir)","fillMode", vol)
+
+
+        self.ProgScreenSetting = {
+            "background" : "noBackground",
+            "tigger" : {"frontScreen" : (0, 1),   # (scrnUnitList的序号, 该框节目的重复次数)
+                      "backScreen" : (0, 1),
+                      "frontSideScreen" : (0, 1),
+                      "backSideScreen" : (0, 1)},
+            "inherit" : 0,
+        }
+
+    def initUI(self):
+        self.setModal(True)
+        self.setWindowTitle("路牌节目设置（实验）")
+        self.btn_chooseColor.clicked.connect(self.set_background_color)
+
+
+    def set_value(self, progScreenSetting = None):
+        if progScreenSetting != None:
+            self.ProgScreenSetting = progScreenSetting
+            self.backgroundDescribeText = self.ProgScreenSetting["background"]
+            self.set_ui_value()
+
+    def set_ui_value(self):
+        self.label_bgDescribe.setText(self.backgroundDescribeText)
+        if self.backgroundDescribeText.startswith("colorBackground"):
+            # 使用正则表达式匹配括号中的RGB值
+            pattern = r"colorBackground\(\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\)"
+            match = re.search(pattern, self.backgroundDescribeText)
+            print(match)
+            if match:
+                # 提取匹配到的三个数字并转换为整数
+                r = max(0,min(255,int(match.group(1))))
+                g = max(0,min(255,int(match.group(2))))
+                b = max(0,min(255,int(match.group(3))))
+                color =  (r, g, b)
+                # print(color)
+                self.btn_chooseColor.setStyleSheet(f"background-color: rgb{color}")
+
+
+    def set_background_color(self):
+        col = QColorDialog.getColor()
+        if col.isValid():
+            color = (col.red(), col.green(), col.blue())
+            self.backgroundDescribeText = f"colorBackground({color})"
+            self.ProgScreenSetting["background"] = self.backgroundDescribeText
+            self.btn_chooseColor.setStyleSheet(f"background-color: rgb{color}")
+            self.label_bgDescribe.setText(self.backgroundDescribeText)
+
+
+
 
 class MainWindow(QMainWindow, Ui_ControlPanel):
     thisFile_saveStat = pyqtSignal(bool)
@@ -963,11 +1024,46 @@ class ProgramSettler():
         self.Parent.combo_Show.currentTextChanged.connect(self.update_argv)
         self.Parent.checkBox_sysFont.stateChanged.connect(self.change_EngFont_set)
         self.Parent.btn_textSetting.clicked.connect(self.set_colorstr_multiLine)
+        self.Parent.btn_screenSet.clicked.connect(self.set_screenSet)
         
         self.Parent.lineEdit_Text.editingFinished.connect(self.save_progArgv)
 
         self.Parent.btn_ok.setShortcut(Qt.Key_Return)
 
+    def set_screenSet(self):
+        row = self.Parent.currentLine
+        if isinstance(row,int):
+            screen = self.get_currentScreen()
+            colorMode = self.Parent.LineEditor.LineInfoList[row][screen]["colorMode"]
+            row = self.Parent.currentProg
+            if isinstance(row,int):
+                # print(self.Parent.ProgramSheetManager.programSheet[row])
+                if len(self.Parent.ProgramSheetManager.programSheet[row][2][screen]) == 2:  # (原始版本数据)
+                    ext_dict = dict()
+                    self.Parent.ProgramSheetManager.programSheet[row][2][screen].append(ext_dict)  # 所有扩展功能必须加在这个extdict里，不能再添加列表项了（列表长度3）
+                    # 查找 ext_dict 使用 self.Parent.ProgramSheetManager.programSheet[row][2][screen][2]
+
+                if len(self.Parent.ProgramSheetManager.programSheet[row][2][screen]) == 3:
+                    ext_dict = self.Parent.ProgramSheetManager.programSheet[row][2][screen][2]
+                    # print(ext_dict)
+                    if "ProgScreenSetting" in ext_dict.keys():
+                        ProgScreenSetting = ext_dict["ProgScreenSetting"]
+                    else:
+                        ProgScreenSetting = None
+
+                ProgSettingDialog = ProgramSettings()
+                ProgSettingDialog.show()
+                ProgSettingDialog.set_value(progScreenSetting=ProgScreenSetting)
+
+                if ProgSettingDialog.exec_() == QDialog.Accepted:
+                    ProgScreenSetting = ProgSettingDialog.ProgScreenSetting
+                    self.Parent.ProgramSheetManager.programSheet[row][2][screen][2]["ProgScreenSetting"] = ProgScreenSetting  # ext_dict["ProgScreenSetting"]
+                    self.Parent.change_program()
+                    self.Parent.thisFile_saveStat.emit(False)
+
+
+
+                
     def set_colorstr_multiLine(self):
         colorMode = "1"
         multiLine = False

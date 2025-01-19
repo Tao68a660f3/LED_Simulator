@@ -41,6 +41,7 @@ class ScreenController(QWidget):
         self.screenProgramSheet = screenProgramSheet
         self.toDisplay = toDisplay
         self.FontIconMgr = FontIconMgr
+        self.currentScreenProgSet = dict()
         self.currentIndex = 0
         self.currentPtime = 0
         self.currentBeginTime = 0
@@ -50,10 +51,11 @@ class ScreenController(QWidget):
         self.progStopGif = False
         # self.endGifFrame = 0
         self.fpsCounter = 0
-        self.commonFps = flushRate
+        self.commonFps = 0
         self.units = []
         self.gifFrames = []
         self.tmpGifNames = []
+        self.BackImg = Image.new("RGB", (screenInfo["screenSize"][0],screenInfo["screenSize"][1]))
 
         if len(self.screenProgramSheet) == 0:
             self.screenProgramSheet = undefinedProgramSheet
@@ -290,9 +292,18 @@ class ScreenController(QWidget):
                 try:
                     self.currentPtime = self.screenProgramSheet[self.currentIndex][1]
                     unitAndProgram = self.screenProgramSheet[self.currentIndex][2][self.toDisplay]
+                    if len(unitAndProgram) == 3:
+                        ext_dict = unitAndProgram[2]
+                        if "ProgScreenSetting" in ext_dict.keys():
+                            self.currentScreenProgSet = ext_dict["ProgScreenSetting"]
+                        else:
+                            self.currentScreenProgSet = None
+                    else:
+                        self.currentScreenProgSet = None
                     self.units = []
                     for i in range(min(len(unitAndProgram[0]),len(unitAndProgram[1]))):
                         self.units.append(ScreenUnit(unitAndProgram[0][i],unitAndProgram[1][i],self.colorMode,self.offset,self.FontIconMgr))
+                    self.backgroundPerformer()
                 except Exception as e:
                     print("programTimeout:", e)
             if self.currentIndex+1 <= len(self.screenProgramSheet)-1:
@@ -301,6 +312,39 @@ class ScreenController(QWidget):
                 self.currentIndex = 0
                 self.performFinish = True
         self.checkTimeStr()
+
+    def backgroundPerformer(self):
+        if self.currentScreenProgSet != None:
+            backgroundDescribeText = self.currentScreenProgSet["background"]
+
+            if backgroundDescribeText.startswith("colorBackground"):
+                # 使用正则表达式匹配括号中的RGB值
+                pattern = r"colorBackground\(\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\)"
+                match = re.search(pattern, backgroundDescribeText)
+                if match:
+                    # 提取匹配到的三个数字并转换为整数
+                    r = max(0,min(255,int(match.group(1))))
+                    g = max(0,min(255,int(match.group(2))))
+                    b = max(0,min(255,int(match.group(3))))
+                    color =  (r, g, b)
+                    self.BackImg = Image.new("RGB", (self.screenSize[0],self.screenSize[1]), color)
+                    self.backgroundImgUpdater()
+
+    def backgroundImgUpdater(self):
+        sw,sh = self.screenSize[0]*self.screenScale[0], self.screenSize[1]*self.screenScale[1]
+        imw,imh = self.BackImg.width,self.BackImg.height
+        for u in self.units:
+            ux,uy = u.position
+            upn,usz = u.pointNum,u.scale
+            tx,ty = int(ux*imw/sw),int(uy*imh/sh)
+            tw,th = int(imw*upn[0]*usz[0]/sw),int(imh*upn[1]*usz[1]/sh)
+            # print("转换坐标：",tx,ty,tw,th,"图像大小：",imw,imh)
+            im = self.BackImg.crop((tx,ty,tx+tw,ty+th))
+            if self.colorMode == "1":
+                im = im.convert('1')
+            im = im.resize((upn[0],upn[1]),resample=Image.BILINEAR)
+            u.backBitmap = im
+
 
     def paintEvent(self, event):
         qp = QPainter()
@@ -327,7 +371,7 @@ class ScreenController(QWidget):
         self.fpsCounter = 0
         fps = str(fps)
         if self.gifRecording:
-            fps += f"  {self.toDisplay} 正在录制GIF  "
+            fps += f"  {self.toDisplay} 正在录制GIF({self.commonFps})  "
         self.setWindowTitle(f'{self.toDisplay} @ {fps} FPS')
         return fps
 
@@ -709,6 +753,10 @@ class ScreenController(QWidget):
             baseColor = QColor(*unit.color_1[0])
         for y in range(pointNum[1]):
             for x in range(pointNum[0]):
+                if x < unit.backBitmap.width and y < unit.backBitmap.height:
+                    bac_color = unit.backBitmap.getpixel((x,y))
+                else:
+                    bac_color = 0 if colorMode == "1" else (0,0,0)
                 qp.setBrush(baseColor)
                 if rollSpace < 0 and x + x_pos in range(bitmapSize[0]) and y + y_pos in range(bitmapSize[1]) and appear:
                     color = unit.Bitmap.getpixel((x + x_pos, y + y_pos))
@@ -719,10 +767,13 @@ class ScreenController(QWidget):
                 else:
                     color = [0, 0, 0, 0] if colorMode == "RGB" else 0
                 if colorMode == "RGB" :
+                    alpha = color[3]
+                    color = [int(color[i] * alpha/255 + bac_color[i] * (255 - alpha)/255) for i in range(3)]
                     color = [black + int((255 - black) * c / 255) for c in color[0:3]]
                     qp.setBrush(QColor(*color))
-                elif colorMode == "1" and color != 0:
-                    qp.setBrush(QColor(*unit.color_1[1]))
+                elif colorMode == "1":
+                    if bac_color | color and not bac_color & color:
+                        qp.setBrush(QColor(*unit.color_1[1]))
                 ellipse_x = offset + position[0] + x * scale[0] + int(0.5 * (scale[0] - pointSize))
                 ellipse_y = offset + position[1] + y * scale[1] + int(0.5 * (scale[1] - pointSize))
                 qp.drawEllipse(ellipse_x, ellipse_y, pointSize, pointSize+1)
@@ -750,6 +801,7 @@ class ScreenUnit():
         self.color_1 = template_monochromeColors[self.progSheet["color_1"]]
         self.color_RGB = self.progSheet["color_RGB"]
         self.Bitmap = Image.new(self.colorMode,(1,1))
+        self.backBitmap = Image.new(self.colorMode,(1,1))
         self.BmpCreater = BmpCreater(self.FontIconMgr,self.colorMode,self.progSheet["color_RGB"],self.progSheet["font"],self.progSheet["ascFont"],self.progSheet["sysFontOnly"],)
         self.createFontImg()
 
