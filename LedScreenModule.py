@@ -47,6 +47,7 @@ class ScreenController(QWidget):
         self.runningTime = 0
         self.performFinish = False
         self.gifRecording = False
+        self.progStopGif = False
         # self.endGifFrame = 0
         self.fpsCounter = 0
         self.commonFps = flushRate
@@ -103,9 +104,15 @@ class ScreenController(QWidget):
             newAction = QAction('开始录制GIF', self)
             newAction.triggered.connect(self.start_recording_gif)
             contextMenu.addAction(newAction)
+            newAction = QAction('从节目开头开始录制GIF', self)
+            newAction.triggered.connect(self.p_start_recording_gif)
+            contextMenu.addAction(newAction)
         else:
             newAction = QAction('结束录制GIF', self)
             newAction.triggered.connect(self.stop_recording_gif)
+            contextMenu.addAction(newAction)
+            newAction = QAction('节目完成后结束录制GIF', self)
+            newAction.triggered.connect(self.p_stop_recording_gif)
             contextMenu.addAction(newAction)
             newAction = QAction('结束请耐心等待(^_^)', self)
             newAction.triggered.connect(self.stop_recording_gif)
@@ -187,15 +194,26 @@ class ScreenController(QWidget):
         self.gifFrames = []
         self.gifRecording = True
 
+    def p_start_recording_gif(self):
+        if self.currentIndex > 0:
+            self.currentIndex -= 1
+        else:
+            self.currentIndex = len(self.screenProgramSheet) - 1
+        self.programTimeout()
+        self.start_recording_gif()
+
     def stop_recording_gif(self):
         self.gifRecording = False
         self.save_gif()
+
+    def p_stop_recording_gif(self):
+        self.progStopGif = True
 
     def save_gif(self, temp = False):
         if temp:
             try:
                 fileName = datetime.datetime.now().strftime(f"temp_{self.toDisplay}_%Y%m%d%H%M%S.gif")
-                self.gifFrames[0].save(os.path.join("./ScreenShots",fileName), save_all=True, append_images=self.gifFrames[1:], optimize=False, duration=0.1, loop=0)
+                self.gifFrames[0].save(os.path.join("./ScreenShots",fileName), save_all=True, append_images=self.gifFrames[1:], optimize=False, duration=100, loop=0, disposal=2)
                 self.gifFrames = []
                 self.tmpGifNames.append(fileName)
             except Exception as e:
@@ -261,6 +279,10 @@ class ScreenController(QWidget):
             print("checkProgramTimeout: ", e)
 
     def programTimeout(self):
+        if self.progStopGif:        # 录制GIF直到当前节目结束
+            self.progStopGif = False
+            if self.gifRecording:
+                self.stop_recording_gif()
         self.currentBeginTime = time.time()
         self.runningTime = 0
         if self.isVisible() == True:
@@ -301,7 +323,7 @@ class ScreenController(QWidget):
 
     def get_fps(self):
         fps = self.fpsCounter
-        self.commonFps = int(0.5*(self.commonFps+fps))
+        self.commonFps = min(max(fps,self.commonFps),50)
         self.fpsCounter = 0
         fps = str(fps)
         if self.gifRecording:
@@ -659,9 +681,9 @@ class ScreenController(QWidget):
         qp.setBrush(QColor(30,30,30))
         qp.drawRect(self.offset,self.offset,self.screenSize[0]*self.screenScale[0],self.screenSize[1]*self.screenScale[1])
         qp.setBrush(QColor(random.randint(30,200),random.randint(30,200),random.randint(30,200)))
-        qp.drawRect(int(0.8*(2*self.offset+self.screenSize[0]*self.screenScale[0])),(2*self.offset+self.screenSize[1]*self.screenScale[1])-int(0.5*self.offset),4,4)
+        qp.drawRect(int(0.8*(2*self.offset+self.screenSize[0]*self.screenScale[0])),(2*self.offset+self.screenSize[1]*self.screenScale[1])-int(0.5*self.offset),1,1)
         qp.setBrush(QColor(random.randint(30,200),random.randint(30,200),random.randint(30,200)))
-        qp.drawRect(int(0.8*(2*self.offset+self.screenSize[0]*self.screenScale[0])+10),(2*self.offset+self.screenSize[1]*self.screenScale[1])-int(0.5*self.offset),4,4)
+        qp.drawRect(int(0.8*(2*self.offset+self.screenSize[0]*self.screenScale[0])+10),(2*self.offset+self.screenSize[1]*self.screenScale[1])-int(0.5*self.offset),1,1)
         self.resize(2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
 
     def drawScreen(self, unit, qp):
@@ -703,7 +725,7 @@ class ScreenController(QWidget):
                     qp.setBrush(QColor(*unit.color_1[1]))
                 ellipse_x = offset + position[0] + x * scale[0] + int(0.5 * (scale[0] - pointSize))
                 ellipse_y = offset + position[1] + y * scale[1] + int(0.5 * (scale[1] - pointSize))
-                qp.drawEllipse(ellipse_x, ellipse_y, pointSize, pointSize)
+                qp.drawEllipse(ellipse_x, ellipse_y, pointSize, pointSize+1)
 
 class ScreenUnit():
     def __init__(self,unitInfo,progSheet,colorMode,offset,FontIconMgr):

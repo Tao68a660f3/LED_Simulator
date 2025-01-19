@@ -45,9 +45,6 @@ class DraggableTableWidget(QTableWidget):
         # 发送信号
         self.rowMoved.emit(self.dragged_row, drop_row)
         
-        # 调用父类方法完成拖拽
-        super().dropEvent(event)
-        
         # 重置拖拽变量
         self.dragged_row = None
         self.dragged_items = None
