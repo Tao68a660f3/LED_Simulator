@@ -297,6 +297,7 @@ class BmpCreater():
         # print(multi_line)
         line_space = multi_line["line_space"]
         exp_size = multi_line["exp_size"]
+        default_color = None
         reverse = False
         if not vertical:
             sstyle = style[1]
@@ -310,11 +311,13 @@ class BmpCreater():
 
         if self.color_type == "RGB":
             color_type = "RGBA"
+            default_color = (0,0,0,0)
         elif self.color_type == "1":
             color_type = "1"
+            default_color = 0
         # style: -1,0,1，对齐方式 左中右或上中下
         if len(image_list) == 0:
-            return Image.new(color_type,(10,10))
+            return Image.new(color_type, (10,10), default_color)
         
         if multi_line["stat"] == False:  # 自身调用时，"stat"定义为False，"line_space"为原先值（再传过来），"exp_size"定义为[multi_line["line_space"]]， 这样其长度为1，与不使用多行，但传递了"line_space"的情况分开
             # print("拼图第1种情况",len(image_list))
@@ -328,7 +331,7 @@ class BmpCreater():
                 total_width = sum(image["img"].width for image in image_list)
                 # 创建一个新的图像作为画布，背景为白色
                 if space >= 0 and not pmc:
-                    new_image = Image.new(color_type, (total_width+space*(len(image_list)-1), total_height))
+                    new_image = Image.new(color_type, (total_width+space*(len(image_list)-1), total_height), default_color)
                 elif space >= -100 or pmc:
                     if len(image_list) > 1:
                         if pmc:
@@ -341,12 +344,12 @@ class BmpCreater():
                             for im in image_list[:-1]:
                                 total_width += int(im["img"].width * (100 + space) / 100)
                             total_width += im["img"].width
-                    new_image = Image.new(color_type, (total_width, total_height))
+                    new_image = Image.new(color_type, (total_width, total_height), default_color)
             else:
                 total_height = sum(image["img"].height for image in image_list)
                 total_width = max(image["img"].width for image in image_list)
                 if space >= 0 and not pmc:
-                    new_image = Image.new(color_type, (total_width, total_height+space*(len(image_list)-1)))
+                    new_image = Image.new(color_type, (total_width, total_height+space*(len(image_list)-1)), default_color)
                 elif space >= -100 or pmc:
                     if len(image_list) > 1:                    
                         if pmc:
@@ -359,7 +362,7 @@ class BmpCreater():
                             for im in image_list[:-1]:
                                 total_height += int(im["img"].height * (100 + space) / 100)
                             total_height += im["img"].height
-                    new_image = Image.new(color_type, (total_width, total_height))
+                    new_image = Image.new(color_type, (total_width, total_height), default_color)
             # 在新图像上依次粘贴每个图像
             x_offset = 0
             y_offset = 0
@@ -448,7 +451,7 @@ class BmpCreater():
             
         else:
             # print("拼图第3种情况")
-            return Image.new(color_type,(10,10))
+            return Image.new(color_type,(10,10), default_color)
         
     def fill_image_with_color(self, task_1 = "0", image = Image.new("1", (10,10)), foc = (255, 255, 255, 255), bac = (0, 0, 0, 0)):
         # 创建一个新的彩色图像，模式为RGBA，大小与原图相同
@@ -542,25 +545,6 @@ class BmpCreater():
 
                         if self.color_type == "RGB":
                             ch = self.fill_image_with_color(task[1], ch, foc, bac)
-                            # # 创建一个新的彩色图像，模式为RGB，大小与原图相同
-                            # cch = Image.new("RGBA", ch.size, self.color)
-                            # if task[1] == "0":
-                            #     # 将原图的非黑色部分（即白色部分）用指定颜色替换
-                            #     for x in range(ch.width):
-                            #         for y in range(ch.height):
-                            #             if ch.getpixel((x, y)) != 0:  # 白色部分
-                            #                 cch.putpixel((x, y), self.color)
-                            #             else:  # 黑色部分，保持透明或设为其他颜色
-                            #                 cch.putpixel((x, y), (0, 0, 0, 0))  # 这里设置为黑色
-                            # else:
-                            #     for x in range(ch.width):
-                            #         for y in range(ch.height):
-                            #             if ch.getpixel((x, y)) != 0:
-                            #                 cch.putpixel((x, y), foc)
-                            #             else:
-                            #                 cch.putpixel((x, y), bac)
-                                
-                            # ch = cch
 
                         if chr.isascii() and vertical and roll_asc:
                             ch = ch.transpose(Image.ROTATE_270)
