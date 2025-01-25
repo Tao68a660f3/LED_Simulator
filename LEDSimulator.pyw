@@ -576,6 +576,8 @@ class ProgramSettings(QDialog,Ui_ProgSet):
                             self.backgroundDescribeText = f"imgBackground(\"{file_name}\",{fill})"
                 else:
                     msg = QMessageBox.warning(self,"提示","请在\"菜单栏\"中的\"更多功能\"选择\"指定背景文件夹\"后再设置背景。")
+            else:
+                msg = QMessageBox.warning(self,"提示","请在\"菜单栏\"中的\"更多功能\"选择\"指定背景文件夹\"后再设置背景。")
         self.label_bgDescribe.setText(self.backgroundDescribeText)
 
 
