@@ -14,12 +14,13 @@ undefinedProgramSheet = [['测试信息', 900, {'frontScreen': [[{'position': [0
 
 class Thread_BmpUpdater(QThread):
     def __init__(self, parent = None):
-        super(Thread_BmpUpdater, self).__init__(parent)
+        super(Thread_BmpUpdater, self).__init__()
         self.myparent = parent
         self.is_running = True
 
     def run(self):
-        while self.myparent.isVisible() and self.is_running:
+        print(self.is_running)
+        while self.is_running:
             self.myparent.checkTimeStr()
             time.sleep(0.5)
 
@@ -33,6 +34,7 @@ class ScreenController(QWidget):
         self.screen = QApplication.primaryScreen()
         self.BmpUpdater = Thread_BmpUpdater(self)
         self.BmpUpdater.finished.connect(self.BmpUpdater.deleteLater)
+        self.settings = dict()
         self.offset = 16
         self.flushRate = int(1000/flushRate)
         self.colorMode = screenInfo["colorMode"]
@@ -42,6 +44,7 @@ class ScreenController(QWidget):
         self.toDisplay = toDisplay
         self.FontIconMgr = FontIconMgr
         self.currentScreenProgSet = dict()
+        self.maskMode = False
         self.currentIndex = 0
         self.currentPtime = 0
         self.currentBeginTime = 0
@@ -73,6 +76,7 @@ class ScreenController(QWidget):
         self.timer2.timeout.connect(self.checkProgramTimeout)
         self.timer2.start(200)
 
+        self.read_setting()
         self.setWindowTitle(self.toDisplay)
         self.setWindowFlags(Qt.FramelessWindowHint) # 隐藏边框
         self.show()
@@ -81,6 +85,13 @@ class ScreenController(QWidget):
 
         self.setContextMenuPolicy(Qt.CustomContextMenu) # 右键菜单
         self.customContextMenuRequested.connect(self.showContextMenu)
+
+    def read_setting(self):
+        setting_file = "./resources/settings.info"
+        if os.path.exists(setting_file):
+            with open(setting_file,'r',encoding = 'utf-8') as r:
+                list_str = r.read()
+                self.settings = ast.literal_eval(list_str)
 
     def stopThread_BmpUpdater(self):
         try:
@@ -255,6 +266,7 @@ class ScreenController(QWidget):
                 chWeekday = now.strftime("%A")
                 newStr = re.sub(r"(?<!%)(%A)", chinese_week_day[chWeekday], oldStr )
                 # newStr = oldStr.replace("%A",chinese_week_day[chWeekday])
+                # print(newStr)
                 newStr = now.strftime(newStr)
                 if newStr != s.tempStr:
                     s.progSheet["text"] = newStr
@@ -315,11 +327,23 @@ class ScreenController(QWidget):
 
     def backgroundPerformer(self):
         if self.currentScreenProgSet != None:
+            #**********
+            #以下为改正设置错误的触发器设置项
+            if "tigger" in self.currentScreenProgSet.keys():    # 拼写错误和内容错误的设置项目
+                self.currentScreenProgSet.pop("tigger")
+                self.currentScreenProgSet["trigger"] = {"u" : -1 , "c" : -1}
+            #**********
+
             backgroundDescribeText = self.currentScreenProgSet["background"]
 
-            if backgroundDescribeText.startswith("colorBackground"):
+            if backgroundDescribeText.startswith("colorMask") or backgroundDescribeText.startswith("imgMask") or backgroundDescribeText.startswith("videoMask"):
+                self.maskMode = True
+            else:
+                self.maskMode = False
+
+            if backgroundDescribeText.startswith("color"):
                 # 使用正则表达式匹配括号中的RGB值
-                pattern = r"colorBackground\(\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\)"
+                pattern = r"(?:colorMask|colorBackground)\(\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\)"
                 match = re.search(pattern, backgroundDescribeText)
                 if match:
                     # 提取匹配到的三个数字并转换为整数
@@ -329,6 +353,47 @@ class ScreenController(QWidget):
                     color =  (r, g, b)
                     self.BackImg = Image.new("RGB", (self.screenSize[0],self.screenSize[1]), color)
                     self.backgroundImgUpdater()
+
+            elif backgroundDescribeText.startswith("img"):
+                # 匹配函数名、文件名和数字参数
+                pattern = r'(?:imgMask|imgBackground)\("([^"]+)",\s*(\d+)\s*\)'
+                match = re.search(pattern, backgroundDescribeText)
+                if match:
+                    filename = match.group(1)  # 第一个参数（文件名）
+                    fill = int(match.group(2))  # 第二个参数（数字）
+                    if "background_folder" in self.settings.keys():
+                        backImgDir = os.path.join(self.settings["background_folder"],filename)
+                        if os.path.exists(backImgDir):
+                            self.BackImg = Image.open(backImgDir)
+                            if fill == 0:    # (["平铺","居中","填充","拉伸"])  # 0123
+                                lim = self.BackImg.crop((0,0,min(self.BackImg.width,self.screenSize[0]),min(self.BackImg.height,self.screenSize[1])))
+                                bim = Image.new("RGB", (self.screenSize[0],self.screenSize[1]), (0,0,0))
+                                for x in range(int(bim.width/lim.width)+1):
+                                    for y in range(int(bim.height/lim.height)+1):
+                                        bim.paste(lim,(x*lim.width,y*lim.height))
+                                self.BackImg = bim
+                            elif fill == 1:
+                                bim = Image.new("RGB", (self.screenSize[0],self.screenSize[1]), (0,0,0))
+                                x = int(0.5*(bim.width-self.BackImg.width))
+                                y = int(0.5*(bim.height-self.BackImg.height))
+                                bim.paste(self.BackImg,(x,y))
+                                self.BackImg = bim
+                            elif fill == 2:
+                                bim = Image.new("RGB", (self.screenSize[0],self.screenSize[1]), (0,0,0))
+                                imratio = self.BackImg.width/self.BackImg.height
+                                scratio = self.screenSize[0]/self.screenSize[1]
+                                if imratio >= scratio:
+                                    lim = self.BackImg.resize((int(imratio * self.screenSize[1]),self.screenSize[1]),resample=Image.BILINEAR)
+                                else:
+                                    lim = self.BackImg.resize((self.screenSize[0],int(self.screenSize[0]/imratio)),resample=Image.BILINEAR)
+                                x = int(0.5*(bim.width-lim.width))
+                                y = int(0.5*(bim.height-lim.height))
+                                bim.paste(lim,(x,y))
+                                self.BackImg = bim
+                            elif fill == 3:
+                                pass  # 默认实现的效果就是fill = 3
+
+                            self.backgroundImgUpdater()
 
     def backgroundImgUpdater(self):
         sw,sh = self.screenSize[0]*self.screenScale[0], self.screenSize[1]*self.screenScale[1]
@@ -753,8 +818,9 @@ class ScreenController(QWidget):
             baseColor = QColor(*unit.color_1[0])
         for y in range(pointNum[1]):
             for x in range(pointNum[0]):
-                if x < unit.backBitmap.width and y < unit.backBitmap.height:
-                    bac_color = unit.backBitmap.getpixel((x,y))
+                if unit.backBitmap != None:
+                    if x < unit.backBitmap.width and y < unit.backBitmap.height:
+                        bac_color = unit.backBitmap.getpixel((x,y))
                 else:
                     bac_color = 0 if colorMode == "1" else (0,0,0)
                 qp.setBrush(baseColor)
@@ -767,13 +833,23 @@ class ScreenController(QWidget):
                 else:
                     color = [0, 0, 0, 0] if colorMode == "RGB" else 0
                 if colorMode == "RGB" :
-                    alpha = color[3]
-                    color = [int(color[i] * alpha/255 + bac_color[i] * (255 - alpha)/255) for i in range(3)]
-                    color = [black + int((255 - black) * c / 255) for c in color[0:3]]
+                    if unit.backBitmap != None:
+                        alpha = color[3]
+                        if self.maskMode:
+                            color = [int(bac_color[i] * alpha/255) for i in range(3)]
+                        else:
+                            color = [int(color[i] * alpha/255 + bac_color[i] * (255 - alpha)/255) for i in range(3)]
+                        color = [black + int((255 - black) * c / 255) for c in color[0:3]]
+                    else:
+                        color = [black + int((255 - black) * c / 255) for c in color[0:3]]
                     qp.setBrush(QColor(*color))
                 elif colorMode == "1":
-                    if bac_color | color and not bac_color & color:
-                        qp.setBrush(QColor(*unit.color_1[1]))
+                    if self.maskMode:
+                        if bac_color & color:
+                            qp.setBrush(QColor(*unit.color_1[1]))
+                    else:
+                        if bac_color | color and not bac_color & color:
+                            qp.setBrush(QColor(*unit.color_1[1]))
                 ellipse_x = offset + position[0] + x * scale[0] + int(0.5 * (scale[0] - pointSize))
                 ellipse_y = offset + position[1] + y * scale[1] + int(0.5 * (scale[1] - pointSize))
                 qp.drawEllipse(ellipse_x, ellipse_y, pointSize, pointSize+1)
@@ -801,7 +877,7 @@ class ScreenUnit():
         self.color_1 = template_monochromeColors[self.progSheet["color_1"]]
         self.color_RGB = self.progSheet["color_RGB"]
         self.Bitmap = Image.new(self.colorMode,(1,1))
-        self.backBitmap = Image.new(self.colorMode,(1,1))
+        self.backBitmap = None
         self.BmpCreater = BmpCreater(self.FontIconMgr,self.colorMode,self.progSheet["color_RGB"],self.progSheet["font"],self.progSheet["ascFont"],self.progSheet["sysFontOnly"],)
         self.createFontImg()
 

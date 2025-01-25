@@ -394,38 +394,114 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
 
 class ProgramSettings(QDialog,Ui_ProgSet):
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__()
         self.setupUi(self)
         self.initUI()
-        self.backgroundDescribeText = ""      # no, colorBackground((r,g,b)), imgBackground("img_filename(not dir)","fillMode"), videoBackground("video_filename(not dir)","fillMode", vol)
-
-
+        self.Parent = parent
+        self.backgroundDescribeText = ""      # noBackground, None, colorBackground((r,g,b)), colorMask((r,g,b))
+                                              # imgBackground("img_filename(not dir)","fillMode"), videoBackground("video_filename(not dir)","fillMode", vol)
+                                              # imgMask("img_filename(not dir)","fillMode"), videoMask("video_filename(not dir)","fillMode", vol)
         self.ProgScreenSetting = {
             "background" : "noBackground",
-            "tigger" : {"frontScreen" : (0, 1),   # (scrnUnitList的序号, 该框节目的重复次数)
-                      "backScreen" : (0, 1),
-                      "frontSideScreen" : (0, 1),
-                      "backSideScreen" : (0, 1)},
+            "trigger" : {"u" : -1 , "c" : -1},      # 原先的触发器键名拼写和内容都设置错误，已重新修改
             "inherit" : 0,
         }
 
     def initUI(self):
         self.setModal(True)
         self.setWindowTitle("路牌节目设置（实验）")
-        self.btn_chooseColor.clicked.connect(self.set_background_color)
+        self.comboBox_mode.addItems(["纯色背景","图片背景","视频背景"])
+        self.comboBox_fill.addItems(["平铺","居中","填充","拉伸"])  # 0123
+        self.spinBox.setMaximum(100)
+        self.spinBox.setMinimum(0)
+        self.label_bgDescribe.setText("")
 
+    def connect_signal(self):
+        self.checkBox_enableBg.stateChanged.connect(self.onBgEnabledChanged)
+        self.checkBox_mask.stateChanged.connect(self.onMaskChanged)
+        self.pushButton.clicked.connect(self.set_background)
+        self.comboBox_mode.currentIndexChanged.connect(self.onModeChanged)
+        self.comboBox_fill.currentIndexChanged.connect(self.onFillChanged)
+
+    def disconnect_signal(self):
+        try:
+            self.checkBox_enableBg.stateChanged.disconnect(self.onBgEnabledChanged)
+            self.checkBox_mask.stateChanged.disconnect(self.onMaskChanged)
+            self.pushButton.clicked.disconnect(self.set_background)
+            self.comboBox_mode.currentIndexChanged.disconnect(self.onModeChanged)
+            self.comboBox_fill.currentIndexChanged.disconnect(self.onFillChanged)
+        except Exception as e:
+            print("disconnect_signal: ", e)
+
+    def set_ui_enabled(self,enabled):
+        self.comboBox_mode.setEnabled(enabled)
+        self.comboBox_fill.setEnabled(enabled)
+        self.pushButton.setEnabled(enabled)
+        self.checkBox_mask.setEnabled(enabled)
+        self.spinBox.setEnabled(enabled)
+
+    def onModeChanged(self):
+        return
+
+    def onFillChanged(self):
+        mode = self.comboBox_mode.currentIndex()
+        fill = self.comboBox_fill.currentIndex()
+        if mode == 1:
+            self.set_background_img(fill)
+        elif mode == 2:
+            pass
+
+    def onBgEnabledChanged(self):
+        enabled = self.checkBox_enableBg.isChecked()
+        if not enabled:
+            self.backgroundDescribeText = "noBackground"
+        else:
+            self.backgroundDescribeText = "None"
+        self.set_ui_value()
+
+    def onMaskChanged(self):
+        print("onMaskChanged",self.checkBox_mask.isChecked())
+        if self.backgroundDescribeText != "noBackground":
+            if "Background" in self.backgroundDescribeText and self.checkBox_mask.isChecked():
+                self.backgroundDescribeText = self.backgroundDescribeText.replace("Background","Mask")
+            if "Mask" in self.backgroundDescribeText and not self.checkBox_mask.isChecked():
+                self.backgroundDescribeText = self.backgroundDescribeText.replace("Mask","Background")
+
+        self.set_ui_value()
 
     def set_value(self, progScreenSetting = None):
+        self.disconnect_signal()
         if progScreenSetting != None:
+            #**********
+            #以下为改正设置错误的触发器设置项
+            if "tigger" in progScreenSetting.keys():    # 拼写错误和内容错误的设置项目
+                progScreenSetting.pop("tigger")
+                progScreenSetting["trigger"] = {"u" : -1 , "c" : -1}    # unit, count. -1表示使用默认触发器
+            #**********
+
             self.ProgScreenSetting = progScreenSetting
             self.backgroundDescribeText = self.ProgScreenSetting["background"]
-            self.set_ui_value()
+        self.set_ui_value()
+
+        self.connect_signal()
 
     def set_ui_value(self):
         self.label_bgDescribe.setText(self.backgroundDescribeText)
-        if self.backgroundDescribeText.startswith("colorBackground"):
+        self.pushButton.setStyleSheet(None)
+        if self.backgroundDescribeText != "noBackground":
+            self.checkBox_enableBg.setChecked(True)
+            self.set_ui_enabled(True)
+        else:
+            self.checkBox_enableBg.setChecked(False)
+            self.set_ui_enabled(False)
+        if self.backgroundDescribeText.startswith("colorMask") or self.backgroundDescribeText.startswith("imgMask") or self.backgroundDescribeText.startswith("videoMask"):
+            self.checkBox_mask.setChecked(True)
+
+
+        if self.backgroundDescribeText.startswith("color"):
+            self.comboBox_mode.setCurrentIndex(0)
             # 使用正则表达式匹配括号中的RGB值
-            pattern = r"colorBackground\(\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\)"
+            pattern = r"(?:colorMask|colorBackground)\(\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\)"
             match = re.search(pattern, self.backgroundDescribeText)
             print(match)
             if match:
@@ -435,18 +511,79 @@ class ProgramSettings(QDialog,Ui_ProgSet):
                 b = max(0,min(255,int(match.group(3))))
                 color =  (r, g, b)
                 # print(color)
-                self.btn_chooseColor.setStyleSheet(f"background-color: rgb{color}")
+                self.pushButton.setStyleSheet(f"background-color: rgb{color}")
+
+        elif self.backgroundDescribeText.startswith("img"):
+            self.comboBox_mode.setCurrentIndex(1)
+            # 匹配 imgMask 或 imgBackground 后面括号中的第二个参数
+            pattern = r'(?:imgMask|imgBackground)\([^,]+,\s*(\d+)\s*\)'
+            match = re.search(pattern, self.backgroundDescribeText)
+            print(match)
+            if match:
+                self.comboBox_fill.setCurrentIndex(int(match.group(1)))
+            
+            
+
+
+    def set_background(self):
+        mode = self.comboBox_mode.currentIndex()
+        if mode == 0:    # 纯色背景
+            self.set_background_color()
+        elif mode == 1:
+            self.set_background_img()
+
+        if mode != 0:
+            self.pushButton.setStyleSheet(None)
 
 
     def set_background_color(self):
+        mask = self.checkBox_mask.isChecked()
         col = QColorDialog.getColor()
         if col.isValid():
             color = (col.red(), col.green(), col.blue())
-            self.backgroundDescribeText = f"colorBackground({color})"
-            self.ProgScreenSetting["background"] = self.backgroundDescribeText
-            self.btn_chooseColor.setStyleSheet(f"background-color: rgb{color}")
+            if mask:
+                self.backgroundDescribeText = f"colorMask({color})"
+            else:
+                self.backgroundDescribeText = f"colorBackground({color})"
+
+            self.pushButton.setStyleSheet(f"background-color: rgb{color}")
             self.label_bgDescribe.setText(self.backgroundDescribeText)
 
+    def set_background_img(self, fill = None):
+        mask = self.checkBox_mask.isChecked()
+        if fill != None:
+            pattern = r'(?:imgMask|imgBackground)\("([^"]+)"'
+            match = re.search(pattern, self.backgroundDescribeText)
+            if match:
+                file_name = match.group(1)
+                if mask:
+                    self.backgroundDescribeText = f"imgMask(\"{file_name}\",{fill})"
+                else:
+                    self.backgroundDescribeText = f"imgBackground(\"{file_name}\",{fill})"
+        else:
+            fill = self.comboBox_fill.currentIndex()
+            if "background_folder" in self.Parent.settings:
+                bfo = self.Parent.settings["background_folder"]
+                if not os.path.exists(bfo):
+                    bfo = "./Background"
+                if os.path.exists(bfo):
+                    file_dir,ok = QFileDialog.getOpenFileName(self,'打开',bfo,'图片 (*.jpg *.png)')
+                    if ok:
+                        file_name = os.path.basename(file_dir)
+                        if mask:
+                            self.backgroundDescribeText = f"imgMask(\"{file_name}\",{fill})"
+                        else:
+                            self.backgroundDescribeText = f"imgBackground(\"{file_name}\",{fill})"
+                else:
+                    msg = QMessageBox.warning(self,"提示","请在\"菜单栏\"中的\"更多功能\"选择\"指定背景文件夹\"后再设置背景。")
+        self.label_bgDescribe.setText(self.backgroundDescribeText)
+
+
+
+    def get_setting(self):
+        self.ProgScreenSetting["background"] = self.backgroundDescribeText
+
+        return self.ProgScreenSetting
 
 
 
@@ -456,6 +593,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
+        self.settings = dict()
         self.currentFileDir = ""
         self.currentFileName = ""
         self.thisFileSaved = True
@@ -472,6 +610,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.setMinimumSize(self.width,self.height)
         self.initUI()
         self.make_menu()
+        self.read_setting()
 
     def initUI(self):
         self.BtnWidget = QWidget(self)
@@ -539,6 +678,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         fileMenu.addAction(newAction)
         newAction = QAction('保存', self)
         newAction.triggered.connect(self.save_file)
+        newAction.setShortcut('Ctrl+S')
         fileMenu.addAction(newAction)
         newAction = QAction('另存为', self)
         newAction.triggered.connect(self.save_another)
@@ -560,7 +700,11 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         newAction = QAction('置顶显示屏', self)
         newAction.triggered.connect(self.topMost)
         fileMenu.addAction(newAction)
+
         fileMenu = self.menuBar().addMenu('更多功能')
+        newAction = QAction('指定背景文件夹', self)
+        newAction.triggered.connect(self.set_background_folder)
+        fileMenu.addAction(newAction)
         newAction = QAction('复制线路', self)
         newAction.triggered.connect(self.LineController.copy_busLine)
         fileMenu.addAction(newAction)
@@ -571,6 +715,18 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         exitAction.setShortcut('Ctrl+Q')
         exitAction.triggered.connect(self.close)
         fileMenu.addAction(exitAction)
+
+    def read_setting(self):
+        setting_file = "./resources/settings.info"
+        if os.path.exists(setting_file):
+            with open(setting_file,'r',encoding = 'utf-8') as r:
+                list_str = r.read()
+                self.settings = ast.literal_eval(list_str)
+
+    def save_setting(self):
+        setting_file = "./resources/settings.info"
+        with open(setting_file,'w',encoding = 'utf-8') as w:
+            w.write(str(self.settings))
 
     def closeEvent(self,event):
         print(self.thisFileSaved)
@@ -723,6 +879,14 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             scn.move(100,100)
             self.LedScreens[screen] = scn
         self.change_program()
+
+    def set_background_folder(self):
+        self.settings["background_folder"] = "./Background"
+        _dir = QFileDialog.getExistingDirectory(self,"选取默认背景文件夹","./")
+        if os.path.exists(_dir):
+            self.settings["background_folder"] = _dir
+
+        self.save_setting()
 
     def change_program(self):   # 切换正在显示的节目
         line_row = self.currentLine
@@ -1051,12 +1215,12 @@ class ProgramSettler():
                     else:
                         ProgScreenSetting = None
 
-                ProgSettingDialog = ProgramSettings()
+                ProgSettingDialog = ProgramSettings(self.Parent)
                 ProgSettingDialog.show()
                 ProgSettingDialog.set_value(progScreenSetting=ProgScreenSetting)
 
                 if ProgSettingDialog.exec_() == QDialog.Accepted:
-                    ProgScreenSetting = ProgSettingDialog.ProgScreenSetting
+                    ProgScreenSetting = ProgSettingDialog.get_setting()
                     self.Parent.ProgramSheetManager.programSheet[row][2][screen][2]["ProgScreenSetting"] = ProgScreenSetting  # ext_dict["ProgScreenSetting"]
                     self.Parent.change_program()
                     self.Parent.thisFile_saveStat.emit(False)

@@ -25,7 +25,35 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
+        <widget class="QCheckBox" name="checkBox_enableBg">
+         <property name="text">
+          <string>使用背景</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1,0">
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>背景模式：</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBox_mode"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton">
+           <property name="text">
+            <string>选择...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,1,0,0">
          <item>
           <spacer name="horizontalSpacer">
            <property name="orientation">
@@ -40,33 +68,44 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="btn_chooseColor">
+          <widget class="QLabel" name="label_5">
            <property name="text">
-            <string>选择颜色</string>
+            <string>填充方式：</string>
            </property>
           </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBox_fill"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>音量：</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="spinBox"/>
          </item>
         </layout>
        </item>
        <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>158</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_bgDescribe">
-         <property name="text">
-          <string>TextLabel</string>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QCheckBox" name="checkBox_mask">
+           <property name="text">
+            <string>遮罩模式</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_bgDescribe">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
@@ -127,8 +166,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>257</x>
+     <y>290</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -143,8 +182,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>325</x>
+     <y>290</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
