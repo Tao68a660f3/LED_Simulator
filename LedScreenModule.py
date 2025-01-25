@@ -326,6 +326,8 @@ class ScreenController(QWidget):
         self.checkTimeStr()
 
     def backgroundPerformer(self):
+        self.maskMode = False
+        
         if self.currentScreenProgSet != None:
             #**********
             #以下为改正设置错误的触发器设置项
@@ -338,8 +340,6 @@ class ScreenController(QWidget):
 
             if backgroundDescribeText.startswith("colorMask") or backgroundDescribeText.startswith("imgMask") or backgroundDescribeText.startswith("videoMask"):
                 self.maskMode = True
-            else:
-                self.maskMode = False
 
             if backgroundDescribeText.startswith("color"):
                 # 使用正则表达式匹配括号中的RGB值
