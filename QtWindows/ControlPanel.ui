@@ -641,119 +641,111 @@
            </widget>
           </item>
           <item>
-           <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,1,1,1,1,1,1,1,0">
+           <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,3,0,1,0,1">
-              <item>
+             <layout class="QGridLayout" name="gridLayout">
+              <item row="0" column="0">
                <widget class="QLabel" name="label_4">
                 <property name="text">
                  <string>主字体</string>
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="0" column="1">
                <widget class="QComboBox" name="combo_Font"/>
               </item>
-              <item>
+              <item row="0" column="2">
                <widget class="QLabel" name="label_11">
                 <property name="text">
                  <string>字号</string>
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="0" column="3">
                <widget class="QSpinBox" name="spin_FontSize"/>
               </item>
-              <item>
+              <item row="0" column="4">
                <widget class="QLabel" name="label_Y_Offset">
                 <property name="text">
                  <string>竖直偏移</string>
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="0" column="5">
                <widget class="QSpinBox" name="spinBox_Y_Offset"/>
               </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,3,0,1,0,1">
-              <item>
+              <item row="1" column="0">
                <widget class="QLabel" name="label_5">
                 <property name="text">
                  <string>ASCII字体</string>
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="1" column="1">
                <widget class="QComboBox" name="combo_ASCII_Font"/>
               </item>
-              <item>
+              <item row="1" column="2">
                <widget class="QLabel" name="label_24">
                 <property name="text">
                  <string>字号</string>
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="1" column="3">
                <widget class="QSpinBox" name="spin_FontSize_2"/>
               </item>
-              <item>
+              <item row="1" column="4">
                <widget class="QLabel" name="label_Y_Offset_2">
                 <property name="text">
                  <string>竖直偏移</string>
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="1" column="5">
                <widget class="QSpinBox" name="spinBox_Y_Offset_2"/>
               </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,1,0,0,0">
-              <item>
+             <layout class="QGridLayout" name="gridLayout_2">
+              <item row="0" column="0" rowspan="2">
                <widget class="QLabel" name="label_6">
                 <property name="text">
                  <string>显示方式</string>
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="0" column="1" rowspan="2">
                <widget class="QComboBox" name="combo_Show"/>
               </item>
-              <item>
+              <item row="0" column="2" rowspan="2">
                <widget class="QLabel" name="label_23">
                 <property name="text">
                  <string>文字方向</string>
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="0" column="3" rowspan="2">
                <widget class="QComboBox" name="combo_TextDirect"/>
               </item>
-              <item>
-               <layout class="QVBoxLayout" name="verticalLayout_5">
-                <item>
-                 <widget class="QCheckBox" name="checkBox_sysFont">
-                  <property name="text">
-                   <string>不使用点阵ASCII字体</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QCheckBox" name="checkBox_rollAscii">
-                  <property name="text">
-                   <string>竖向时旋转ASCII字体</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
+              <item row="0" column="4">
+               <widget class="QCheckBox" name="checkBox_sysFont">
+                <property name="text">
+                 <string>不使用点阵ASCII字体</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="4">
+               <widget class="QCheckBox" name="checkBox_rollAscii">
+                <property name="text">
+                 <string>竖向时旋转ASCII字体</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_6">
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
               <item>
                <widget class="QLabel" name="label_Argv_1">
                 <property name="text">
@@ -787,116 +779,92 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_9">
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_24">
-                <item>
-                 <widget class="QLabel" name="label_WordSpace">
-                  <property name="text">
-                   <string>字间距</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_WordSpace"/>
-                </item>
-               </layout>
+             <layout class="QGridLayout" name="gridLayout_4">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_WordSpace">
+                <property name="text">
+                 <string>字间距</string>
+                </property>
+               </widget>
               </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_11">
-                <item>
-                 <widget class="QLabel" name="label_BoldSize">
-                  <property name="text">
-                   <string>加粗(横竖)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_BoldSizeX"/>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_BoldSizeY"/>
-                </item>
-               </layout>
+              <item row="0" column="2" colspan="2">
+               <widget class="QSpinBox" name="spinBox_WordSpace"/>
               </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_34">
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_23">
-                <item>
-                 <widget class="QLabel" name="label_Y_Offset_3">
-                  <property name="text">
-                   <string>水平位置</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_X_Offset"/>
-                </item>
-                <item>
-                 <widget class="QLabel" name="label_Y_Offset_4">
-                  <property name="text">
-                   <string>竖直位置</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_Y_GlobalOffset"/>
-                </item>
-               </layout>
+              <item row="0" column="4" colspan="2">
+               <widget class="QLabel" name="label_BoldSize">
+                <property name="text">
+                 <string>加粗(横竖)</string>
+                </property>
+               </widget>
               </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_36">
-                <item>
-                 <widget class="QLabel" name="label_Align_x">
-                  <property name="text">
-                   <string>x对齐</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_Align_x"/>
-                </item>
-                <item>
-                 <widget class="QLabel" name="label_Align_y">
-                  <property name="text">
-                   <string>y对齐</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_Align_y"/>
-                </item>
-               </layout>
+              <item row="0" column="6">
+               <widget class="QSpinBox" name="spinBox_BoldSizeX"/>
+              </item>
+              <item row="0" column="7">
+               <widget class="QSpinBox" name="spinBox_BoldSizeY"/>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_Y_Offset_3">
+                <property name="text">
+                 <string>水平位置</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QSpinBox" name="spinBox_X_Offset"/>
+              </item>
+              <item row="1" column="2">
+               <widget class="QLabel" name="label_Y_Offset_4">
+                <property name="text">
+                 <string>竖直位置</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3">
+               <widget class="QSpinBox" name="spinBox_Y_GlobalOffset"/>
+              </item>
+              <item row="1" column="4">
+               <widget class="QLabel" name="label_Align_x">
+                <property name="text">
+                 <string>x对齐</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="5">
+               <widget class="QSpinBox" name="spinBox_Align_x"/>
+              </item>
+              <item row="1" column="6">
+               <widget class="QLabel" name="label_Align_y">
+                <property name="text">
+                 <string>y对齐</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="7">
+               <widget class="QSpinBox" name="spinBox_Align_y"/>
               </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_32" stretch="2,1,1">
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_33">
-                <item>
-                 <widget class="QLabel" name="label_Zoom">
-                  <property name="text">
-                   <string>缩放比例(%)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="spinBox_Zoom"/>
-                </item>
-               </layout>
+             <layout class="QGridLayout" name="gridLayout_5">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_Zoom">
+                <property name="text">
+                 <string>缩放比例(%)</string>
+                </property>
+               </widget>
               </item>
-              <item>
+              <item row="0" column="1">
+               <widget class="QSpinBox" name="spinBox_Zoom"/>
+              </item>
+              <item row="0" column="2">
                <widget class="QCheckBox" name="chk_AutoZoom">
                 <property name="text">
                  <string>自动缩放</string>
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="0" column="3">
                <widget class="QCheckBox" name="chk_Argv1">
                 <property name="text">
                  <string>仅缩放系统字体</string>
@@ -906,7 +874,7 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_15">
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
               <item>
                <widget class="QLabel" name="label_3">
                 <property name="text">
@@ -920,55 +888,29 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="4,1,2">
-              <item>
-               <layout class="QVBoxLayout" name="verticalLayout_9">
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_19">
-                  <item>
-                   <widget class="QLabel" name="label_9">
-                    <property name="text">
-                     <string>单元颜色(单色牌选择)：</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="combo_SingleColorChoose"/>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_20">
-                  <item>
-                   <widget class="QLabel" name="label_10">
-                    <property name="text">
-                     <string>单元颜色(彩色牌选择)：</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="btn_Colorful_ChooseColor">
-                    <property name="text">
-                     <string>默认颜色</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
+             <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,3,3,5">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_9">
+                <property name="text">
+                 <string>单元颜色(单色牌选择)：</string>
+                </property>
+               </widget>
               </item>
-              <item>
+              <item row="0" column="1">
+               <widget class="QComboBox" name="combo_SingleColorChoose"/>
+              </item>
+              <item row="0" column="2" rowspan="2">
                <widget class="QPushButton" name="btn_textSetting">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
-                  <height>80</height>
+                  <height>0</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>16777215</height>
+                  <height>60</height>
                  </size>
                 </property>
                 <property name="text">
@@ -976,22 +918,36 @@
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="0" column="3" rowspan="2">
                <widget class="QPushButton" name="btn_ok">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
-                  <height>80</height>
+                  <height>0</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>16777215</height>
+                  <height>60</height>
                  </size>
                 </property>
                 <property name="text">
                  <string>确定</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_10">
+                <property name="text">
+                 <string>单元颜色(彩色牌选择)：</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QPushButton" name="btn_Colorful_ChooseColor">
+                <property name="text">
+                 <string>默认颜色</string>
                 </property>
                </widget>
               </item>
