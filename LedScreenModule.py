@@ -824,13 +824,16 @@ class ScreenController(QWidget):
                 else:
                     bac_color = 0 if colorMode == "1" else (0,0,0)
                 qp.setBrush(baseColor)
-                if rollSpace < 0 and x + x_pos in range(bitmapSize[0]) and y + y_pos in range(bitmapSize[1]) and appear:
-                    color = unit.Bitmap.getpixel((x + x_pos, y + y_pos))
-                elif rollSpace >= 0 and ("左" in unit.appearance or "右"  in unit.appearance) and (x + x_pos) % (bitmapSize[0] + rollSpace) in range(bitmapSize[0]) and y + y_pos in range(bitmapSize[1]) and appear:
-                    color = unit.Bitmap.getpixel(((x + x_pos) % (bitmapSize[0] + rollSpace), y + y_pos))
-                elif rollSpace >= 0 and ("上" in unit.appearance or "下"  in unit.appearance) and (y + y_pos) % (bitmapSize[1] + rollSpace) in range(bitmapSize[1]) and x + x_pos in range(bitmapSize[0]) and appear:
-                    color = unit.Bitmap.getpixel((x + x_pos, (y + y_pos) % (bitmapSize[1] + rollSpace)))
-                else:
+                try:
+                    if rollSpace < 0 and x + x_pos in range(bitmapSize[0]) and y + y_pos in range(bitmapSize[1]) and appear:
+                        color = unit.Bitmap.getpixel((x + x_pos, y + y_pos))
+                    elif rollSpace >= 0 and ("左" in unit.appearance or "右"  in unit.appearance) and (x + x_pos) % (bitmapSize[0] + rollSpace) in range(bitmapSize[0]) and y + y_pos in range(bitmapSize[1]) and appear:
+                        color = unit.Bitmap.getpixel(((x + x_pos) % (bitmapSize[0] + rollSpace), y + y_pos))
+                    elif rollSpace >= 0 and ("上" in unit.appearance or "下"  in unit.appearance) and (y + y_pos) % (bitmapSize[1] + rollSpace) in range(bitmapSize[1]) and x + x_pos in range(bitmapSize[0]) and appear:
+                        color = unit.Bitmap.getpixel((x + x_pos, (y + y_pos) % (bitmapSize[1] + rollSpace)))
+                    else:
+                        color = [0, 0, 0, 0] if colorMode == "RGB" else 0
+                except:
                     color = [0, 0, 0, 0] if colorMode == "RGB" else 0
                 if colorMode == "RGB" :
                     if unit.backBitmap != None:
