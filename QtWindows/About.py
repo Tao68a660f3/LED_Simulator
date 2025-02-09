@@ -20,7 +20,7 @@ class Ui_Form(object):
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.label_Version = QtWidgets.QLabel(Form)
         font = QtGui.QFont()
-        font.setPointSize(15)
+        font.setPointSize(20)
         self.label_Version.setFont(font)
         self.label_Version.setText("")
         self.label_Version.setAlignment(QtCore.Qt.AlignCenter)

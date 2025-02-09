@@ -1,4 +1,4 @@
-import sys, os, ast, copy, datetime
+import sys, os, ast, copy, datetime, base64, io
 from PyQt5.QtWidgets import QApplication, QWidget, QDialog, QMainWindow, QAbstractItemView, QTableWidgetItem, QHeaderView, QFileDialog, QPushButton, QLabel, QColorDialog, QMenu, QAction, QMessageBox
 from PyQt5.QtGui import QPixmap, QIcon, QTextCharFormat
 from PyQt5.QtCore import pyqtSignal, Qt, QCoreApplication
@@ -32,18 +32,94 @@ class AboutWindow(QWidget,Ui_Form):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
+        self.winsize = [500,300]
+        self.setMinimumSize(self.winsize[0], self.winsize[1])
+        self.offset = 3
+        self.scnpsize = [144,16]
+        self.pnum = [self.scnpsize[0]+2*self.offset,self.scnpsize[1]+2*self.offset]
+        self.img = None
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle("关于")
-        # pixmap = QPixmap("./resources/welcome2.png")
-        # pixmap = pixmap.scaledToWidth(360)
-        # self.label_6.setPixmap(pixmap)
         self.set_version()
+        self.create_img()
+        self.resize(self.winsize[0],self.winsize[1])
 
     def set_version(self):
         self.label_Version.setText(f"关于LED模拟器{version}")
         self.label_Date.setText(f"发布日期：{release_date}")
+
+    def create_img(self):
+        im_base64 = "Qk1+AQAAAAAAAD4AAAAoAAAAiAAAABAAAAABAAEAAAAAAEABAADEDgAAxA4AAAIAAAACAAAAAAAAAP/////z+///1/t/7////+n733/BBwAAAP3xuAPZ8b7X////7vGvvd13AAAA/vfXud7Pvvf////vT+3d3XcAAAB+7++/3z/e9////++/7OvddwAAALtf77/ef973AQEH4AHtdwEBAAAA21/rt92/3veZmZNvv+23z+cAAADXv+mr27vAB52dmawHLffznwAAAO+/6rvYA973n5+ZqffN9/1/AAAA17/rO9u73vefl5nEB+X3AAEAAADXvwu7W7ve95+Hmc336ff+6wAAALm3+7ubu8AHn5eZ7APt1/7fAAAAuvv7u9gD3vefnZkC5wGXwQcAAAD7A+u737/e95+Zk+7v7bfddwAAAAN/2YHgAd73DwEH4AHvd913AAAA/3++e++7wAP////u6+/33XcAAAD/f///77//9////+7v7//BBwAAAA=="
+        # 将base64字符串转换为字节
+        img_data = base64.b64decode(im_base64)
+        # 创建字节流
+        buffer = io.BytesIO(img_data)
+        # 打开图片
+        self.img = Image.open(buffer)
+        self.img = self.img.point(lambda x: not x)
+
+    def resizeEvent(self, event):
+        newSize = event.size()
+        self.winsize = [newSize.width(),newSize.height()]
+        self.update()
+
+    def paintEvent(self, event):
+        qp = QPainter()
+        qp.begin(self)
+        qp.setPen(Qt.NoPen)
+        self.drawScreen(qp)
+        qp.end()
+
+    def drawScreen(self,qp):
+        # print(self.winsize)
+        psize = 3
+        baseColor = QColor(60, 60, 60)
+        frontColor = QColor(255, 255, 60)
+        area = [int(0.8*self.winsize[0]),int(0.75*self.winsize[1])]
+
+        if area[0]/area[1] >= self.pnum[0]/self.pnum[1]:
+            psize = int(area[1]/self.pnum[1])
+        else:
+            psize = int(area[0]/self.pnum[0])
+        if psize < 3:
+            psize = 3
+
+        d = int(psize * 0.8)
+
+        w = psize*self.pnum[0]
+        h = psize*self.pnum[1]
+
+        xp = int((self.winsize[0] - w) * 0.5)
+        yp = int((self.winsize[1] - h) * 0.4)
+
+        offset = psize*self.offset
+
+        xpos = int(0.5 * (self.scnpsize[0] - self.img.width))
+        ypos = int(0.5 * (self.scnpsize[1] - self.img.height))
+
+        qp.setBrush(QColor(15,15,15))
+        qp.drawRect(xp,yp,w,h)
+        qp.setBrush(QColor(30,30,30))
+        qp.drawRect(xp+offset,yp+offset,w-2*offset,h-2*offset)
+
+        for y in range(self.scnpsize[1]):
+            for x in range(self.scnpsize[0]):
+                if y - ypos in range(self.img.height) and x - xpos in range(self.img.width):
+                    color = self.img.getpixel((x-xpos,y-ypos))
+                else:
+                    color = 0
+                if color != 0:
+                    qp.setBrush(frontColor)
+                else:
+                    qp.setBrush(baseColor)
+                qp.drawEllipse(xp+x*psize+offset, yp+y*psize+offset, d, d+1)
+
+
+
+
+        
 
 class NewALine(QDialog,Ui_NewALine):
     dataEntered = pyqtSignal(list)
