@@ -398,23 +398,43 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.setupUi(self)
         self.initUI()
         self.Parent = parent
+        self.unitCount = 0
+
         self.backgroundDescribeText = ""      # noBackground, None, colorBackground((r,g,b)), colorMask((r,g,b))
                                               # imgBackground("img_filename(not dir)","fillMode"), videoBackground("video_filename(not dir)","fillMode", vol)
                                               # imgMask("img_filename(not dir)","fillMode"), videoMask("video_filename(not dir)","fillMode", vol)
+        self.triggerList = []
         self.ProgScreenSetting = {
             "background" : "noBackground",
-            "trigger" : {"u" : -1 , "c" : -1},      # 原先的触发器键名拼写和内容都设置错误，已重新修改
+            "trigger" : [],      # 原先的触发器键名拼写和内容都设置错误，已重新修改    # 二次改设计, 单个触发器改为 {"u" : -1 , "c" : -1 , "to" : 1}
             "inherit" : 0,
         }
 
     def initUI(self):
         self.setModal(True)
         self.setWindowTitle("路牌节目设置（实验）")
+
+        # tab 0
         self.comboBox_mode.addItems(["纯色背景","图片背景","视频背景"])
         self.comboBox_fill.addItems(["平铺","居中","填充","拉伸"])  # 0123
         self.spinBox.setMaximum(100)
         self.spinBox.setMinimum(0)
         self.label_bgDescribe.setText("")
+
+        # tab 1
+        self.tableWidget.setColumnCount(3)
+        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)    #设置表格的选取方式是行选取
+        self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)    #设置选取方式为单个选取
+        self.tableWidget.setHorizontalHeaderLabels(["屏幕分区","重复次数","跳转至(相对)"])   #设置行表头
+        self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
+        self.tableWidget.verticalHeader().setDefaultSectionSize(18)
+        self.spin_Unit.setMinimum(1)
+        self.spin_Unit.setMaximum(1)
+        self.spin_Count.setMinimum(1)
+        self.spin_Count.setMaximum(65535)
+        self.spin_Goto.setMinimum(-65536)
+        self.spin_Goto.setMaximum(65535)
+        self.tableWidget.rowMoved.connect(self.onRowMoved)
 
     def connect_signal(self):
         self.checkBox_enableBg.stateChanged.connect(self.onBgEnabledChanged)
@@ -422,6 +442,11 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.pushButton.clicked.connect(self.set_background)
         self.comboBox_mode.currentIndexChanged.connect(self.onModeChanged)
         self.comboBox_fill.currentIndexChanged.connect(self.onFillChanged)
+        
+        self.pushButton_Add.clicked.connect(self.addTrigger)
+        self.pushButton_Delete.clicked.connect(self.deleteTrigger)
+
+        self.tableWidget.itemSelectionChanged.connect(self.onSelectionChanged)
 
     def disconnect_signal(self):
         try:
@@ -430,6 +455,11 @@ class ProgramSettings(QDialog,Ui_ProgSet):
             self.pushButton.clicked.disconnect(self.set_background)
             self.comboBox_mode.currentIndexChanged.disconnect(self.onModeChanged)
             self.comboBox_fill.currentIndexChanged.disconnect(self.onFillChanged)
+
+            self.pushButton_Add.clicked.disconnect(self.addTrigger)
+            self.pushButton_Delete.clicked.disconnect(self.deleteTrigger)
+
+            self.tableWidget.itemSelectionChanged.disconnect(self.onSelectionChanged)
         except Exception as e:
             print("disconnect_signal: ", e)
 
@@ -439,6 +469,33 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.pushButton.setEnabled(enabled)
         self.checkBox_mask.setEnabled(enabled)
         self.spinBox.setEnabled(enabled)
+    
+    def show_tgTable(self):
+        colname = ["u","c","to"]
+        self.tableWidget.setRowCount(0)
+        for row in range(len(self.triggerList)):
+            self.tableWidget.insertRow(row)
+            for col in range(len(colname)):
+                item = QTableWidgetItem(str(self.triggerList[row][colname[col]]))
+                item.setTextAlignment(Qt.AlignLeft | Qt.AlignCenter)
+                item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)    #设置为只可选择可用拖动
+                self.tableWidget.setItem(row,col,item)
+
+    def onRowMoved(self,drag,drop):
+        if drag != drop:
+            moving_data = self.triggerList[drag]
+            self.triggerList.pop(drag)
+            self.triggerList.insert(drop,moving_data)
+        self.show_tgTable()
+
+    def onSelectionChanged(self):
+        row = self.Parent.selected_row(self.tableWidget)
+        if isinstance(row, int):
+            tg = self.triggerList[row]
+            self.spin_Unit.setValue(tg["u"])
+            self.spin_Count.setValue(tg["c"])
+            self.spin_Goto.setValue(tg["to"])
+
 
     def onModeChanged(self):
         return
@@ -469,18 +526,23 @@ class ProgramSettings(QDialog,Ui_ProgSet):
 
         self.set_ui_value()
 
-    def set_value(self, progScreenSetting = None):
+    def set_value(self, progScreenSetting = None, unitCount = 0):
         self.disconnect_signal()
+        self.unitCount = unitCount
         if progScreenSetting != None:
             #**********
             #以下为改正设置错误的触发器设置项
             if "tigger" in progScreenSetting.keys():    # 拼写错误和内容错误的设置项目
                 progScreenSetting.pop("tigger")
-                progScreenSetting["trigger"] = {"u" : -1 , "c" : -1}    # unit, count. -1表示使用默认触发器
+                progScreenSetting["trigger"] = []    # 没有触发器为空列表
+
+            if not isinstance(progScreenSetting["trigger"],list):
+                progScreenSetting["trigger"] = []
             #**********
 
             self.ProgScreenSetting = progScreenSetting
             self.backgroundDescribeText = self.ProgScreenSetting["background"]
+            self.triggerList = self.ProgScreenSetting["trigger"]
         self.set_ui_value()
 
         self.connect_signal()
@@ -496,6 +558,8 @@ class ProgramSettings(QDialog,Ui_ProgSet):
             self.set_ui_enabled(False)
         if self.backgroundDescribeText.startswith("colorMask") or self.backgroundDescribeText.startswith("imgMask") or self.backgroundDescribeText.startswith("videoMask"):
             self.checkBox_mask.setChecked(True)
+
+        self.spin_Unit.setMaximum(self.unitCount)
 
 
         if self.backgroundDescribeText.startswith("color"):
@@ -523,7 +587,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
                 self.comboBox_fill.setCurrentIndex(int(match.group(1)))
             
             
-
+        self.show_tgTable()
 
     def set_background(self):
         mode = self.comboBox_mode.currentIndex()
@@ -580,10 +644,28 @@ class ProgramSettings(QDialog,Ui_ProgSet):
                 msg = QMessageBox.warning(self,"提示","请在\"菜单栏\"中的\"更多功能\"选择\"指定背景文件夹\"后再设置背景。")
         self.label_bgDescribe.setText(self.backgroundDescribeText)
 
+    def addTrigger(self):
+        u = self.spin_Unit.value()
+        c = self.spin_Count.value()
+        to = self.spin_Goto.value()
+        tg = {"u" : u , "c" : c , "to" : to}
+        for i in range(len(self.triggerList)):
+            if self.triggerList[i]["u"] == u:
+                self.triggerList[i] = tg
+                self.show_tgTable()
+                return
+        self.triggerList.append(tg)
+        self.show_tgTable()
 
+    def deleteTrigger(self):
+        row = self.Parent.selected_row(self.tableWidget)
+        if isinstance(row, int):
+            self.triggerList.pop(row)
+        self.show_tgTable()
 
     def get_setting(self):
         self.ProgScreenSetting["background"] = self.backgroundDescribeText
+        self.ProgScreenSetting["trigger"] = self.triggerList
 
         return self.ProgScreenSetting
 
@@ -601,6 +683,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.thisFileSaved = True
         self.currentLine = None
         self.currentProg = None
+        self.currentDisplayProgIndex = None
         self.setWindowTitle("LED模拟器")
         self.setWindowIcon(QIcon("./resources/icon.ico"))
         #获取显示器分辨率大小
@@ -651,6 +734,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.ProgramSheetManager.show_program()
         self.ProgramSettler.init_ProgramSetting()
         self.LineSettler.init_LineSetting()
+        self.LineController.show_name_time()
 
     def on_prog_changed(self):
         row = self.selected_row(self.tableWidget_ProgramSheet)
@@ -843,8 +927,28 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             screen = "前路牌"
         screen = screenLink[screen]
         return screen
+    
+    def force_changeProg(self):
+        for scn in self.LedScreens.values():
+            if scn is not None:
+                try:
+                    scn.currentIndex = self.currentDisplayProgIndex
+                    scn.programTimeout()
+                    print(f"集体切换节目{self.currentDisplayProgIndex}")
+                except Exception as e:
+                    print(e)
+    
+    def change_currentDisplayProgIndex(self,who):
+        if self.currentDisplayProgIndex == who.currentIndex:
+            self.force_changeProg()
+        else:
+            self.currentDisplayProgIndex = who.currentIndex
+
+            if who.currentPtime < 0:
+                self.force_changeProg()
 
     def turn_on_all_screen(self):
+        self.currentDisplayProgIndex = None
         self.close_all_screen()
         row = self.currentLine
         h = 0
@@ -852,12 +956,12 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             
             for screen in screenLink.values():
                 try:
-                    screen.close()
+                    self.LedScreens[screen].close()
                 except Exception as e:
                     print("turn_on_all_screen: ", e)
                 if self.LineEditor.LineInfoList[row][screen]["enabled"]:
                     try:
-                        scn = ScreenController(flushRate=self.LineEditor.LineInfoList[row]["flushRate"],screenInfo={"colorMode":self.LineEditor.LineInfoList[row][screen]["colorMode"],"screenSize":self.LineEditor.LineInfoList[row][screen]["screenSize"]},screenProgramSheet=self.LineEditor.LineInfoList[row]["programSheet"],FontIconMgr=self.IconManager.FontMgr,toDisplay=screen)
+                        scn = ScreenController(parent=self,flushRate=self.LineEditor.LineInfoList[row]["flushRate"],screenInfo={"colorMode":self.LineEditor.LineInfoList[row][screen]["colorMode"],"screenSize":self.LineEditor.LineInfoList[row][screen]["screenSize"]},screenProgramSheet=self.LineEditor.LineInfoList[row]["programSheet"],FontIconMgr=self.IconManager.FontMgr,toDisplay=screen)
                         scn.move(50,50+h)
                         h += self.LineEditor.LineInfoList[row][screen]["screenSize"][1]*self.LineEditor.LineInfoList[row][screen]["screenSize"][2][1]+60
                         self.LedScreens[screen] = scn
@@ -873,11 +977,12 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                 pass
 
     def preview_screen(self):
+        self.currentDisplayProgIndex = None
         row = self.currentLine
         if isinstance(row,int):
             self.close_all_screen()
             screen = self.get_currentScreen()
-            scn = ScreenController(flushRate=self.LineEditor.LineInfoList[row]["flushRate"],screenInfo={"colorMode":self.LineEditor.LineInfoList[row][screen]["colorMode"],"screenSize":self.LineEditor.LineInfoList[row][screen]["screenSize"]},screenProgramSheet=self.LineEditor.LineInfoList[row]["programSheet"],FontIconMgr=self.IconManager.FontMgr,toDisplay=screen)
+            scn = ScreenController(parent=self, flushRate=self.LineEditor.LineInfoList[row]["flushRate"],screenInfo={"colorMode":self.LineEditor.LineInfoList[row][screen]["colorMode"],"screenSize":self.LineEditor.LineInfoList[row][screen]["screenSize"]},screenProgramSheet=self.LineEditor.LineInfoList[row]["programSheet"],FontIconMgr=self.IconManager.FontMgr,toDisplay=screen)
             scn.move(100,100)
             self.LedScreens[screen] = scn
         self.change_program()
@@ -1125,6 +1230,8 @@ class ProgramSettler():
         self.ChFont = [c for c in self.FontLib if "asc" not in c.lower()]
         self.TtFont = [c for c in self.FontLib if "asc" not in c.lower() and "hzk" not in c.lower()]
         self.EngFont = [c for c in self.FontLib if "asc" in c.lower()]
+        self.tmpBmp = []
+        self.colorMode = "1"
         self.initUI()
 
     def initUI(self):
@@ -1140,6 +1247,10 @@ class ProgramSettler():
         self.Parent.tableWidget_Screens.setColumnWidth(3,100)
         self.Parent.tableWidget_Screens.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.Parent.tableWidget_Screens.verticalHeader().setDefaultSectionSize(18)
+
+        # 启用右键菜单
+        self.Parent.tableWidget_Screens.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.Parent.tableWidget_Screens.customContextMenuRequested.connect(self.show_context_menu)
 
         self.Parent.combo_Font.addItems(self.ChFont)
         self.Parent.combo_ASCII_Font.addItems(self.EngFont)
@@ -1196,13 +1307,20 @@ class ProgramSettler():
 
         self.Parent.btn_ok.setShortcut(Qt.Key_Return)
 
+    def update_self_colorMode(self):
+        row = self.Parent.currentLine
+        if isinstance(row,int):
+            screen = self.get_currentScreen()
+            self.colorMode = self.Parent.LineEditor.LineInfoList[row][screen]["colorMode"]
+
     def set_screenSet(self):
         row = self.Parent.currentLine
         if isinstance(row,int):
             screen = self.get_currentScreen()
-            colorMode = self.Parent.LineEditor.LineInfoList[row][screen]["colorMode"]
             row = self.Parent.currentProg
             if isinstance(row,int):
+                unitCount = len(self.Parent.ProgramSheetManager.programSheet[row][2][screen][0])
+
                 # print(self.Parent.ProgramSheetManager.programSheet[row])
                 if len(self.Parent.ProgramSheetManager.programSheet[row][2][screen]) == 2:  # (原始版本数据)
                     ext_dict = dict()
@@ -1219,27 +1337,23 @@ class ProgramSettler():
 
                 ProgSettingDialog = ProgramSettings(self.Parent)
                 ProgSettingDialog.show()
-                ProgSettingDialog.set_value(progScreenSetting=ProgScreenSetting)
+                ProgSettingDialog.set_value(progScreenSetting=ProgScreenSetting, unitCount=unitCount)
 
                 if ProgSettingDialog.exec_() == QDialog.Accepted:
                     ProgScreenSetting = ProgSettingDialog.get_setting()
                     self.Parent.ProgramSheetManager.programSheet[row][2][screen][2]["ProgScreenSetting"] = ProgScreenSetting  # ext_dict["ProgScreenSetting"]
                     self.Parent.change_program()
                     self.Parent.thisFile_saveStat.emit(False)
-
-
-
-                
+           
     def set_colorstr_multiLine(self):
-        colorMode = "1"
         multiLine = False
         lineSpace = 1
         richText = [False,False]
         text = ""
         row = self.Parent.currentLine
+        self.update_self_colorMode()
         if isinstance(row,int):
             screen = self.get_currentScreen()
-            colorMode = self.Parent.LineEditor.LineInfoList[row][screen]["colorMode"]
             row = self.Parent.currentProg
             if isinstance(row,int):
                 self.screenProgList = self.Parent.ProgramSheetManager.programSheet[row][2][screen][1]
@@ -1255,7 +1369,7 @@ class ProgramSettler():
 
                     ColorMultiLineDialog = ColorMultiLine()
                     ColorMultiLineDialog.show()
-                    ColorMultiLineDialog.set_value(text,multiLine,lineSpace,colorMode,richText)
+                    ColorMultiLineDialog.set_value(text,multiLine,lineSpace,self.colorMode,richText)
                     if ColorMultiLineDialog.exec_() == QDialog.Accepted:
                         text, multiLine, lineSpace, richText = ColorMultiLineDialog.get_edit_result()
 
@@ -1319,14 +1433,39 @@ class ProgramSettler():
 
             QTimer.singleShot(0, self.show_scnUnit)
 
+    def show_context_menu(self, pos):
+        # 获取点击的行
+        row = self.Parent.tableWidget_Screens.rowAt(pos.y())
+        if row < 0:
+            return
+        # 创建菜单
+        menu = QMenu(self.Parent.tableWidget_Screens)
+        # 添加菜单项
+        action1 = QAction("导出图像", self.Parent.tableWidget_Screens)
+        # 将动作添加到菜单
+        menu.addAction(action1)
+        # 连接动作信号
+        action1.triggered.connect(lambda: self.save_img(row))
+        # 显示菜单
+        # 将窗口坐标转换为全局坐标
+        global_pos = self.Parent.tableWidget_Screens.mapToGlobal(pos)
+        menu.exec_(global_pos)
 
-    def show_scnUnit(self):
+    def show_scnUnit(self, change_size = False, index = 0):
         data = []
+        self.update_self_colorMode()
         row = self.Parent.currentProg
         if isinstance(row,int):
             screen = self.get_currentScreen()
             screenUnitList = self.Parent.ProgramSheetManager.programSheet[row][2][screen][0]
             screenProgList = self.Parent.ProgramSheetManager.programSheet[row][2][screen][1]
+
+            size = min(len(screenProgList),len(screenUnitList))
+            if not change_size:
+                self.tmpBmp = []
+                all = range(size)
+            else:
+                all = [index]
 
             # 更改线路默认屏幕布局
             progrow = self.Parent.currentLine  # 当前选择的线路 注意变量为 progrow
@@ -1338,9 +1477,9 @@ class ProgramSettler():
                 self.Parent.flush_table(self.Parent.tableWidget_ProgramSheet,[])
                 return
 
-            for i in range(min(len(screenProgList),len(screenUnitList))):
+            for i in all:
                 p = screenProgList[i]
-                Creater = BmpCreater(self.Parent.IconManager.FontMgr,"1",(255,255,255),p["font"],p["ascFont"],p["sysFontOnly"],)
+                Creater = BmpCreater(self.Parent.IconManager.FontMgr,self.colorMode,(255,255,255),p["font"],p["ascFont"],p["sysFontOnly"],)
                 _roll_asc = True
                 if "rollAscii" in p.keys():
                     _roll_asc = p["rollAscii"]
@@ -1348,7 +1487,14 @@ class ProgramSettler():
                     bmp = Creater.create_character(vertical=p["vertical"], roll_asc = _roll_asc, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["ascFontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset_asc"], style = p["align"], multi_line={"stat":p["multiLine"], "line_space": p["lineSpace"] })
                 else:
                     bmp = Creater.create_character(vertical=p["vertical"], roll_asc = _roll_asc, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["fontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset"], style = p["align"])
-                data.append([i+1,str(screenUnitList[i]["pointNum"]),str(screenUnitList[i]["pointSize"]),bmp.size])
+
+                if not change_size:
+                    data.append([i+1,str(screenUnitList[i]["pointNum"]),str(screenUnitList[i]["pointSize"]),bmp.size])
+                    self.tmpBmp.append(bmp)
+                else:
+                    self.tmpBmp[i] = bmp
+                    for j in range(size):
+                        data.append([j+1,str(screenUnitList[j]["pointNum"]),str(screenUnitList[j]["pointSize"]),self.tmpBmp[j].size])
 
             current_row = self.Parent.selected_row(self.Parent.tableWidget_Screens)
             if current_row is None:
@@ -1426,13 +1572,13 @@ class ProgramSettler():
 
     def show_progArgv(self):
         row = self.Parent.currentLine
+        self.update_self_colorMode()
         if isinstance(row,int):
             screen = self.get_currentScreen()
-            colorMode = self.Parent.LineEditor.LineInfoList[row][screen]["colorMode"]
-            if colorMode == "1":
+            if self.colorMode == "1":
                 self.Parent.combo_SingleColorChoose.setEnabled(True)
                 self.Parent.btn_Colorful_ChooseColor.setEnabled(False)
-            elif colorMode == "RGB":
+            elif self.colorMode == "RGB":
                 self.Parent.combo_SingleColorChoose.setEnabled(False)
                 self.Parent.btn_Colorful_ChooseColor.setEnabled(True)
             row = self.Parent.currentProg
@@ -1493,8 +1639,9 @@ class ProgramSettler():
                         print("未找到富文本选项")
 
     def save_progArgv(self):
-        row = self.Parent.currentProg
-        if isinstance(row,int):
+        r = self.Parent.currentProg
+        row = None
+        if isinstance(r,int):
             row = self.Parent.selected_row(self.Parent.tableWidget_Screens)
             if isinstance(row,int):
                 self.screenProgList[row]["font"] = self.Parent.combo_Font.currentText()
@@ -1555,9 +1702,10 @@ class ProgramSettler():
             self.Parent.thisFile_saveStat.emit(False)
 
         self.Parent.change_program()     # 不可改变顺序
-        self.show_scnUnit()
-        
-
+        if row != None:
+            self.show_scnUnit(change_size=True,index=row)
+        else:
+            self.show_scnUnit()
 
     def get_color(self):
         row = self.Parent.selected_row(self.Parent.tableWidget_Screens)
@@ -1568,7 +1716,23 @@ class ProgramSettler():
                 self.screenProgList[row]["color_RGB"] = color
                 self.save_progArgv()
                 self.show_progArgv()
-    
+
+    def save_img(self, index):
+        row = self.Parent.currentLine
+        self.update_self_colorMode()
+        if isinstance(row,int):
+            if self.colorMode == "1":
+                extension = ["单色位图","bmp"]
+            elif self.colorMode == "RGB":
+                extension = ["便携式网络图形","png"]
+            filedir,ok = QFileDialog.getSaveFileName(self.Parent,'保存','./',f'{extension[0]} (*.{extension[1]})')
+            if ok:
+                im = self.tmpBmp[index]
+                if self.colorMode == "1":
+                    im = im.point(lambda x: not x)  # 直接反转二值图像
+                im.save(filedir)
+
+
 class LineSettler():
     def __init__(self, parent):
         self.Parent = parent
@@ -1994,7 +2158,6 @@ class LineController():
 
         self.Parent.LineNameEdit.editingFinished.connect(self.change_name_time)
         self.Parent.combo_FlushRate.currentTextChanged.connect(self.change_name_time)
-        self.Parent.tableWidget_lineChoose.clicked.connect(self.show_name_time)
         self.Parent.btn_newLine.clicked.connect(self.new_busLine_openDialog)
         self.Parent.btn_delLine.clicked.connect(self.del_busLine)
         self.Parent.btn_MvUp_BusLine.clicked.connect(self.mv_up_busLine)

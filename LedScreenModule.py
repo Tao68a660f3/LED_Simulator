@@ -2,7 +2,7 @@
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction
 from PyQt5.QtGui import QPainter, QColor, QImage
-from PyQt5.QtCore import QTimer, Qt, QThread
+from PyQt5.QtCore import QTimer, Qt, QThread, pyqtSignal
 from PIL import Image
 from ScreenInfo import *
 from LineInfo import *
@@ -28,8 +28,11 @@ class Thread_BmpUpdater(QThread):
         self.is_running = False
 
 class ScreenController(QWidget):
-    def __init__(self,flushRate,screenInfo,screenProgramSheet,toDisplay,FontIconMgr):
+    counterPlusOne = pyqtSignal()
+
+    def __init__(self,parent,flushRate,screenInfo,screenProgramSheet,toDisplay,FontIconMgr):
         super().__init__()
+        self.Parent = parent
         self.window_handle = self.winId()
         self.screen = QApplication.primaryScreen()
         self.BmpUpdater = Thread_BmpUpdater(self)
@@ -85,6 +88,7 @@ class ScreenController(QWidget):
 
         self.setContextMenuPolicy(Qt.CustomContextMenu) # 右键菜单
         self.customContextMenuRequested.connect(self.showContextMenu)
+        self.counterPlusOne.connect(self.triggerProgramTimeout)
 
     def read_setting(self):
         setting_file = "./resources/settings.info"
@@ -275,22 +279,59 @@ class ScreenController(QWidget):
                     s.progSheet["text"] = oldStr
         except Exception as e:
             print("checkTimeStr:", e)
-        
+
+    def normal_goto_prog(self):
+        if self.currentIndex+1 <= len(self.screenProgramSheet)-1:
+            self.currentIndex += 1
+        else:
+            self.currentIndex = 0
+            self.performFinish = True
+        self.Parent.change_currentDisplayProgIndex(self)
+
     def checkProgramTimeout(self):
-        try:
-            self.runningTime = time.time() - self.currentBeginTime
-            if self.runningTime >= self.currentPtime and self.currentPtime >= 0:
+        self.runningTime = time.time() - self.currentBeginTime
+        if self.runningTime >= self.currentPtime and self.currentPtime >= 0:
+            if self.currentScreenProgSet != None:
+                # 这里不用改正触发器设置的错误（多次更改设计导致）
+                trigger = self.currentScreenProgSet["trigger"]
+                if isinstance(trigger,list):
+                    if len(trigger) > 0:
+                        tg = trigger[0]
+                        self.currentIndex = (self.currentIndex + tg["to"]) % len(self.screenProgramSheet)
+                        self.Parent.change_currentDisplayProgIndex(self)
+                        self.programTimeout()
+                    else:
+                        self.normal_goto_prog()
+                        self.programTimeout()
+            else:
+                self.normal_goto_prog()
                 self.programTimeout()
 
-            if self.currentPtime < 0:
-                num = []
-                for u in self.units:
-                    num.append(u.counter)
-                if self.currentPtime < 0 and max(num) >= 1:
-                    self.programTimeout()
+    def default_tg(self):
+        num = []
+        for u in self.units:
+            num.append(u.counter)
+        if self.currentPtime < 0 and max(num) >= 1:
+            self.normal_goto_prog()
+            self.programTimeout()
 
-        except Exception as e:
-            print("checkProgramTimeout: ", e)
+    def triggerProgramTimeout(self):
+        if self.currentPtime < 0:
+            if self.currentScreenProgSet != None:
+                # 这里不用改正触发器设置的错误（多次更改设计导致）
+                trigger = self.currentScreenProgSet["trigger"]
+                if isinstance(trigger,list):
+                    if len(trigger) > 0:
+                        for tg in trigger:
+                            if self.units[tg["u"]-1].counter >= tg["c"]:
+                                self.currentIndex = (self.currentIndex + tg["to"]) % len(self.screenProgramSheet)
+                                self.programTimeout()
+                    else:
+                        self.default_tg()
+            else:
+                self.default_tg()
+            
+            self.Parent.change_currentDisplayProgIndex(self)
 
     def programTimeout(self):
         if self.progStopGif:        # 录制GIF直到当前节目结束
@@ -318,11 +359,7 @@ class ScreenController(QWidget):
                     self.backgroundPerformer()
                 except Exception as e:
                     print("programTimeout:", e)
-            if self.currentIndex+1 <= len(self.screenProgramSheet)-1:
-                self.currentIndex += 1
-            else:
-                self.currentIndex = 0
-                self.performFinish = True
+
         self.checkTimeStr()
 
     def backgroundPerformer(self):
@@ -333,7 +370,10 @@ class ScreenController(QWidget):
             #以下为改正设置错误的触发器设置项
             if "tigger" in self.currentScreenProgSet.keys():    # 拼写错误和内容错误的设置项目
                 self.currentScreenProgSet.pop("tigger")
-                self.currentScreenProgSet["trigger"] = {"u" : -1 , "c" : -1}
+                self.currentScreenProgSet["trigger"] = []    # 没有触发器为空列表
+
+            if not isinstance(self.currentScreenProgSet["trigger"],list):
+                self.currentScreenProgSet["trigger"] = []
             #**********
 
             backgroundDescribeText = self.currentScreenProgSet["background"]
@@ -442,6 +482,7 @@ class ScreenController(QWidget):
 
     def posTransFunc(self,obj):
         appearance = obj.appearance
+        c0 = obj.counter
 
         arg1,arg2 = obj.progSheet["argv_1"],obj.progSheet["argv_2"]
         try:
@@ -783,6 +824,8 @@ class ScreenController(QWidget):
                             obj.rollCounter = 0
                         else:
                             return
+        if obj.counter - c0 != 0:
+            self.counterPlusOne.emit()
 
     def drawBackground(self,qp):
         qp.setBrush(QColor(25,25,25))

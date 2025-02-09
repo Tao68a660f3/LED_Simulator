@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw, ImageFont, ImageChops
+from PIL import Image, ImageDraw, ImageFont
 # import numpy as np
 import binascii, re, os, ast #, freetype
 
@@ -50,8 +50,9 @@ class ASC_Bmp_Reader():
         x = value%16
         y = value//16
         ch = self.fnt_img.crop((x*self.ascii_size[0],y*self.ascii_size[1],(x+1)*self.ascii_size[0],(y+1)*self.ascii_size[1]))
-        ch = ImageChops.invert(ch)
         ch = ch.convert('1')
+        ch = ch.point(lambda x: not x)  # 直接反转二值图像
+        
         l = self.ascii_size[0]-1    ####!!
         r = 0
         if self.ascii_size[0] == self.ascii_size[1]:
@@ -519,11 +520,11 @@ class BmpCreater():
                     try:
                         ico = Image.open(self.relative_path+self.FontManager.icon_dict[sub_task])
                         if self.color_type == "1":
-                            ico = ImageChops.invert(ico)
                             ico = ico.convert('1')
+                            ico = ico.point(lambda x: not x)  # 直接反转二值图像
                         elif self.color_type == "RGB":
                             if ico.mode == "1":
-                                ico = ImageChops.invert(ico)
+                                ico = ico.point(lambda x: not x)  # 直接反转二值图像
                                 ico = self.fill_image_with_color(task[1], ico, foc, bac)
                             else:
                                 ico = ico.convert("RGBA")
@@ -572,11 +573,11 @@ class BmpCreater():
     
 if __name__ == "__main__":
     # t = "[{'char': '在本文中，', 'foreground': '#ffffff', 'background': '0'}, {'char': '我们', 'foreground': '#ffab81', 'background': '0'}, {'char': '介绍了', 'foreground': '#75ffca', 'background': '0'}, {'char': '四种', 'foreground': '#395dff', 'background': '0'}, {'char': '将单个文件', 'foreground': '#ffffff', 'background': '0'}, {'char': '恢复到', 'foreground': '#ff40b6', 'background': '0'}, {'char': '以前版本', 'foreground': '#ffff00', 'background': '0'}, {'char': '的方法', 'foreground': '#ffffff', 'background': '0'}]"
-    t = "欢迎使用音乐播`dnArrow2`放器 真正的“电脑爱好者”都应该用自动播\n放而不是第三方弹窗。[doge][doge]"
-    ch_font="等线"
+    t = "西四丁字街"
+    ch_font="宋体"
     asc_font="Arial"
-    FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=24, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=80, auto_scale=0, scale_sys_font_only=0, new_width = 240, new_height = 160, y_offset = 0, y_offset_asc = 0, style = [0,0], multi_line = {"stat":True, "line_space": 1.1 })
+    FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,255,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
+    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=24, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=True, scale_sys_font_only=0, new_width = 80, new_height = 32, y_offset = 0, y_offset_asc = 0, style = [0,0], multi_line = {"stat":False, "line_space": 1.1 })
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]
