@@ -1546,11 +1546,7 @@ class ProgramSettler():
             screenProgList = self.Parent.ProgramSheetManager.programSheet[row][2][screen][1]
 
             size = min(len(screenProgList),len(screenUnitList))
-            if not change_size:
-                self.tmpBmp = []
-                all = range(size)
-            else:
-                all = [index]
+            all = range(size)
 
             # 更改线路默认屏幕布局
             progrow = self.Parent.currentLine  # 当前选择的线路 注意变量为 progrow
@@ -1573,14 +1569,8 @@ class ProgramSettler():
                 else:
                     bmp = Creater.create_character(vertical=p["vertical"], roll_asc = _roll_asc, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["fontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset"], style = p["align"])
 
-                if not change_size:
-                    data.append([i+1,str(screenUnitList[i]["pointNum"]),str(screenUnitList[i]["pointSize"]),bmp.size])
-                    self.tmpBmp.append(bmp)
-                else:
-                    self.tmpBmp[i] = bmp
-                    print(size,len(self.tmpBmp),len(screenUnitList))
-                    for j in range(size):
-                        data.append([j+1,str(screenUnitList[j]["pointNum"]),str(screenUnitList[j]["pointSize"]),self.tmpBmp[j].size])
+                data.append([i+1,str(screenUnitList[i]["pointNum"]),str(screenUnitList[i]["pointSize"]),bmp.size])
+                self.tmpBmp.append(bmp)
 
             current_row = self.Parent.selected_row(self.Parent.tableWidget_Screens)
             if current_row is None:
