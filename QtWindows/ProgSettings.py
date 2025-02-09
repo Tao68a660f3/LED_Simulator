@@ -147,7 +147,7 @@ class Ui_ProgSet(object):
         self.verticalLayout.addWidget(self.buttonBox)
 
         self.retranslateUi(ProgSet)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         self.buttonBox.accepted.connect(ProgSet.accept) # type: ignore
         self.buttonBox.rejected.connect(ProgSet.reject) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(ProgSet)

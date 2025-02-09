@@ -1,6 +1,6 @@
 import sys, os, ast, copy, datetime, base64, io
 from PyQt5.QtWidgets import QApplication, QWidget, QDialog, QMainWindow, QAbstractItemView, QTableWidgetItem, QHeaderView, QFileDialog, QPushButton, QLabel, QColorDialog, QMenu, QAction, QMessageBox
-from PyQt5.QtGui import QPixmap, QIcon, QTextCharFormat
+from PyQt5.QtGui import QPixmap, QIcon, QTextCharFormat, QFont
 from PyQt5.QtCore import pyqtSignal, Qt, QCoreApplication
 
 from BmpCreater import FontManager, BmpCreater
@@ -47,6 +47,7 @@ class AboutWindow(QWidget,Ui_Form):
         self.resize(self.winsize[0],self.winsize[1])
 
     def set_version(self):
+        self.label_Version.setFont(QFont('宋体', 18))
         self.label_Version.setText(f"关于LED模拟器{version}")
         self.label_Date.setText(f"发布日期：{release_date}")
 
