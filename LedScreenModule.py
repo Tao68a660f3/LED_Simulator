@@ -323,15 +323,18 @@ class ScreenController(QWidget):
                 if isinstance(trigger,list):
                     if len(trigger) > 0:
                         for tg in trigger:
+                            print(self.units[tg["u"]-1].counter, tg["c"])
                             if self.units[tg["u"]-1].counter >= tg["c"]:
                                 self.currentIndex = (self.currentIndex + tg["to"]) % len(self.screenProgramSheet)
                                 self.programTimeout()
+                                self.Parent.change_currentDisplayProgIndex(self)
                     else:
                         self.default_tg()
+                        self.Parent.change_currentDisplayProgIndex(self)
             else:
                 self.default_tg()
+                self.Parent.change_currentDisplayProgIndex(self)
             
-            self.Parent.change_currentDisplayProgIndex(self)
 
     def programTimeout(self):
         if self.progStopGif:        # 录制GIF直到当前节目结束
