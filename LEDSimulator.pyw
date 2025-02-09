@@ -1564,7 +1564,7 @@ class ProgramSettler():
 
             for i in all:
                 p = screenProgList[i]
-                Creater = BmpCreater(self.Parent.IconManager.FontMgr,self.colorMode,(255,255,255),p["font"],p["ascFont"],p["sysFontOnly"],)
+                Creater = BmpCreater(self.Parent.IconManager.FontMgr,self.colorMode,p["color_RGB"],p["font"],p["ascFont"],p["sysFontOnly"],)
                 _roll_asc = True
                 if "rollAscii" in p.keys():
                     _roll_asc = p["rollAscii"]
@@ -1578,6 +1578,7 @@ class ProgramSettler():
                     self.tmpBmp.append(bmp)
                 else:
                     self.tmpBmp[i] = bmp
+                    print(size,len(self.tmpBmp),len(screenUnitList))
                     for j in range(size):
                         data.append([j+1,str(screenUnitList[j]["pointNum"]),str(screenUnitList[j]["pointSize"]),self.tmpBmp[j].size])
 
@@ -1787,10 +1788,7 @@ class ProgramSettler():
             self.Parent.thisFile_saveStat.emit(False)
 
         self.Parent.change_program()     # 不可改变顺序
-        if row != None:
-            self.show_scnUnit(change_size=True,index=row)
-        else:
-            self.show_scnUnit()
+        self.show_scnUnit()
 
     def get_color(self):
         row = self.Parent.selected_row(self.Parent.tableWidget_Screens)
