@@ -613,4 +613,4 @@ class Ui_ControlPanel(object):
         self.btn_ok.setText(_translate("ControlPanel", "确定"))
         self.label_10.setText(_translate("ControlPanel", "单元颜色(彩色牌选择)："))
         self.btn_Colorful_ChooseColor.setText(_translate("ControlPanel", "默认颜色"))
-from DraggableTable import DraggableTableWidget
+from ModifiedModule import DraggableTableWidget

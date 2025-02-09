@@ -979,7 +979,7 @@
   <customwidget>
    <class>DraggableTableWidget</class>
    <extends>QTableWidget</extends>
-   <header>DraggableTable</header>
+   <header>ModifiedModule</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -173,4 +173,4 @@ class Ui_ProgSet(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_tgSet), _translate("ProgSet", "节目切换触发器"))
         self.label.setText(_translate("ProgSet", "暂不可用"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_inheritProg), _translate("ProgSet", "继承节目"))
-from DraggableTable import DraggableTableWidget
+from ModifiedModule import DraggableTableWidget

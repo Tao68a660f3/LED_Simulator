@@ -17,6 +17,9 @@ from ProgSettings import *
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
+version = "体验版"
+release_date = 20250209
+
 # 屏幕尺寸相关信息
 pointKindDict = {"(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled","(6,8)":"midSizeScaled68","(8,10)":"midSizeScaled810","(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled"}
 ledTypes = [i for i in pointKindDict.keys()]
@@ -33,9 +36,14 @@ class AboutWindow(QWidget,Ui_Form):
 
     def initUI(self):
         self.setWindowTitle("关于")
-        pixmap = QPixmap("./resources/welcome2.png")
-        pixmap = pixmap.scaledToWidth(360)
-        self.label_6.setPixmap(pixmap)
+        # pixmap = QPixmap("./resources/welcome2.png")
+        # pixmap = pixmap.scaledToWidth(360)
+        # self.label_6.setPixmap(pixmap)
+        self.set_version()
+
+    def set_version(self):
+        self.label_Version.setText(f"关于LED模拟器{version}")
+        self.label_Date.setText(f"发布日期：{release_date}")
 
 class NewALine(QDialog,Ui_NewALine):
     dataEntered = pyqtSignal(list)

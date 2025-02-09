@@ -323,7 +323,7 @@ class ScreenController(QWidget):
                 if isinstance(trigger,list):
                     if len(trigger) > 0:
                         for tg in trigger:
-                            print(self.units[tg["u"]-1].counter, tg["c"])
+                            # print(self.units[tg["u"]-1].counter, tg["c"])
                             if self.units[tg["u"]-1].counter >= tg["c"]:
                                 self.currentIndex = (self.currentIndex + tg["to"]) % len(self.screenProgramSheet)
                                 self.programTimeout()
