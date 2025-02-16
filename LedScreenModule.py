@@ -30,7 +30,7 @@ class Thread_BmpUpdater(QThread):
 class ScreenController(QWidget):
     counterPlusOne = pyqtSignal()
 
-    def __init__(self,parent,flushRate,screenInfo,screenProgramSheet,toDisplay,FontIconMgr):
+    def __init__(self,flushRate,screenInfo,screenProgramSheet,toDisplay,FontIconMgr,parent = None):
         super().__init__()
         self.Parent = parent
         self.window_handle = self.winId()
@@ -39,7 +39,7 @@ class ScreenController(QWidget):
         self.BmpUpdater.finished.connect(self.BmpUpdater.deleteLater)
         self.settings = dict()
         self.offset = 16
-        self.flushRate = int(1000/flushRate)
+        self.flushRate = 1000 // flushRate
         self.colorMode = screenInfo["colorMode"]
         self.screenSize = [screenInfo["screenSize"][0],screenInfo["screenSize"][1]]
         self.screenScale = screenInfo["screenSize"][2]
@@ -157,7 +157,6 @@ class ScreenController(QWidget):
 
     def closeEvent(self, event):
         self.stopThread_BmpUpdater()
-        event.accept()
 
     def top_most(self):
         try:
@@ -212,10 +211,8 @@ class ScreenController(QWidget):
         self.gifRecording = True
 
     def p_start_recording_gif(self):
-        if self.currentIndex > 0:
-            self.currentIndex -= 1
-        else:
-            self.currentIndex = len(self.screenProgramSheet) - 1
+        # if self.Parent is not None:
+        #     self.Parent.change_currentDisplayProgIndex(self)
         self.programTimeout()
         self.start_recording_gif()
 
@@ -286,19 +283,27 @@ class ScreenController(QWidget):
         else:
             self.currentIndex = 0
             self.performFinish = True
-        self.Parent.change_currentDisplayProgIndex(self)
+        if self.Parent is not None:
+            self.Parent.change_currentDisplayProgIndex(self)
 
     def checkProgramTimeout(self):
         self.runningTime = time.time() - self.currentBeginTime
         if self.runningTime >= self.currentPtime and self.currentPtime >= 0:
-            if self.currentScreenProgSet != None:
+            if self.currentScreenProgSet is not None:
                 # 这里不用改正触发器设置的错误（多次更改设计导致）
                 trigger = self.currentScreenProgSet["trigger"]
                 if isinstance(trigger,list):
                     if len(trigger) > 0:
                         tg = trigger[0]
-                        self.currentIndex = (self.currentIndex + tg["to"]) % len(self.screenProgramSheet)
-                        self.Parent.change_currentDisplayProgIndex(self)
+                        if "abst" in tg.keys():
+                            if tg["abst"]:
+                                self.currentIndex = (self.currentIndex + tg["to"]) % len(self.screenProgramSheet)
+                            else:
+                                self.currentIndex = (tg["to"]-1) % len(self.screenProgramSheet)
+                        else:
+                            self.currentIndex = (self.currentIndex + tg["to"]) % len(self.screenProgramSheet)
+                        if self.Parent is not None:
+                            self.Parent.change_currentDisplayProgIndex(self)
                         self.programTimeout()
                     else:
                         self.normal_goto_prog()
@@ -317,7 +322,7 @@ class ScreenController(QWidget):
 
     def triggerProgramTimeout(self):
         if self.currentPtime < 0:
-            if self.currentScreenProgSet != None:
+            if self.currentScreenProgSet is not None:
                 # 这里不用改正触发器设置的错误（多次更改设计导致）
                 trigger = self.currentScreenProgSet["trigger"]
                 if isinstance(trigger,list):
@@ -325,15 +330,20 @@ class ScreenController(QWidget):
                         for tg in trigger:
                             # print(self.units[tg["u"]-1].counter, tg["c"])
                             if self.units[tg["u"]-1].counter >= tg["c"]:
-                                self.currentIndex = (self.currentIndex + tg["to"]) % len(self.screenProgramSheet)
+                                if "abst" in tg.keys():
+                                    if tg["abst"]:
+                                        self.currentIndex = (self.currentIndex + tg["to"]) % len(self.screenProgramSheet)
+                                    else:
+                                        self.currentIndex = (tg["to"]-1) % len(self.screenProgramSheet)
+                                else:
+                                    self.currentIndex = (self.currentIndex + tg["to"]) % len(self.screenProgramSheet)
                                 self.programTimeout()
-                                self.Parent.change_currentDisplayProgIndex(self)
+                                if self.Parent is not None:
+                                    self.Parent.change_currentDisplayProgIndex(self)
                     else:
                         self.default_tg()
-                        self.Parent.change_currentDisplayProgIndex(self)
             else:
                 self.default_tg()
-                self.Parent.change_currentDisplayProgIndex(self)
             
 
     def programTimeout(self):
@@ -368,7 +378,7 @@ class ScreenController(QWidget):
     def backgroundPerformer(self):
         self.maskMode = False
         
-        if self.currentScreenProgSet != None:
+        if self.currentScreenProgSet is not None:
             #**********
             #以下为改正设置错误的触发器设置项
             if "tigger" in self.currentScreenProgSet.keys():    # 拼写错误和内容错误的设置项目
@@ -435,6 +445,19 @@ class ScreenController(QWidget):
                                 self.BackImg = bim
                             elif fill == 3:
                                 pass  # 默认实现的效果就是fill = 3
+                            elif fill == 4:
+                                bim = Image.new("RGB", (self.screenSize[0],self.screenSize[1]), (0,0,0))
+                                imratio = self.BackImg.width/self.BackImg.height
+                                scratio = self.screenSize[0]/self.screenSize[1]
+                                if imratio >= scratio:
+                                    lim = self.BackImg.resize((self.screenSize[0],int(self.screenSize[0]/imratio)),resample=Image.BILINEAR)
+                                else:
+                                    lim = self.BackImg.resize((int(imratio * self.screenSize[1]),self.screenSize[1]),resample=Image.BILINEAR)
+                                x = int(0.5*(bim.width-lim.width))
+                                y = int(0.5*(bim.height-lim.height))
+                                bim.paste(lim,(x,y))
+                                self.BackImg = bim
+
 
                             self.backgroundImgUpdater()
 
@@ -510,12 +533,18 @@ class ScreenController(QWidget):
             y0 = obj.Bitmap.size[1] - obj.pointNum[1]
         else:
             y0 = 0
+
+        pos0 += obj.x_offset
+        y0 += obj.y_offset
         
         if appearance == "静止":
             obj.appear = True
-            obj.x = pos0 + obj.x_offset
+            obj.x = pos0
+            obj.y = y0
+            obj.counter = obj.rollCounter // (10000 // self.flushRate)
         elif appearance == "闪烁":
-            obj.x = pos0 + obj.x_offset
+            obj.x = pos0
+            obj.y = y0
             if obj.rollCounter <= arg1+1:
                 obj.appear = True
             elif obj.rollCounter <= arg1+arg2+1:
@@ -525,6 +554,7 @@ class ScreenController(QWidget):
                 obj.counter += 1
         elif appearance == "向左滚动":
             obj.appear = True
+            obj.y = y0
             if obj.rollCounter < arg1:
                 pass
             else:
@@ -554,6 +584,7 @@ class ScreenController(QWidget):
                     obj.y = obj.y+arg3 if obj.y <= obj.Bitmap.size[1]+arg2 else 1+arg3
         elif appearance == "向左移到中间":
             obj.appear = True
+            obj.y = y0
             if obj.rollCounter == 0:
                 obj.x = -obj.pointNum[0]
             if obj.rollCounter < arg1:
@@ -561,9 +592,11 @@ class ScreenController(QWidget):
             else:
                 obj.rollCounter = 0
                 obj.x = obj.x+arg3 if obj.x < pos0 else obj.x
+            if obj.x >= pos0:
+                obj.counter = 65535
         elif appearance == "向上移到中间":
             obj.appear = True
-            obj.x = pos0 + obj.x_offset
+            obj.x = pos0
             if obj.rollCounter == 0:
                 obj.y = -obj.pointNum[1]
             if obj.rollCounter < arg1:
@@ -571,29 +604,33 @@ class ScreenController(QWidget):
             else:
                 obj.rollCounter = 0
                 obj.y = obj.y+arg3 if obj.y < y0 else obj.y
+            if obj.x >= pos0:
+                obj.counter = 65535
         elif appearance == "中间向左移开":
             obj.appear = True
+            obj.y = y0
             if time.time() - self.currentBeginTime > arg2:
                 if obj.rollCounter < arg1:
                     pass
                 else:
                     obj.rollCounter = 0
                     if obj.x >= obj.Bitmap.size[0]:
-                        obj.counter += 1
+                        obj.counter = 65535
                     obj.x = obj.x+arg3 if obj.x < obj.Bitmap.size[0] else obj.x
         elif appearance == "中间向上移开":
             obj.appear = True
-            obj.x = pos0 + obj.x_offset
+            obj.x = pos0
             if time.time() - self.currentBeginTime > arg2:
                 if obj.rollCounter < arg1:
                     pass
                 else:
                     obj.rollCounter = 0
                     if obj.y >= obj.Bitmap.size[1]:
-                        obj.counter += 1
+                        obj.counter = 65535
                     obj.y = obj.y+arg3 if obj.y < obj.Bitmap.size[1] else obj.y
         elif appearance == "跳跃向左移动":
             obj.appear = True
+            obj.y = y0
             if obj.rollCounter < arg1:
                 pass
             else:
@@ -625,7 +662,7 @@ class ScreenController(QWidget):
                         obj.rollCounter = 0
         elif appearance == "跳跃向上移动":
             obj.appear = True
-            obj.x = pos0 + obj.x_offset
+            obj.x = pos0
             if obj.rollCounter < arg1:
                 pass
             else:
@@ -657,6 +694,7 @@ class ScreenController(QWidget):
                         obj.rollCounter = 0
         elif appearance == "向右滚动":
             obj.appear = True
+            obj.y = y0
             if obj.rollCounter < arg1:
                 pass
             else:
@@ -686,6 +724,7 @@ class ScreenController(QWidget):
                     obj.y = obj.y-arg3 if obj.y >= 1+arg3 else obj.Bitmap.size[1]+arg2
         elif appearance == "向右移到中间":
             obj.appear = True
+            obj.y = y0
             if obj.rollCounter == 0:
                 obj.x = obj.Bitmap.size[0]
             if obj.rollCounter < arg1:
@@ -693,9 +732,11 @@ class ScreenController(QWidget):
             else:
                 obj.rollCounter = 0
                 obj.x = obj.x-arg3 if obj.x > pos0 else obj.x
+            if obj.x >= pos0:
+                obj.counter = 65535
         elif appearance == "向下移到中间":
             obj.appear = True
-            obj.x = pos0 + obj.x_offset
+            obj.x = pos0
             if obj.rollCounter == 0:
                 obj.y = obj.Bitmap.size[1]
             if obj.rollCounter < arg1:
@@ -703,29 +744,33 @@ class ScreenController(QWidget):
             else:
                 obj.rollCounter = 0
                 obj.y = obj.y-arg3 if obj.y > y0 else obj.y
+            if obj.x >= pos0:
+                obj.counter = 65535
         elif appearance == "中间向右移开":
             obj.appear = True
+            obj.y = y0
             if time.time() - self.currentBeginTime > arg2:
                 if obj.rollCounter < arg1:
                     pass
                 else:
                     obj.rollCounter = 0
                     if obj.x <= -obj.pointNum[0]:
-                        obj.counter += 1
+                        obj.counter = 65535
                     obj.x = obj.x-arg3 if obj.x > -obj.pointNum[0] else obj.x
         elif appearance == "中间向下移开":
             obj.appear = True
-            obj.x = pos0 + obj.x_offset
+            obj.x = pos0
             if time.time() - self.currentBeginTime > arg2:
                 if obj.rollCounter < arg1:
                     pass
                 else:
                     obj.rollCounter = 0
                     if obj.y <= -obj.pointNum[1]:
-                        obj.counter += 1
+                        obj.counter = 65535
                     obj.y = obj.y-arg3 if obj.y > -obj.pointNum[1] else obj.y
         elif appearance == "跳跃向右移动":
             obj.appear = True
+            obj.y = y0
             if obj.rollCounter < arg1:
                 pass
             else:
@@ -757,7 +802,7 @@ class ScreenController(QWidget):
                         obj.rollCounter = 0
         elif appearance == "跳跃向下移动":
             obj.appear = True
-            obj.x = pos0 + obj.x_offset
+            obj.x = pos0
             if obj.rollCounter < arg1:
                 pass
             else:
@@ -789,7 +834,7 @@ class ScreenController(QWidget):
                         obj.rollCounter = 0
         elif appearance == "上下反复跳跃移动":
             obj.appear = True
-            obj.x = pos0 + obj.x_offset
+            obj.x = pos0
             if obj.rollCounter < arg1:
                 pass
             else:
@@ -827,7 +872,7 @@ class ScreenController(QWidget):
                             obj.rollCounter = 0
                         else:
                             return
-        if obj.counter - c0 != 0:
+        if obj.counter != c0:
             self.counterPlusOne.emit()
 
     def drawBackground(self,qp):
@@ -864,7 +909,7 @@ class ScreenController(QWidget):
             baseColor = QColor(*unit.color_1[0])
         for y in range(pointNum[1]):
             for x in range(pointNum[0]):
-                if unit.backBitmap != None:
+                if unit.backBitmap is not None:
                     if x < unit.backBitmap.width and y < unit.backBitmap.height:
                         bac_color = unit.backBitmap.getpixel((x,y))
                 else:
@@ -882,7 +927,7 @@ class ScreenController(QWidget):
                 except:
                     color = [0, 0, 0, 0] if colorMode == "RGB" else 0
                 if colorMode == "RGB" :
-                    if unit.backBitmap != None:
+                    if unit.backBitmap is not None:
                         alpha = color[3]
                         if self.maskMode:
                             color = [int(bac_color[i] * alpha/255) for i in range(3)]
@@ -915,11 +960,12 @@ class ScreenUnit():
         self.tempStr = ""
         self.appearance = self.progSheet["appearance"]
         self.FontIconMgr = FontIconMgr
-        self.rollCounter = 0
+        self.rollCounter = 0    # 屏幕每绘制一次就加一，可被procTransFunc重新置为零
         self.counter = 0
         self.x = 0
         self.y = 0
         self.x_offset = 0
+        self.y_offset = 0
         self.appear = True
         self.space = self.progSheet["spacing"]
         self.rollSpace = -1
@@ -952,6 +998,9 @@ class ScreenUnit():
         if align[1] > 0:
             self.y = 0
 
+        if "y_offset_global" in self.progSheet.keys():
+            self.y_offset = self.progSheet["y_offset_global"]
+
         if "滚动" in self.progSheet["appearance"]:
             self.rollSpace = self.progSheet["argv_2"]
             if ("左" in self.appearance or "右"  in self.appearance):
@@ -963,10 +1012,7 @@ class ScreenUnit():
             if ("左" in self.appearance or "右"  in self.appearance):
                 self.x += self.x_offset
             elif ("上" in self.appearance or "下"  in self.appearance):
-                self.y += self.x_offset
-
-        if "y_offset_global" in self.progSheet.keys():
-            self.y += self.progSheet["y_offset_global"]
+                self.y += self.y_offset
 
     def createFontImg(self):
         _roll_asc = True

@@ -500,8 +500,8 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.setWindowTitle("路牌节目设置（实验）")
 
         # tab 0
-        self.comboBox_mode.addItems(["纯色背景","图片背景","视频背景"])
-        self.comboBox_fill.addItems(["平铺","居中","填充","拉伸"])  # 0123
+        self.comboBox_mode.addItems(["纯色背景","图片背景",])#"视频背景"])
+        self.comboBox_fill.addItems(["平铺","居中","填充","拉伸","适应"])  # 0123
         self.spinBox.setMaximum(100)
         self.spinBox.setMinimum(0)
         self.label_bgDescribe.setText("")
@@ -510,14 +510,14 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.tableWidget.setColumnCount(3)
         self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)    #设置表格的选取方式是行选取
         self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)    #设置选取方式为单个选取
-        self.tableWidget.setHorizontalHeaderLabels(["屏幕分区","重复次数","跳转至(相对)"])   #设置行表头
+        self.tableWidget.setHorizontalHeaderLabels(["屏幕分区","重复次数","跳转至"])   #设置行表头
         self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
         self.tableWidget.verticalHeader().setDefaultSectionSize(18)
         self.spin_Unit.setMinimum(1)
         self.spin_Unit.setMaximum(1)
         self.spin_Count.setMinimum(1)
         self.spin_Count.setMaximum(65535)
-        self.spin_Goto.setMinimum(-65536)
+        self.spin_Goto.setMinimum(1)
         self.spin_Goto.setMaximum(65535)
         self.tableWidget.rowMoved.connect(self.onRowMoved)
 
@@ -530,6 +530,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         
         self.pushButton_Add.clicked.connect(self.addTrigger)
         self.pushButton_Delete.clicked.connect(self.deleteTrigger)
+        self.chk_abs.stateChanged.connect(self.onAbstChanged)
 
         self.tableWidget.itemSelectionChanged.connect(self.onSelectionChanged)
 
@@ -543,6 +544,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
 
             self.pushButton_Add.clicked.disconnect(self.addTrigger)
             self.pushButton_Delete.clicked.disconnect(self.deleteTrigger)
+            self.chk_abs.stateChanged.disconnect(self.onAbstChanged)
 
             self.tableWidget.itemSelectionChanged.disconnect(self.onSelectionChanged)
         except Exception as e:
@@ -561,7 +563,16 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         for row in range(len(self.triggerList)):
             self.tableWidget.insertRow(row)
             for col in range(len(colname)):
-                item = QTableWidgetItem(str(self.triggerList[row][colname[col]]))
+                context = str(self.triggerList[row][colname[col]])
+                if col == 2:
+                    if "abst" in self.triggerList[row].keys():
+                        if self.triggerList[row]["abst"]:
+                            context = f"相对: {context}"
+                        else:
+                            context = f"绝对: {context}"
+                    else:
+                        context = f"相对: {context}"
+                item = QTableWidgetItem(context)
                 item.setTextAlignment(Qt.AlignLeft | Qt.AlignCenter)
                 item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)    #设置为只可选择可用拖动
                 self.tableWidget.setItem(row,col,item)
@@ -577,6 +588,10 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         row = self.Parent.selected_row(self.tableWidget)
         if isinstance(row, int):
             tg = self.triggerList[row]
+            if "abst" in tg.keys():
+                self.chk_abs.setChecked(tg["abst"])
+            else:
+                self.chk_abs.setChecked(True)
             self.spin_Unit.setValue(tg["u"])
             self.spin_Count.setValue(tg["c"])
             self.spin_Goto.setValue(tg["to"])
@@ -611,10 +626,17 @@ class ProgramSettings(QDialog,Ui_ProgSet):
 
         self.set_ui_value()
 
+    def onAbstChanged(self):
+        abst = self.chk_abs.isChecked()
+        if abst:
+            self.spin_Goto.setMinimum(-65536)
+        else:
+            self.spin_Goto.setMinimum(1)
+
     def set_value(self, progScreenSetting = None, unitCount = 0):
         self.disconnect_signal()
         self.unitCount = unitCount
-        if progScreenSetting != None:
+        if progScreenSetting is not None:
             #**********
             #以下为改正设置错误的触发器设置项
             if "tigger" in progScreenSetting.keys():    # 拼写错误和内容错误的设置项目
@@ -700,7 +722,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
 
     def set_background_img(self, fill = None):
         mask = self.checkBox_mask.isChecked()
-        if fill != None:
+        if fill is not None:
             pattern = r'(?:imgMask|imgBackground)\("([^"]+)"'
             match = re.search(pattern, self.backgroundDescribeText)
             if match:
@@ -733,7 +755,8 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         u = self.spin_Unit.value()
         c = self.spin_Count.value()
         to = self.spin_Goto.value()
-        tg = {"u" : u , "c" : c , "to" : to}
+        abst = self.chk_abs.isChecked()
+        tg = {"u" : u , "c" : c , "to" : to , "abst" : abst}
         for i in range(len(self.triggerList)):
             if self.triggerList[i]["u"] == u:
                 self.triggerList[i] = tg
@@ -1013,27 +1036,31 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         screen = screenLink[screen]
         return screen
     
-    def force_changeProg(self):
+    def force_changeProg(self, who):
         for scn in self.LedScreens.values():
             if scn is not None:
-                try:
-                    scn.currentIndex = self.currentDisplayProgIndex
-                    scn.programTimeout()
-                    print(f"集体切换节目{self.currentDisplayProgIndex}")
-                except Exception as e:
-                    print(e)
+                if not (scn is who):
+                    try:
+                        scn.currentIndex = self.currentDisplayProgIndex
+                        scn.programTimeout()
+                        print(f"{scn.toDisplay}被迫切换节目{self.currentDisplayProgIndex+1}")
+                    except Exception as e:
+                        print(e)
     
     def change_currentDisplayProgIndex(self,who):
-        if self.currentDisplayProgIndex == who.currentIndex:
-            self.force_changeProg()
-        else:
+        print(f"当前节目：{self.currentDisplayProgIndex}+1，{who.toDisplay}请求更换节目至{who.currentIndex+1}")
+        if self.currentDisplayProgIndex is None:
             self.currentDisplayProgIndex = who.currentIndex
 
-            if who.currentPtime < 0:
-                self.force_changeProg()
+        if self.currentDisplayProgIndex == who.currentIndex:
+            self.force_changeProg(who)
+        else:
+            self.currentDisplayProgIndex = who.currentIndex
+            # if who.currentPtime < 0: who的currentPtime早就更新了，直接全部强制更换节目
+            self.force_changeProg(who)
 
     def turn_on_all_screen(self):
-        self.currentDisplayProgIndex = None
+        self.currentDisplayProgIndex = 0
         self.close_all_screen()
         row = self.currentLine
         h = 0
@@ -1043,7 +1070,8 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                 try:
                     self.LedScreens[screen].close()
                 except Exception as e:
-                    print("turn_on_all_screen: ", e)
+                    pass
+                    # print("turn_on_all_screen: ", e)
                 if self.LineEditor.LineInfoList[row][screen]["enabled"]:
                     try:
                         scn = ScreenController(parent=self,flushRate=self.LineEditor.LineInfoList[row]["flushRate"],screenInfo={"colorMode":self.LineEditor.LineInfoList[row][screen]["colorMode"],"screenSize":self.LineEditor.LineInfoList[row][screen]["screenSize"]},screenProgramSheet=self.LineEditor.LineInfoList[row]["programSheet"],FontIconMgr=self.IconManager.FontMgr,toDisplay=screen)
@@ -1086,7 +1114,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             programSheet = self.LineEditor.LineInfoList[line_row]["programSheet"]
             row = self.currentProg
             if isinstance(row,int):
-                
+                self.currentDisplayProgIndex = row
                 for screen in screenLink.values():
                     try:
                         if self.LineEditor.LineInfoList[line_row][screen]["enabled"]:
@@ -1538,6 +1566,7 @@ class ProgramSettler():
 
     def show_scnUnit(self, change_size = False, index = 0):
         data = []
+        self.tmpBmp = []
         self.update_self_colorMode()
         row = self.Parent.currentProg
         if isinstance(row,int):
@@ -1798,7 +1827,7 @@ class ProgramSettler():
                 extension = ["单色位图","bmp"]
             elif self.colorMode == "RGB":
                 extension = ["便携式网络图形","png"]
-            filedir,ok = QFileDialog.getSaveFileName(self.Parent,'保存','./',f'{extension[0]} (*.{extension[1]})')
+            filedir,ok = QFileDialog.getSaveFileName(self.Parent,'导出图像','./',f'{extension[0]} (*.{extension[1]})')
             if ok:
                 im = self.tmpBmp[index]
                 if self.colorMode == "1":
@@ -2275,7 +2304,7 @@ class LineController():
 
     def copy_busLine(self):
         row = self.Parent.currentLine
-        if row != None:
+        if row is not None:
             self.Parent.LineEditor.copy_data(row)
             self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
             self.Parent.set_selected_row(self.Parent.tableWidget_lineChoose,len(self.Parent.LineEditor.LineInfoList)-1)
@@ -2283,7 +2312,7 @@ class LineController():
 
     def del_busLine(self):
         row = self.Parent.currentLine
-        if row != None:
+        if row is not None:
             self.Parent.LineEditor.remove_data(row)
             self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
             self.Parent.set_selected_row(self.Parent.tableWidget_lineChoose,max(0,row-1))
@@ -2297,7 +2326,7 @@ class LineController():
 
     def mv_up_busLine(self):
         row = self.Parent.currentLine
-        if row != None:
+        if row is not None:
             self.Parent.LineEditor.mv_up(row)
             self.Parent.thisFile_saveStat.emit(False)
         self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
@@ -2305,7 +2334,7 @@ class LineController():
 
     def mv_dn_busLine(self):
         row = self.Parent.currentLine
-        if row != None:
+        if row is not None:
             self.Parent.LineEditor.mv_dn(row)
             self.Parent.thisFile_saveStat.emit(False)
         self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>500</width>
+    <height>400</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -146,20 +146,20 @@
          <item>
           <widget class="QSpinBox" name="spin_Count"/>
          </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
           <widget class="QLabel" name="label_9">
            <property name="text">
-            <string>跳转至(相对位置):</string>
+            <string>跳转至:</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QSpinBox" name="spin_Goto"/>
          </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
           <spacer name="horizontalSpacer_2">
            <property name="orientation">
@@ -174,25 +174,14 @@
           </spacer>
          </item>
          <item>
+          <widget class="QCheckBox" name="chk_abs">
+           <property name="text">
+            <string>跳转至相对位置</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="pushButton_Add">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>45</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>45</width>
-             <height>16777215</height>
-            </size>
-           </property>
            <property name="text">
             <string>上传</string>
            </property>
@@ -200,24 +189,6 @@
          </item>
          <item>
           <widget class="QPushButton" name="pushButton_Delete">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>45</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>45</width>
-             <height>16777215</height>
-            </size>
-           </property>
            <property name="text">
             <string>删除</string>
            </property>
