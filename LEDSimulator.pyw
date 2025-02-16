@@ -18,7 +18,7 @@ from ProgSettings import *
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
 version = "体验版"
-release_date = 20250209
+release_date = "20250216"
 
 # 屏幕尺寸相关信息
 pointKindDict = {"(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled","(6,8)":"midSizeScaled68","(8,10)":"midSizeScaled810","(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled"}
@@ -1367,7 +1367,7 @@ class ProgramSettler():
 
         self.Parent.combo_Font.addItems(self.ChFont)
         self.Parent.combo_ASCII_Font.addItems(self.EngFont)
-        self.Parent.combo_Show.addItems(["静止","闪烁","向左滚动","向上滚动","向左移到中间","向左扇形圆形","向上移到中间","向上扇形圆形","中间向左移开","中间向上移开","跳跃向左移动","跳跃向上移动","向右滚动","向下滚动","向右移到中间","向右扇形圆形","向下移到中间","向下扇形圆形","中间向右移开","中间向下移开","跳跃向右移动","跳跃向下移动","上下反复跳跃移动",])
+        self.Parent.combo_Show.addItems(["静止","闪烁","向左滚动","向上滚动","向左移到中间","向左扇形圆形","向左开百叶窗","开水平窗户","向上移到中间","向上扇形圆形","向上开百叶窗","关水平窗户","中间向左移开","中间向上移开","跳跃向左移动","跳跃向上移动","向右滚动","向下滚动","向右移到中间","向右扇形圆形","向右开百叶窗","开竖直窗户","向下移到中间","向下扇形圆形","向下开百叶窗","关竖直窗户","中间向右移开","中间向下移开","跳跃向右移动","跳跃向下移动","上下反复跳跃移动",])
         self.Parent.combo_TextDirect.addItems(["横向","竖向"])
         self.Parent.combo_SingleColorChoose.addItems(template_monochromeColors.keys())
 
@@ -1662,12 +1662,31 @@ class ProgramSettler():
             self.Parent.label_Argv_1.setText("移动速度")
             self.Parent.label_Argv_2.setText("移动步长")
             self.Parent.label_Argv_3.setText("连续移动？")
-            self.Parent.spinBox_Argv_1.setMaximum(60)
+            self.Parent.spinBox_Argv_1.setMaximum(120)
             self.Parent.spinBox_Argv_1.setMinimum(1)
             self.Parent.spinBox_Argv_2.setMaximum(64)
             self.Parent.spinBox_Argv_2.setMinimum(2)
             self.Parent.spinBox_Argv_3.setMaximum(1)
             self.Parent.spinBox_Argv_3.setMinimum(0)
+        elif "百叶窗" in mode:
+            self.Parent.label_Argv_1.setText("速度")
+            self.Parent.label_Argv_2.setText("窗户大小")
+            self.Parent.label_Argv_3.setText("显示窗户？")
+            self.Parent.spinBox_Argv_1.setMaximum(60)
+            self.Parent.spinBox_Argv_1.setMinimum(1)
+            self.Parent.spinBox_Argv_2.setMaximum(1024)
+            self.Parent.spinBox_Argv_2.setMinimum(2)
+            self.Parent.spinBox_Argv_3.setMaximum(1)
+            self.Parent.spinBox_Argv_3.setMinimum(0)
+        elif "窗户" in mode:
+            self.Parent.label_Argv_1.setText("速度")
+            self.Parent.label_Argv_2.setText("显示窗户？")
+            self.Parent.label_Argv_3.setText("")
+            self.Parent.spinBox_Argv_1.setMaximum(60)
+            self.Parent.spinBox_Argv_1.setMinimum(1)
+            self.Parent.spinBox_Argv_2.setMaximum(1)
+            self.Parent.spinBox_Argv_2.setMinimum(0)
+            self.Parent.spinBox_Argv_3.setEnabled(False)
         elif mode == "闪烁":
             self.Parent.label_Argv_1.setText("亮时长")
             self.Parent.label_Argv_2.setText("灭时长")

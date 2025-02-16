@@ -11,6 +11,8 @@ from BmpCreater import *
 undefinedProgramSheet = [['测试信息', 900, {'frontScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'frontSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]]}]]
 
 sector_area_eft = ["向右扇形圆形","向左扇形圆形","向下扇形圆形","向上扇形圆形"]
+hwindow_area_eft = ["向左开百叶窗","向右开百叶窗","向上开百叶窗","向下开百叶窗","向左关百叶窗","向右关百叶窗","向上关百叶窗","向下关百叶窗"]
+window_area_eft = ["开水平窗户","关水平窗户","开竖直窗户","关竖直窗户"]
 
 class Thread_BmpUpdater(QThread):
     def __init__(self, parent = None):
@@ -594,6 +596,42 @@ class ScreenController(QWidget):
                 obj.x = obj.x+arg3 if obj.x < pos0 else obj.x
             if obj.x >= pos0:
                 obj.counter = 65535
+        elif appearance in ["向左开百叶窗","向右开百叶窗","向上开百叶窗","向下开百叶窗","向左关百叶窗","向右关百叶窗","向上关百叶窗","向下关百叶窗"]:    # arg1~3: 速度，窗户大小，显示窗户？
+            obj.appear = True
+            obj.x = pos0
+            obj.y = y0
+            if obj.rollCounter < arg1:
+                pass
+            else:
+                if obj.showat <= arg2:
+                    obj.showat += 1
+                    obj.rollCounter = 0
+            if obj.showat >= arg2:
+                obj.counter = 65535
+        elif appearance in ["开水平窗户","关水平窗户"]:  # 速度，显示
+            obj.appear = True
+            obj.x = pos0
+            obj.y = y0
+            if obj.rollCounter < arg1:
+                pass
+            else:
+                if obj.showat <= obj.pointNum[0]//2:
+                    obj.showat += 1
+                    obj.rollCounter = 0
+            if obj.showat >= obj.pointNum[0]//2:
+                obj.counter = 65535
+        elif appearance in ["开竖直窗户","关竖直窗户"]:   # 速度，显示
+            obj.appear = True
+            obj.x = pos0
+            obj.y = y0
+            if obj.rollCounter < arg1:
+                pass
+            else:
+                if obj.showat <= obj.pointNum[1]//2:
+                    obj.showat += 1
+                    obj.rollCounter = 0
+            if obj.showat >= obj.pointNum[1]//2:
+                obj.counter = 65535
         elif appearance in ["向左扇形圆形","向右扇形圆形"]:    # arg1~3: 速度，步长，连续？
             obj.appear = True
             obj.x = pos0
@@ -1001,6 +1039,109 @@ class ScreenController(QWidget):
         else:
             return False
 
+    def in_hwindow_area(self,unit,x,y):
+        appearance = unit.appearance     # arg1~3: 速度，窗户大小，显示窗户？
+        if appearance not in hwindow_area_eft:
+            return True
+        pointNum = unit.pointNum
+        showat = unit.showat
+        arg1,arg2 = unit.progSheet["argv_1"],unit.progSheet["argv_2"]
+        if "argv_3" in unit.progSheet.keys(): 
+            arg3 = unit.progSheet["argv_3"]
+        else:
+            arg3 = 1
+
+        if "开" in appearance:
+            if appearance in ["向右开百叶窗","向左开百叶窗"]:
+                if "左" in appearance:
+                    x = pointNum[0] - x
+                return x % arg2 <= min(showat,arg2)
+            if appearance in ["向下开百叶窗","向上开百叶窗"]:
+                if "上" in appearance:
+                    y = pointNum[1] - y
+                return y % arg2 <= min(showat,arg2)
+        
+        elif "关" in appearance:
+            if appearance in ["向右关百叶窗","向左关百叶窗"]:
+                if "左" in appearance:
+                    x = pointNum[0] - x
+                return not (x % arg2 <= min(showat,arg2))
+            if appearance in ["向下关百叶窗","向上关百叶窗"]:
+                if "上" in appearance:
+                    y = pointNum[1] - y
+                return not (y % arg2 <= min(showat,arg2))
+
+    def on_hwindow(self,unit,x,y):
+        appearance = unit.appearance     # arg1~3: 速度，窗户大小，显示窗户？
+        if appearance not in hwindow_area_eft:
+            return False
+        pointNum = unit.pointNum
+        showat = unit.showat
+        arg1,arg2 = unit.progSheet["argv_1"],unit.progSheet["argv_2"]
+        if "argv_3" in unit.progSheet.keys(): 
+            arg3 = unit.progSheet["argv_3"]
+        else:
+            arg3 = 1
+        if "开" in appearance:
+            if appearance in ["向右开百叶窗","向左开百叶窗"]:
+                if "左" in appearance:
+                    x = pointNum[0] - x
+                return x % arg2 == min(showat,arg2) and arg3 == 1
+            if appearance in ["向下开百叶窗","向上开百叶窗"]:
+                if "上" in appearance:
+                    y = pointNum[1] - y
+                return y % arg2 == min(showat,arg2) and arg3 == 1
+        
+        elif "关" in appearance:
+            if appearance in ["向右关百叶窗","向左关百叶窗"]:
+                if "左" in appearance:
+                    x = pointNum[0] - x
+                return not (x % arg2 == min(showat,arg2)) and arg3 == 1
+            if appearance in ["向下关百叶窗","向上关百叶窗"]:
+                if "上" in appearance:
+                    y = pointNum[1] - y
+                return not (y % arg2 == min(showat,arg2)) and arg3 == 1
+
+    def in_window_area(self,unit,x,y):    # ["开水平窗户","关水平窗户","开竖直窗户","关竖直窗户"]
+        appearance = unit.appearance     # arg1~3: 速度，显示窗户
+        if appearance not in window_area_eft:
+            return True
+        pointNum = unit.pointNum
+        showat = unit.showat
+        # arg1,arg2 = unit.progSheet["argv_1"],unit.progSheet["argv_2"]
+
+        if "水平" in appearance:
+            if appearance == "开水平窗户":
+                showat = pointNum[0]//2 - showat
+                return x >= showat and x <= pointNum[0]-showat
+            if appearance == "关水平窗户":
+                return x <= showat or x >= pointNum[0]-showat
+        
+        elif "竖直" in appearance:
+            if appearance == "开竖直窗户":
+                showat = pointNum[1]//2 - showat
+                return y >= showat and y <= pointNum[1]-showat
+            if appearance == "关竖直窗户":
+                return y <= showat or y >= pointNum[1]-showat
+
+    def on_window(self,unit,x,y):
+        appearance = unit.appearance     # arg1~3: 速度，显示窗户
+        if appearance not in window_area_eft:
+            return False
+        pointNum = unit.pointNum
+        showat = unit.showat
+        arg2 = unit.progSheet["argv_2"]
+
+        if "水平" in appearance:
+            if "开" in appearance:
+                showat = pointNum[0]//2 - showat
+            return (x == showat or x == pointNum[0]-showat) and arg2 == 1 and showat < pointNum[0]//2
+
+        elif "竖直" in appearance:
+            if "开" in appearance:
+                showat = pointNum[1]//2 - showat
+            return (y == showat or y == pointNum[1]-showat) and arg2 == 1 and showat < pointNum[1]//2
+
     def drawBackground(self,qp):
         qp.setBrush(QColor(25,25,25))
         qp.drawRect(0,0,2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
@@ -1054,16 +1195,39 @@ class ScreenController(QWidget):
                 except:
                     color = [0, 0, 0, 0] if colorMode == "RGB" else 0
                 #------------------------------------------------
-                if self.hiden_for_sector(unit,x,y):
-                    color = [0, 0, 0, 0] if colorMode == "RGB" else 0
                 #------------------------------------------------
-                if unit.appearance in sector_area_eft:
-                    if self.in_sector_area(unit,x,y):
-                        if unit.colorMode == "RGB":
-                            color = unit.progSheet["color_RGB"][:]
-                            color.append(255)
-                        else:
-                            color = 1
+                if unit.appearance in hwindow_area_eft + window_area_eft + sector_area_eft:
+                    #------------------------------------------------
+                    if unit.appearance in hwindow_area_eft:
+                        if not self.in_hwindow_area(unit,x,y):
+                            color = [0, 0, 0, 0] if colorMode == "RGB" else 0
+                        if self.on_hwindow(unit,x,y):
+                            if unit.colorMode == "RGB":
+                                color = unit.progSheet["color_RGB"][:]
+                                color.append(255)
+                            else:
+                                color = 1
+                    #------------------------------------------------
+                    if unit.appearance in window_area_eft:
+                        if not self.in_window_area(unit,x,y):
+                            color = [0, 0, 0, 0] if colorMode == "RGB" else 0
+                        if self.on_window(unit,x,y):
+                            if unit.colorMode == "RGB":
+                                color = unit.progSheet["color_RGB"][:]
+                                color.append(255)
+                            else:
+                                color = 1
+                    #------------------------------------------------
+                    if unit.appearance in sector_area_eft:
+                        if self.hiden_for_sector(unit,x,y):
+                            color = [0, 0, 0, 0] if colorMode == "RGB" else 0
+                        if self.in_sector_area(unit,x,y):
+                            if unit.colorMode == "RGB":
+                                color = unit.progSheet["color_RGB"][:]
+                                color.append(255)
+                            else:
+                                color = 1
+                #------------------------------------------------
                 #------------------------------------------------
                 if colorMode == "RGB" :
                     if unit.backBitmap is not None:
