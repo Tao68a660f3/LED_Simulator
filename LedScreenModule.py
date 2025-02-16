@@ -10,7 +10,7 @@ from BmpCreater import *
 
 undefinedProgramSheet = [['测试信息', 900, {'frontScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'frontSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]]}]]
 
-
+sector_area_eft = ["向右扇形圆形","向左扇形圆形","向下扇形圆形","向上扇形圆形"]
 
 class Thread_BmpUpdater(QThread):
     def __init__(self, parent = None):
@@ -511,9 +511,9 @@ class ScreenController(QWidget):
         c0 = obj.counter
 
         arg1,arg2 = obj.progSheet["argv_1"],obj.progSheet["argv_2"]
-        try:
+        if "argv_3" in obj.progSheet.keys(): 
             arg3 = obj.progSheet["argv_3"]
-        except:
+        else:
             arg3 = 1   # 旧版节目单
         if not obj.progSheet["vertical"]:
             align = obj.progSheet["align"]
@@ -594,6 +594,23 @@ class ScreenController(QWidget):
                 obj.x = obj.x+arg3 if obj.x < pos0 else obj.x
             if obj.x >= pos0:
                 obj.counter = 65535
+        elif appearance in ["向左扇形圆形","向右扇形圆形"]:    # arg1~3: 速度，步长，连续？
+            obj.appear = True
+            obj.x = pos0
+            obj.y = y0
+            if obj.rollCounter < arg1:
+                pass
+            else:
+                if obj.showat <= obj.pointNum[0]:
+                    if arg3 >= 1:
+                        obj.showat += 1
+                        obj.rollCounter = 0
+                    else:
+                        obj.showat += arg2
+                        if obj.rollCounter >= arg2:
+                            obj.rollCounter = 0
+            if obj.showat >= obj.pointNum[0]:
+                obj.counter = 65535
         elif appearance == "向上移到中间":
             obj.appear = True
             obj.x = pos0
@@ -605,6 +622,23 @@ class ScreenController(QWidget):
                 obj.rollCounter = 0
                 obj.y = obj.y+arg3 if obj.y < y0 else obj.y
             if obj.x >= pos0:
+                obj.counter = 65535
+        elif appearance in ["向上扇形圆形","向下扇形圆形"]:    # arg1~3: 速度，步长，连续？ 
+            obj.appear = True
+            obj.x = pos0
+            obj.y = y0
+            if obj.rollCounter < arg1:
+                pass
+            else:
+                if obj.showat <= obj.pointNum[1]:
+                    if arg3 >= 1:
+                        obj.showat += 1
+                        obj.rollCounter = 0
+                    else:
+                        obj.showat += arg2
+                        if obj.rollCounter >= arg2:
+                            obj.rollCounter = 0
+            if obj.showat >= obj.pointNum[1]:
                 obj.counter = 65535
         elif appearance == "中间向左移开":
             obj.appear = True
@@ -875,6 +909,98 @@ class ScreenController(QWidget):
         if obj.counter != c0:
             self.counterPlusOne.emit()
 
+    def is_point_in_ellipse(self, x, y, ex, ey, w, h):
+        return ((x-(ex+w/2))**2/(w/2)**2 + (y-(ey+h/2))**2/(h/2)**2) <= 1
+    
+    def is_point_above_line(self, point_x, point_y, line_x, line_y, angle_degrees):
+        # 将角度转换为斜率
+        # 避免90度和270度的情况（斜率无穷大）
+        if angle_degrees == 90 or angle_degrees == 270:
+            return point_x < line_x if angle_degrees == 90 else point_x > line_x
+        
+        # 计算斜率 k = tan(angle)
+        k = -1    # 初始值，避免未定义
+        if 0 <= angle_degrees < 90:
+            k = angle_degrees / (90 - angle_degrees)
+        elif 90 < angle_degrees <= 180:
+            k = (180 - angle_degrees) / (angle_degrees - 90)
+            k = -k
+        elif 180 < angle_degrees <= 270:
+            k = (angle_degrees - 180) / (270 - angle_degrees)
+        else:  # 270 < angle_degrees < 360
+            k = (360 - angle_degrees) / (angle_degrees - 270)
+            k = -k
+        
+        # 计算直线方程 y = k(x - x1) + y1
+        expected_y = k * (line_x - point_x) + line_y
+        
+        # 如果实际y值小于预期y值，点在直线上方
+        return point_y < expected_y
+
+    def in_sector_area(self,unit,x,y):
+        appearance = unit.appearance    # arg1~3: 速度，步长，连续？
+        pointNum = unit.pointNum
+        showat = unit.showat
+        arg1,arg2 = unit.progSheet["argv_1"],unit.progSheet["argv_2"]
+        if "argv_3" in unit.progSheet.keys(): 
+            arg3 = unit.progSheet["argv_3"]
+        else:
+            arg3 = 1
+        if arg3 >= 1:
+            angle = int(90 * (abs(arg2 // 2 - (showat % arg2)))//arg2)
+        else:
+            if unit.rollCounter >= arg1//2:
+                angle = 0
+            else:
+                angle = 45
+
+        if appearance in ["向右扇形圆形","向左扇形圆形"]:
+            d = pointNum[1]
+            if "左" in appearance:
+                x = pointNum[0] - x
+            ellipsepoint = [showat,0]
+            linepoint = [showat + d // 2, (d // 2)+1]
+
+            if y < pointNum[1] // 2:
+                y += 1
+            if y >= pointNum[1] // 2:
+                y = pointNum[1] - y
+        elif appearance in ["向下扇形圆形","向上扇形圆形"]:
+            d = pointNum[0]
+            if "上" in appearance:
+                y = pointNum[1] - y
+
+            ellipsepoint = [0,showat]
+            linepoint = [(d // 2)+1, showat + d // 2]
+            angle = 90 - angle
+
+            if x < pointNum[0] // 2:
+                x += 1
+            if x >= pointNum[0] // 2:
+                x = pointNum[0] - x
+
+        ispoint = self.is_point_in_ellipse(x,y,ellipsepoint[0],ellipsepoint[1],d,d) and self.is_point_above_line(x,y,linepoint[0],linepoint[1],angle)
+
+        return ispoint
+    
+    def hiden_for_sector(self,unit,x,y):
+        if "argv_3" in unit.progSheet.keys(): 
+            arg3 = unit.progSheet["argv_3"]
+        else:
+            arg3 = 1
+        arg3 = 1 if arg3 != 0 else 0
+
+        if unit.appearance == "向右扇形圆形":
+            return unit.appearance not in sector_area_eft or unit.appearance in sector_area_eft and x >= unit.showat + arg3 * int(0.5*unit.pointNum[1])
+        elif unit.appearance == "向左扇形圆形":
+            return unit.appearance not in sector_area_eft or unit.appearance in sector_area_eft and x <= unit.pointNum[0] - (unit.showat + arg3 * int(0.5*unit.pointNum[1]))
+        elif unit.appearance == "向下扇形圆形":
+            return unit.appearance not in sector_area_eft or unit.appearance in sector_area_eft and y >= unit.showat + arg3 * int(0.5*unit.pointNum[0])
+        elif unit.appearance == "向上扇形圆形":
+            return unit.appearance not in sector_area_eft or unit.appearance in sector_area_eft and y <= unit.pointNum[1] - (unit.showat + arg3 * int(0.5*unit.pointNum[0]))
+        else:
+            return False
+
     def drawBackground(self,qp):
         qp.setBrush(QColor(25,25,25))
         qp.drawRect(0,0,2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
@@ -915,6 +1041,7 @@ class ScreenController(QWidget):
                 else:
                     bac_color = 0 if colorMode == "1" else (0,0,0)
                 qp.setBrush(baseColor)
+                #------------------------------------------------
                 try:
                     if rollSpace < 0 and x + x_pos in range(bitmapSize[0]) and y + y_pos in range(bitmapSize[1]) and appear:
                         color = unit.Bitmap.getpixel((x + x_pos, y + y_pos))
@@ -926,6 +1053,18 @@ class ScreenController(QWidget):
                         color = [0, 0, 0, 0] if colorMode == "RGB" else 0
                 except:
                     color = [0, 0, 0, 0] if colorMode == "RGB" else 0
+                #------------------------------------------------
+                if self.hiden_for_sector(unit,x,y):
+                    color = [0, 0, 0, 0] if colorMode == "RGB" else 0
+                #------------------------------------------------
+                if unit.appearance in sector_area_eft:
+                    if self.in_sector_area(unit,x,y):
+                        if unit.colorMode == "RGB":
+                            color = unit.progSheet["color_RGB"][:]
+                            color.append(255)
+                        else:
+                            color = 1
+                #------------------------------------------------
                 if colorMode == "RGB" :
                     if unit.backBitmap is not None:
                         alpha = color[3]
@@ -944,6 +1083,7 @@ class ScreenController(QWidget):
                     else:
                         if bac_color | color and not bac_color & color:
                             qp.setBrush(QColor(*unit.color_1[1]))
+                #------------------------------------------------
                 ellipse_x = offset + position[0] + x * scale[0] + int(0.5 * (scale[0] - pointSize))
                 ellipse_y = offset + position[1] + y * scale[1] + int(0.5 * (scale[1] - pointSize))
                 qp.drawEllipse(ellipse_x, ellipse_y, pointSize, pointSize+1)
@@ -967,6 +1107,7 @@ class ScreenUnit():
         self.x_offset = 0
         self.y_offset = 0
         self.appear = True
+        self.showat = 0
         self.space = self.progSheet["spacing"]
         self.rollSpace = -1
         self.color_1 = template_monochromeColors[self.progSheet["color_1"]]
