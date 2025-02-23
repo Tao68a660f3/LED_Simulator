@@ -522,7 +522,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.spin_Count.setMaximum(65535)
         self.spin_Goto.setMinimum(1)
         self.spin_Goto.setMaximum(65535)
-        self.spin_Range.setMinimum(0)
+        self.spin_Range.setMinimum(-65536)
         self.spin_Range.setMaximum(65535)
         self.tableWidget.rowMoved.connect(self.onRowMoved)
 
@@ -859,7 +859,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
     def on_line_changed(self):
         row = self.selected_row(self.tableWidget_lineChoose)
         self.currentLine = row
-        print(f"当前选中线路：{self.currentLine}")
+        # print(f"当前选中线路：{self.currentLine}")
         # 事件统一管理
         self.close_all_screen()
         self.ProgramSheetManager.show_program()
@@ -870,7 +870,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
     def on_prog_changed(self):
         row = self.selected_row(self.tableWidget_ProgramSheet)
         self.currentProg = row
-        print(f"当前选中节目：{self.currentProg}")
+        # print(f"当前选中节目：{self.currentProg}")
         # 事件统一管理
         self.change_program()
         self.ProgramSheetManager.show_name_time()

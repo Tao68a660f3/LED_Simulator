@@ -326,7 +326,7 @@ class ScreenController(QWidget):
         gfrom = 0
         if "prange" in tg.keys():
             rg = tg["prange"]
-            prange = random.randint(0,rg)
+            prange = random.randint(min(0,rg),max(0,rg))
         if "gfrom" in tg.keys():
             if tg["gfrom"]:
                 gfrom = 1
