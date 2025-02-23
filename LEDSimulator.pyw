@@ -24,8 +24,10 @@ release_date = "20250216"
 pointKindDict = {"(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled","(6,8)":"midSizeScaled68","(8,10)":"midSizeScaled810","(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled"}
 ledTypes = [i for i in pointKindDict.keys()]
 scales = [ast.literal_eval(i) for i in ledTypes]
+flushRateList = ["60","54","50","48","30","24","18","15","5"]
 
 screenLink = {"前路牌":"frontScreen","后路牌":"backScreen","前侧路牌":"frontSideScreen","后侧路牌":"backSideScreen"}
+showStyles = ["静止","闪烁","向左滚动","向右滚动","向上滚动","向下滚动","跳跃向左移动","跳跃向右移动","跳跃向上移动","跳跃向下移动","向左移到中间","向右移到中间","向上移到中间","向下移到中间","中间向左移开","中间向右移开","中间向上移开","中间向下移开","向左扇形圆形","向右扇形圆形","向上扇形圆形","向下扇形圆形","向左开百叶窗","向右开百叶窗","向上开百叶窗","向下开百叶窗","开水平窗户","关水平窗户","开竖直窗户","关竖直窗户","向左翻屏","向右翻屏","向上翻屏","向下翻屏","上下反复跳跃移动",]
 
 
 class AboutWindow(QWidget,Ui_Form):
@@ -136,7 +138,7 @@ class NewALine(QDialog,Ui_NewALine):
         self.buttonBox.accepted.connect(self.onOk)
         colors = ["彩色屏幕","单色屏幕"]
         self.combo_Preset.addItems(["自定义","北京公交","普通"])
-        self.combo_FlushRate.addItems(["60","54","50","48","30","24","18","15"])
+        self.combo_FlushRate.addItems(flushRateList)
         self.chk_FrontScreen.setChecked(True)
         self.chk_FrontScreen.setEnabled(False)
         colorCombo = [self.combo_FrontColor,self.combo_BackColor,self.combo_FrontSideColor,self.combo_BackSideColor]
@@ -498,13 +500,14 @@ class ProgramSettings(QDialog,Ui_ProgSet):
     def initUI(self):
         self.setModal(True)
         self.setWindowTitle("路牌节目设置（实验）")
+        self.setMinimumSize(600,300)
 
         # tab 0
         self.comboBox_mode.addItems(["纯色背景","图片背景",])#"视频背景"])
         self.comboBox_fill.addItems(["平铺","居中","填充","拉伸","适应"])  # 0123
         self.spinBox.setMaximum(100)
         self.spinBox.setMinimum(0)
-        self.label_bgDescribe.setText("")
+        self.label_bgDescribe.setText("LED模拟器")
 
         # tab 1
         self.tableWidget.setColumnCount(3)
@@ -519,6 +522,8 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.spin_Count.setMaximum(65535)
         self.spin_Goto.setMinimum(1)
         self.spin_Goto.setMaximum(65535)
+        self.spin_Range.setMinimum(0)
+        self.spin_Range.setMaximum(65535)
         self.tableWidget.rowMoved.connect(self.onRowMoved)
 
     def connect_signal(self):
@@ -565,13 +570,18 @@ class ProgramSettings(QDialog,Ui_ProgSet):
             for col in range(len(colname)):
                 context = str(self.triggerList[row][colname[col]])
                 if col == 2:
+                    abst = True  # abst==True表示相对位置
                     if "abst" in self.triggerList[row].keys():
-                        if self.triggerList[row]["abst"]:
-                            context = f"相对: {context}"
-                        else:
-                            context = f"绝对: {context}"
-                    else:
+                        abst = self.triggerList[row]["abst"]
+                    if abst:
                         context = f"相对: {context}"
+                    else:
+                        context = f"绝对: {context}"
+                    if "gfrom" in self.triggerList[row].keys():
+                        if self.triggerList[row]["gfrom"] and abst:
+                            context = f"*{context}"
+                    if "prange" in self.triggerList[row].keys():
+                        context = f"{context}[{self.triggerList[row]['prange']}]"
                 item = QTableWidgetItem(context)
                 item.setTextAlignment(Qt.AlignLeft | Qt.AlignCenter)
                 item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)    #设置为只可选择可用拖动
@@ -595,6 +605,14 @@ class ProgramSettings(QDialog,Ui_ProgSet):
             self.spin_Unit.setValue(tg["u"])
             self.spin_Count.setValue(tg["c"])
             self.spin_Goto.setValue(tg["to"])
+            if "prange" in tg.keys():
+                self.spin_Range.setValue(tg["prange"])
+            else:
+                self.spin_Range.setValue(0)
+            if "gfrom" in tg.keys():
+                self.chk_from.setChecked(tg["gfrom"])
+            else:
+                self.chk_from.setChecked(False)
 
 
     def onModeChanged(self):
@@ -630,8 +648,11 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         abst = self.chk_abs.isChecked()
         if abst:
             self.spin_Goto.setMinimum(-65536)
+            self.chk_from.setEnabled(True)
         else:
             self.spin_Goto.setMinimum(1)
+            self.chk_from.setChecked(False)
+            self.chk_from.setEnabled(False)
 
     def set_value(self, progScreenSetting = None, unitCount = 0):
         self.disconnect_signal()
@@ -755,8 +776,10 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         u = self.spin_Unit.value()
         c = self.spin_Count.value()
         to = self.spin_Goto.value()
+        prange = self.spin_Range.value()
         abst = self.chk_abs.isChecked()
-        tg = {"u" : u , "c" : c , "to" : to , "abst" : abst}
+        gfrom = self.chk_from.isChecked()
+        tg = {"u" : u , "c" : c , "to" : to , "prange" : prange , "abst" : abst , "gfrom" : gfrom}
         for i in range(len(self.triggerList)):
             if self.triggerList[i]["u"] == u:
                 self.triggerList[i] = tg
@@ -1067,11 +1090,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         if isinstance(row,int):
             
             for screen in screenLink.values():
-                try:
-                    self.LedScreens[screen].close()
-                except Exception as e:
-                    pass
-                    # print("turn_on_all_screen: ", e)
+
                 if self.LineEditor.LineInfoList[row][screen]["enabled"]:
                     try:
                         scn = ScreenController(parent=self,flushRate=self.LineEditor.LineInfoList[row]["flushRate"],screenInfo={"colorMode":self.LineEditor.LineInfoList[row][screen]["colorMode"],"screenSize":self.LineEditor.LineInfoList[row][screen]["screenSize"]},screenProgramSheet=self.LineEditor.LineInfoList[row]["programSheet"],FontIconMgr=self.IconManager.FontMgr,toDisplay=screen)
@@ -1367,7 +1386,7 @@ class ProgramSettler():
 
         self.Parent.combo_Font.addItems(self.ChFont)
         self.Parent.combo_ASCII_Font.addItems(self.EngFont)
-        self.Parent.combo_Show.addItems(["静止","闪烁","向左滚动","向上滚动","向左移到中间","向左扇形圆形","向左开百叶窗","开水平窗户","向上移到中间","向上扇形圆形","向上开百叶窗","关水平窗户","中间向左移开","中间向上移开","跳跃向左移动","跳跃向上移动","向右滚动","向下滚动","向右移到中间","向右扇形圆形","向右开百叶窗","开竖直窗户","向下移到中间","向下扇形圆形","向下开百叶窗","关竖直窗户","中间向右移开","中间向下移开","跳跃向右移动","跳跃向下移动","上下反复跳跃移动",])
+        self.Parent.combo_Show.addItems(showStyles)
         self.Parent.combo_TextDirect.addItems(["横向","竖向"])
         self.Parent.combo_SingleColorChoose.addItems(template_monochromeColors.keys())
 
@@ -1658,8 +1677,18 @@ class ProgramSettler():
             self.Parent.spinBox_Argv_2.setMinimum(1)
             self.Parent.spinBox_Argv_3.setMaximum(60)
             self.Parent.spinBox_Argv_3.setMinimum(0)
-        elif "扇形圆形" in mode:
+        elif "翻屏" in mode:
             self.Parent.label_Argv_1.setText("移动速度")
+            self.Parent.label_Argv_2.setText("移动步长")
+            self.Parent.label_Argv_3.setText("停靠时间")
+            self.Parent.spinBox_Argv_1.setMaximum(60)
+            self.Parent.spinBox_Argv_1.setMinimum(1)
+            self.Parent.spinBox_Argv_2.setMaximum(32)
+            self.Parent.spinBox_Argv_2.setMinimum(1)
+            self.Parent.spinBox_Argv_3.setMaximum(60)
+            self.Parent.spinBox_Argv_3.setMinimum(0)
+        elif "扇形圆形" in mode:
+            self.Parent.label_Argv_1.setText("综合速度")
             self.Parent.label_Argv_2.setText("移动步长")
             self.Parent.label_Argv_3.setText("连续移动？")
             self.Parent.spinBox_Argv_1.setMaximum(120)
@@ -1669,7 +1698,7 @@ class ProgramSettler():
             self.Parent.spinBox_Argv_3.setMaximum(1)
             self.Parent.spinBox_Argv_3.setMinimum(0)
         elif "百叶窗" in mode:
-            self.Parent.label_Argv_1.setText("速度")
+            self.Parent.label_Argv_1.setText("综合速度")
             self.Parent.label_Argv_2.setText("窗户大小")
             self.Parent.label_Argv_3.setText("显示窗户？")
             self.Parent.spinBox_Argv_1.setMaximum(60)
@@ -1679,7 +1708,7 @@ class ProgramSettler():
             self.Parent.spinBox_Argv_3.setMaximum(1)
             self.Parent.spinBox_Argv_3.setMinimum(0)
         elif "窗户" in mode:
-            self.Parent.label_Argv_1.setText("速度")
+            self.Parent.label_Argv_1.setText("综合速度")
             self.Parent.label_Argv_2.setText("显示窗户？")
             self.Parent.label_Argv_3.setText("")
             self.Parent.spinBox_Argv_1.setMaximum(60)
@@ -2285,7 +2314,7 @@ class LineController():
         self.Parent.tableWidget_lineChoose.verticalHeader().setDefaultSectionSize(18)
         self.Parent.tableWidget_lineChoose.rowMoved.connect(self.onRowMoved)
 
-        self.Parent.combo_FlushRate.addItems(["60","54","50","48","30","24","18","15"])
+        self.Parent.combo_FlushRate.addItems(flushRateList)
 
         self.Parent.LineNameEdit.editingFinished.connect(self.change_name_time)
         self.Parent.combo_FlushRate.currentTextChanged.connect(self.change_name_time)
