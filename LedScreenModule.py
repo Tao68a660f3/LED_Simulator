@@ -111,32 +111,32 @@ class ScreenController(QWidget):
 
     def showContextMenu(self, pos):
         contextMenu = QMenu(self)
-        newAction = QAction('关闭窗口', self)
-        newAction.triggered.connect(self.close)
-        contextMenu.addAction(newAction)
-        newAction = QAction('窗口置顶', self)
-        newAction.triggered.connect(self.top_most)
-        contextMenu.addAction(newAction)
-        newAction = QAction('屏幕截图', self)
-        newAction.triggered.connect(self.screen_shot)
-        contextMenu.addAction(newAction)
+        closeAction = QAction('关闭窗口', self)
+        closeAction.triggered.connect(self.close)
+        contextMenu.addAction(closeAction)
+        topMostAction = QAction('窗口置顶', self)
+        topMostAction.triggered.connect(self.top_most)
+        contextMenu.addAction(topMostAction)
+        scnshotAction = QAction('屏幕截图', self)
+        scnshotAction.triggered.connect(self.screen_shot)
+        contextMenu.addAction(scnshotAction)
         if not self.gifRecording:
-            newAction = QAction('开始录制GIF', self)
-            newAction.triggered.connect(self.start_recording_gif)
-            contextMenu.addAction(newAction)
-            newAction = QAction('从节目开头开始录制GIF', self)
-            newAction.triggered.connect(self.p_start_recording_gif)
-            contextMenu.addAction(newAction)
+            stGIFAction = QAction('开始录制GIF', self)
+            stGIFAction.triggered.connect(self.start_recording_gif)
+            contextMenu.addAction(stGIFAction)
+            pstGIFAction = QAction('从节目开头开始录制GIF', self)
+            pstGIFAction.triggered.connect(self.p_start_recording_gif)
+            contextMenu.addAction(pstGIFAction)
         else:
-            newAction = QAction('结束录制GIF', self)
-            newAction.triggered.connect(self.stop_recording_gif)
-            contextMenu.addAction(newAction)
-            newAction = QAction('节目完成后结束录制GIF', self)
-            newAction.triggered.connect(self.p_stop_recording_gif)
-            contextMenu.addAction(newAction)
-            newAction = QAction('结束请耐心等待(^_^)', self)
-            newAction.triggered.connect(self.stop_recording_gif)
-            contextMenu.addAction(newAction)
+            edGIFAction = QAction('结束录制GIF', self)
+            edGIFAction.triggered.connect(self.stop_recording_gif)
+            contextMenu.addAction(edGIFAction)
+            pedGIFAction = QAction('节目完成后结束录制GIF', self)
+            pedGIFAction.triggered.connect(self.p_stop_recording_gif)
+            contextMenu.addAction(pedGIFAction)
+            waitAction = QAction('结束请耐心等待(^_^)', self)
+            waitAction.triggered.connect(self.stop_recording_gif)
+            contextMenu.addAction(waitAction)
 
         contextMenu.exec_(self.mapToGlobal(pos))
 
@@ -1423,7 +1423,7 @@ if __name__ == '__main__':
         "flushRate":54,
         "screenInfo":{
             "colorMode":"1",    # "RGB","1"
-            "screenSize":[128,64,(6,6)],
+            "screenSize":[128,16,(6,6)],
         },
         "screenProgramSheet":undefinedProgramSheet
     }

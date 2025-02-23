@@ -34,10 +34,12 @@ class AboutWindow(QWidget,Ui_Form):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        self.winsize = [500,300]
+        self.winsize = [550,450]
         self.setMinimumSize(self.winsize[0], self.winsize[1])
         self.offset = 3
-        self.scnpsize = [144,16]
+        self.scnpsize = [160,64]
+        self.space = [8,8]
+        self.psize = 3
         self.pnum = [self.scnpsize[0]+2*self.offset,self.scnpsize[1]+2*self.offset]
         self.img = None
         self.initUI()
@@ -54,7 +56,7 @@ class AboutWindow(QWidget,Ui_Form):
         self.label_Date.setText(f"发布日期：{release_date}")
 
     def create_img(self):
-        im_base64 = "Qk1+AQAAAAAAAD4AAAAoAAAAiAAAABAAAAABAAEAAAAAAEABAADEDgAAxA4AAAIAAAACAAAAAAAAAP/////z+///1/t/7////+n733/BBwAAAP3xuAPZ8b7X////7vGvvd13AAAA/vfXud7Pvvf////vT+3d3XcAAAB+7++/3z/e9////++/7OvddwAAALtf77/ef973AQEH4AHtdwEBAAAA21/rt92/3veZmZNvv+23z+cAAADXv+mr27vAB52dmawHLffznwAAAO+/6rvYA973n5+ZqffN9/1/AAAA17/rO9u73vefl5nEB+X3AAEAAADXvwu7W7ve95+Hmc336ff+6wAAALm3+7ubu8AHn5eZ7APt1/7fAAAAuvv7u9gD3vefnZkC5wGXwQcAAAD7A+u737/e95+Zk+7v7bfddwAAAAN/2YHgAd73DwEH4AHvd913AAAA/3++e++7wAP////u6+/33XcAAAD/f///77//9////+7v7//BBwAAAA=="
+        im_base64 = "Qk0+CgAAAAAAAD4AAAAoAAAAoAAAAIAAAAABAAEAAAAAAAAKAADEDgAAxA4AAAIAAAACAAAAAAAAAP/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////AQr/Gua4f/////////////////99xig/tN9//////////////////0VbthW16///////////////////RVrqgGOAf/////////////////9FBcQMkQP//////////////////30W6cF/dv//////////////////AYo9XcNQf//////3/73e/13/////e0nIo3f////3u7v/HB7/bf///xxbsBiEBX////tYPf793v91////j9sFWWN+f////du+/v3e8DV///+5IywnCQJ////92799/dAbVL///84xKBDiyX////3bv330DrtFv///GKkZ+MIM/////du/u/ve+FW///+zUaPHX35////+27+7/f77Vb///+wrVTbSwn////7bv9f4EBtVv///PgaJUOIuf////tu/1/3eu1W///8gg8vOoD/////+27/X/d74Vb///+6+VBAmH3////ALv+/wDvtVv///HMGptIwOf////tgf7/3QG1W///8yXNgQek/////+/7/v/d17XB///7VbIZ7C4n////7//9/4C7Avv///VjHXV3k+f////v//v//X33f///+gMRgcwwB//////////////////zdjjdDydv//////////////////hV65WpJV///9//u/v///7///f//HKJ3PenN///r/tYA///vv/b6///BU4AeZB3///sA9u7//8eAcP7//nwcLuTPE///+/727sAAeLr2/v//cbyVO9B3///7/vbu//7/u/YC//yK01pRJJ////v+9gD///+79vb//8ba2C1myf//y/7G7v//wID2/v/+apquxvtb///z/vLu///vu9aAf/znuGWqHLf///mA9O7///e75rr//C4Zmoig3f//+v72AH//+oDwO///98GhrNP5///7/ve6///BO/a7//3omG7jqxv//8D+wbv//+2797v//9GhkWaNr///+/70AHAB94B7u//8vI2PlfnZ///7AHe6//v32vv7//9yTXE4iy3///v+97v///vXwAH//k1JoeOOO///+//3u///+9/9+//9BrvgYkkH///////////////////8EucQtf///////////////////AVVVVVVAf/////////////////99Rn3PBd9//////////////////0UweAD70X//////////////////RXN8OMbRf/////////////////9FRWaDRlF//////////////////33ouNzQX3//////////////////AfSWoSdAf//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+Pj////////////////////////5+f/////////A44DBgPDjwMPA+cHB5/////////PJnJyc+cnz+fPzkJDz////////85yf/J/5nPP88+eUlPn////////znM/8z/mc8/zz55yc+f////////OU5/zngJTz/PPnnJz5////////85Tz4fOZlPPA8+ecnPn////////znPn8+cmc85zz55yc+f///////8Oc/Pz84ZzDnMPnnJz5////////48mcnJzxyeOc4/OcnPP////////z48HBwfnj88Hz+cHB5///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////6fvff8EHP/vbv//v///d7//////u8a+93XfP8d2x79fvA8Hv/////+9P7d3dd/fP3q3n9+b73e//////77/s6913+7/erev36vvd7/8BAQfgAe13AQH9f96v7/fu/90B/5mZk2+/7bfP5/7/Hq/v9+4/QOv/nZ2ZrAct9/Of/X/er+937s+97/+fn5mp9833/X+7v+6v73fu79/v/5+XmcQH5fcAAdfb9/vu9+7/gQH/n4eZzffp9/7r7/PYAw/3C/vd6/+fl5nsA+3X/t/37573//f98d3v/5+dmQLnAZfBB/fff2/4Af7vAO//n5mT7u/tt913AAHvv+/371/dAf8PAQfgAe933Xf++8gDz/fPX93X/////+7r7/fdd/7/v7e/97+/gLv/////7u/v/8EH/f//f//3/7/9ff///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////x///////v84AMPzfof//////+T8Dn04Z//sPhAAwMB+h///////4HjPOQAH/848Qf/MD37n///////mMc+ZOGf/7xzHz84fPucAMAGAP+eXzYM4Z//mmOfPzj8+5wAwAYAP58fIwzhn/+BJ5cHMPx7nH/H/j4fkAMxjOGf/8MvgQMyfHucf8f+P46QAzGcAB//ww+QMzJ+ABx/x/4/xh8/MJx/D//Dj5IzPk4AHH/H/j/GGAQxmBwP/+ePkzEgDnucf8f+P+MQBDPPgP//x4+TMCAOe5x/x/4/4wHmA8/h///Hn5MwJk57nH/ADj/jAecDzAAP/8OeEzImTnucf8AOP+MABzPP83//0JITMiAOABx/x/4/44gHM8/yf/+Qk/MyIA4AHH/H/j/jmeczzOGf/7CT8zM+fnucf8f+P8eYBAJMAB//sJOTMz5+e5x/x/4/xgAEAkzhn//weZMzAAZ7nH/H/j+OBs8yTOGf//IBkwMABnucf8f+Pg+ezzBM4Z//ggEQAx5+ABx/wAYAP5ADMMzhn/+Cfzh/nn4AHH/ABgD/kAM8zAAf//9/fv////////////+ezz3//////3///////////////57P///////////////////////////////////////////////////////////"
         # 将base64字符串转换为字节
         img_data = base64.b64decode(im_base64)
         # 创建字节流
@@ -62,6 +64,32 @@ class AboutWindow(QWidget,Ui_Form):
         # 打开图片
         self.img = Image.open(buffer)
         self.img = self.img.point(lambda x: not x)
+
+        # self.xpos = int(0.5 * (self.scnpsize[0] - self.img.width))
+        # self.ypos = int(0.5 * (self.scnpsize[1] - self.img.height))
+        self.xpos, self.ypos, self.dx, self.dy = 0, 0,0 ,0
+
+    def mousePressEvent(self, e):
+        if e.buttons() == Qt.LeftButton:
+            try:
+                self.mos = e.pos()
+            except:
+                pass
+                
+    def mouseMoveEvent(self, e):
+        try:
+            if e.buttons() == Qt.LeftButton and self.mos:
+                d = e.pos() - self.mos
+                self.dx = d.x() // self.psize
+                self.dy = d.y() // self.psize
+                self.update()
+            e.accept()
+        except:
+            pass
+
+    def mouseReleaseEvent(self, e):
+        self.xpos += self.dx
+        self.ypos += self.dy
 
     def resizeEvent(self, event):
         newSize = event.size()
@@ -77,30 +105,29 @@ class AboutWindow(QWidget,Ui_Form):
 
     def drawScreen(self,qp):
         # print(self.winsize)
-        psize = 3
         baseColor = QColor(60, 60, 60)
         frontColor = QColor(255, 255, 60)
-        area = [int(0.8*self.winsize[0]),int(0.75*self.winsize[1])]
+        area = [int(0.95*self.winsize[0]),int(0.75*self.winsize[1])]
 
         if area[0]/area[1] >= self.pnum[0]/self.pnum[1]:
-            psize = int(area[1]/self.pnum[1])
+            self.psize = int(area[1]/self.pnum[1])
         else:
-            psize = int(area[0]/self.pnum[0])
-        if psize < 3:
-            psize = 3
+            self.psize = int(area[0]/self.pnum[0])
+        if self.psize < 3:
+            self.psize = 3
 
-        d = int(psize * 0.8)
+        d = int(self.psize * 0.8)
 
-        w = psize*self.pnum[0]
-        h = psize*self.pnum[1]
+        w = self.psize*self.pnum[0]
+        h = self.psize*self.pnum[1]
 
         xp = int((self.winsize[0] - w) * 0.5)
         yp = int((self.winsize[1] - h) * 0.4)
 
-        offset = psize*self.offset
+        xpos = self.xpos + self.dx
+        ypos = self.ypos + self.dy
 
-        xpos = int(0.5 * (self.scnpsize[0] - self.img.width))
-        ypos = int(0.5 * (self.scnpsize[1] - self.img.height))
+        offset = self.psize*self.offset
 
         qp.setBrush(QColor(15,15,15))
         qp.drawRect(xp,yp,w,h)
@@ -109,20 +136,15 @@ class AboutWindow(QWidget,Ui_Form):
 
         for y in range(self.scnpsize[1]):
             for x in range(self.scnpsize[0]):
-                if y - ypos in range(self.img.height) and x - xpos in range(self.img.width):
-                    color = self.img.getpixel((x-xpos,y-ypos))
+                if (y - ypos) % (self.img.height+self.space[1]) in range(self.img.height) and (x - xpos) % (self.img.width+self.space[0]) in range(self.img.width):
+                    color = self.img.getpixel(((x - xpos) % (self.img.width+self.space[0]), (y - ypos) % (self.img.height+self.space[1])))
                 else:
                     color = 0
                 if color != 0:
                     qp.setBrush(frontColor)
                 else:
                     qp.setBrush(baseColor)
-                qp.drawEllipse(xp+x*psize+offset, yp+y*psize+offset, d, d+1)
-
-
-
-
-        
+                qp.drawEllipse(xp+x*self.psize+offset, yp+y*self.psize+offset, d, d+1)
 
 class NewALine(QDialog,Ui_NewALine):
     dataEntered = pyqtSignal(list)
@@ -890,48 +912,48 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         newAction = QAction('新建', self)
         newAction.triggered.connect(self.new_file)
         fileMenu.addAction(newAction)
-        newAction = QAction('打开', self)
-        newAction.triggered.connect(self.open_file)
-        fileMenu.addAction(newAction)
-        newAction = QAction('保存', self)
-        newAction.triggered.connect(self.save_file)
-        newAction.setShortcut('Ctrl+S')
-        fileMenu.addAction(newAction)
-        newAction = QAction('另存为', self)
-        newAction.triggered.connect(self.save_another)
-        fileMenu.addAction(newAction)
+        openAction = QAction('打开', self)
+        openAction.triggered.connect(self.open_file)
+        fileMenu.addAction(openAction)
+        saveAction = QAction('保存', self)
+        saveAction.triggered.connect(self.save_file)
+        saveAction.setShortcut('Ctrl+S')
+        fileMenu.addAction(saveAction)
+        resaveAction = QAction('另存为', self)
+        resaveAction.triggered.connect(self.save_another)
+        fileMenu.addAction(resaveAction)
         exitAction = QAction('关闭', self)
         exitAction.triggered.connect(self.close)
         fileMenu.addAction(exitAction)
 
-        fileMenu = self.menuBar().addMenu('显示屏')
-        newAction = QAction('打开所有显示屏', self)
-        newAction.triggered.connect(self.turn_on_all_screen)
-        fileMenu.addAction(newAction)
-        newAction = QAction('关闭所有显示屏', self)
-        newAction.triggered.connect(self.close_all_screen)
-        fileMenu.addAction(newAction)
-        newAction = QAction('屏幕截图', self)
-        newAction.triggered.connect(self.screenShot)
-        fileMenu.addAction(newAction)
-        newAction = QAction('置顶显示屏', self)
-        newAction.triggered.connect(self.topMost)
-        fileMenu.addAction(newAction)
+        scnMenu = self.menuBar().addMenu('显示屏')
+        openAllAction = QAction('打开所有显示屏', self)
+        openAllAction.triggered.connect(self.turn_on_all_screen)
+        scnMenu.addAction(openAllAction)
+        closeAllAction = QAction('关闭所有显示屏', self)
+        closeAllAction.triggered.connect(self.close_all_screen)
+        scnMenu.addAction(closeAllAction)
+        scnshotAction = QAction('屏幕截图', self)
+        scnshotAction.triggered.connect(self.screenShot)
+        scnMenu.addAction(scnshotAction)
+        topMostAction = QAction('置顶显示屏', self)
+        topMostAction.triggered.connect(self.topMost)
+        scnMenu.addAction(topMostAction)
 
-        fileMenu = self.menuBar().addMenu('更多功能')
-        newAction = QAction('指定背景文件夹', self)
-        newAction.triggered.connect(self.set_background_folder)
-        fileMenu.addAction(newAction)
-        newAction = QAction('复制线路', self)
-        newAction.triggered.connect(self.LineController.copy_busLine)
-        fileMenu.addAction(newAction)
-        newAction = QAction('关于', self)
-        newAction.triggered.connect(self.AboutWindow.show)
-        fileMenu.addAction(newAction)
-        exitAction = QAction('退出', self)
-        exitAction.setShortcut('Ctrl+Q')
-        exitAction.triggered.connect(self.close)
-        fileMenu.addAction(exitAction)
+        moreMenu = self.menuBar().addMenu('更多功能')
+        setbgfolderAction = QAction('指定背景文件夹', self)
+        setbgfolderAction.triggered.connect(self.set_background_folder)
+        moreMenu.addAction(setbgfolderAction)
+        copyLineAction = QAction('复制线路', self)
+        copyLineAction.triggered.connect(self.LineController.copy_busLine)
+        moreMenu.addAction(copyLineAction)
+        showAboutAction = QAction('关于', self)
+        showAboutAction.triggered.connect(self.AboutWindow.show)
+        moreMenu.addAction(showAboutAction)
+        quitAction = QAction('退出', self)
+        quitAction.setShortcut('Ctrl+Q')
+        quitAction.triggered.connect(self.close)
+        moreMenu.addAction(quitAction)
 
     def read_setting(self):
         setting_file = "./resources/settings.info"
