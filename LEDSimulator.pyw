@@ -18,7 +18,7 @@ from ProgSettings import *
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
 version = "体验版"
-release_date = "20250216"
+release_date = "20250223"
 
 # 屏幕尺寸相关信息
 pointKindDict = {"(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled","(6,8)":"midSizeScaled68","(8,10)":"midSizeScaled810","(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled"}

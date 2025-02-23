@@ -930,7 +930,7 @@ class ScreenController(QWidget):
                         if obj.rollCounter > int(arg3*1000/self.flushRate):
                             obj.x = 0
                             obj.rollCounter = 0
-                            obj.counter += (obj.rollCounter-1) // (2*int(arg3*1000/self.flushRate))
+                            obj.counter += 1
         elif appearance == "向右翻屏":
             obj.appear = True
             obj.y = y0
@@ -951,7 +951,7 @@ class ScreenController(QWidget):
                         if obj.rollCounter > int(arg3*1000/self.flushRate):
                             obj.x = -obj.pointNum[0]+obj.Bitmap.size[0]
                             obj.rollCounter = 0
-                            obj.counter += (obj.rollCounter-1) // (2*int(arg3*1000/self.flushRate))
+                            obj.counter += 1
         elif appearance == "向上翻屏":
             obj.appear = True
             obj.x = pos0
@@ -972,7 +972,7 @@ class ScreenController(QWidget):
                         if obj.rollCounter > int(arg3*1000/self.flushRate):
                             obj.y = 0
                             obj.rollCounter = 0
-                            obj.counter += (obj.rollCounter-1) // (2*int(arg3*1000/self.flushRate))
+                            obj.counter += 1
         elif appearance == "向下翻屏":
             obj.appear = True
             obj.x = pos0
@@ -993,7 +993,7 @@ class ScreenController(QWidget):
                         if obj.rollCounter > int(arg3*1000/self.flushRate):
                             obj.y = -obj.pointNum[1]+obj.Bitmap.size[1]
                             obj.rollCounter = 0
-                            obj.counter += (obj.rollCounter-1) // (2*int(arg3*1000/self.flushRate))
+                            obj.counter += 1
         elif appearance == "上下反复跳跃移动":
             obj.appear = True
             obj.x = pos0
@@ -1423,7 +1423,7 @@ if __name__ == '__main__':
         "flushRate":54,
         "screenInfo":{
             "colorMode":"1",    # "RGB","1"
-            "screenSize":[224,32,(6,6)],
+            "screenSize":[128,64,(6,6)],
         },
         "screenProgramSheet":undefinedProgramSheet
     }
