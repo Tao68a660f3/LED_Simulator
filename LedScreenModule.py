@@ -796,7 +796,7 @@ class ScreenController(QWidget):
             obj.appear = True
             obj.x = pos0
             obj.y = y0
-            if obj.showat <= obj.pointNum[0]:
+            if obj.showat <= obj.pointNum[1]:
                 if arg3 >= 1 and obj.rollCounter >= sped:
                     obj.showat += step
                     obj.rollCounter = 0
