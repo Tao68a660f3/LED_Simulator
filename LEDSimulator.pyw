@@ -1,4 +1,4 @@
-import sys, os, ast, copy, datetime, base64, io
+import sys, os, ast, copy, datetime, base64, io, random
 from PyQt5.QtWidgets import QApplication, QWidget, QDialog, QMainWindow, QAbstractItemView, QTableWidgetItem, QHeaderView, QFileDialog, QPushButton, QLabel, QColorDialog, QMenu, QAction, QMessageBox
 from PyQt5.QtGui import QPixmap, QIcon, QTextCharFormat, QFont
 from PyQt5.QtCore import pyqtSignal, Qt, QCoreApplication
@@ -18,7 +18,7 @@ from ProgSettings import *
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
 version = "体验版"
-release_date = "20250223"
+release_date = "20250302"
 
 # 屏幕尺寸相关信息
 pointKindDict = {"(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled","(6,8)":"midSizeScaled68","(8,10)":"midSizeScaled810","(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled"}
@@ -35,28 +35,32 @@ class AboutWindow(QWidget,Ui_Form):
         super().__init__(parent)
         self.setupUi(self)
         self.winsize = [550,450]
-        self.setMinimumSize(self.winsize[0], self.winsize[1])
+        self.minsize = [550,450]
+        self.setMinimumSize(self.minsize[0], self.minsize[1])
         self.offset = 3
         self.scnpsize = [160,64]
         self.space = [8,8]
         self.psize = 3
         self.pnum = [self.scnpsize[0]+2*self.offset,self.scnpsize[1]+2*self.offset]
         self.img = None
+        self.declear = "声明：本软件免费提供，如果您通过“购买”获得本软件，那么您可能被骗了。"
+        self.setWindowTitle("关于")
+        self.set_version()
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle("关于")
-        self.set_version()
         self.create_img()
-        self.resize(self.winsize[0],self.winsize[1])
+        self.resize(self.minsize[0],self.minsize[1])
 
     def set_version(self):
         self.label_Version.setFont(QFont('宋体', 18))
         self.label_Version.setText(f"关于LED模拟器{version}")
         self.label_Date.setText(f"发布日期：{release_date}")
+        self.label_Declare.setText(self.declear)
 
     def create_img(self):
-        im_base64 = "Qk0+CgAAAAAAAD4AAAAoAAAAoAAAAIAAAAABAAEAAAAAAAAKAADEDgAAxA4AAAIAAAACAAAAAAAAAP/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////AQr/Gua4f/////////////////99xig/tN9//////////////////0VbthW16///////////////////RVrqgGOAf/////////////////9FBcQMkQP//////////////////30W6cF/dv//////////////////AYo9XcNQf//////3/73e/13/////e0nIo3f////3u7v/HB7/bf///xxbsBiEBX////tYPf793v91////j9sFWWN+f////du+/v3e8DV///+5IywnCQJ////92799/dAbVL///84xKBDiyX////3bv330DrtFv///GKkZ+MIM/////du/u/ve+FW///+zUaPHX35////+27+7/f77Vb///+wrVTbSwn////7bv9f4EBtVv///PgaJUOIuf////tu/1/3eu1W///8gg8vOoD/////+27/X/d74Vb///+6+VBAmH3////ALv+/wDvtVv///HMGptIwOf////tgf7/3QG1W///8yXNgQek/////+/7/v/d17XB///7VbIZ7C4n////7//9/4C7Avv///VjHXV3k+f////v//v//X33f///+gMRgcwwB//////////////////zdjjdDydv//////////////////hV65WpJV///9//u/v///7///f//HKJ3PenN///r/tYA///vv/b6///BU4AeZB3///sA9u7//8eAcP7//nwcLuTPE///+/727sAAeLr2/v//cbyVO9B3///7/vbu//7/u/YC//yK01pRJJ////v+9gD///+79vb//8ba2C1myf//y/7G7v//wID2/v/+apquxvtb///z/vLu///vu9aAf/znuGWqHLf///mA9O7///e75rr//C4Zmoig3f//+v72AH//+oDwO///98GhrNP5///7/ve6///BO/a7//3omG7jqxv//8D+wbv//+2797v//9GhkWaNr///+/70AHAB94B7u//8vI2PlfnZ///7AHe6//v32vv7//9yTXE4iy3///v+97v///vXwAH//k1JoeOOO///+//3u///+9/9+//9BrvgYkkH///////////////////8EucQtf///////////////////AVVVVVVAf/////////////////99Rn3PBd9//////////////////0UweAD70X//////////////////RXN8OMbRf/////////////////9FRWaDRlF//////////////////33ouNzQX3//////////////////AfSWoSdAf//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+Pj////////////////////////5+f/////////A44DBgPDjwMPA+cHB5/////////PJnJyc+cnz+fPzkJDz////////85yf/J/5nPP88+eUlPn////////znM/8z/mc8/zz55yc+f////////OU5/zngJTz/PPnnJz5////////85Tz4fOZlPPA8+ecnPn////////znPn8+cmc85zz55yc+f///////8Oc/Pz84ZzDnMPnnJz5////////48mcnJzxyeOc4/OcnPP////////z48HBwfnj88Hz+cHB5///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////6fvff8EHP/vbv//v///d7//////u8a+93XfP8d2x79fvA8Hv/////+9P7d3dd/fP3q3n9+b73e//////77/s6913+7/erev36vvd7/8BAQfgAe13AQH9f96v7/fu/90B/5mZk2+/7bfP5/7/Hq/v9+4/QOv/nZ2ZrAct9/Of/X/er+937s+97/+fn5mp9833/X+7v+6v73fu79/v/5+XmcQH5fcAAdfb9/vu9+7/gQH/n4eZzffp9/7r7/PYAw/3C/vd6/+fl5nsA+3X/t/37573//f98d3v/5+dmQLnAZfBB/fff2/4Af7vAO//n5mT7u/tt913AAHvv+/371/dAf8PAQfgAe933Xf++8gDz/fPX93X/////+7r7/fdd/7/v7e/97+/gLv/////7u/v/8EH/f//f//3/7/9ff///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////x///////v84AMPzfof//////+T8Dn04Z//sPhAAwMB+h///////4HjPOQAH/848Qf/MD37n///////mMc+ZOGf/7xzHz84fPucAMAGAP+eXzYM4Z//mmOfPzj8+5wAwAYAP58fIwzhn/+BJ5cHMPx7nH/H/j4fkAMxjOGf/8MvgQMyfHucf8f+P46QAzGcAB//ww+QMzJ+ABx/x/4/xh8/MJx/D//Dj5IzPk4AHH/H/j/GGAQxmBwP/+ePkzEgDnucf8f+P+MQBDPPgP//x4+TMCAOe5x/x/4/4wHmA8/h///Hn5MwJk57nH/ADj/jAecDzAAP/8OeEzImTnucf8AOP+MABzPP83//0JITMiAOABx/x/4/44gHM8/yf/+Qk/MyIA4AHH/H/j/jmeczzOGf/7CT8zM+fnucf8f+P8eYBAJMAB//sJOTMz5+e5x/x/4/xgAEAkzhn//weZMzAAZ7nH/H/j+OBs8yTOGf//IBkwMABnucf8f+Pg+ezzBM4Z//ggEQAx5+ABx/wAYAP5ADMMzhn/+Cfzh/nn4AHH/ABgD/kAM8zAAf//9/fv////////////+ezz3//////3///////////////57P///////////////////////////////////////////////////////////"
+        ims = ["Qk0+CgAAAAAAAD4AAAAoAAAAoAAAAIAAAAABAAEAAAAAAAAKAADEDgAAxA4AAAIAAAACAAAAAAAAAP//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////4CFf41zXD//////////////////vuMUH9pvv/////////////////+irdsK2vX//////////////////6KtdUAxwD//////////////////ooLiBkiB//////////////////++i3Tgv7t//////////////////4DFHq7hqD//////+//e73+u/////72k5FG7////+93d/44Pf7b///+OLdgMQgK////9rB7/fu9/uv///8ftgqyxvz////7t339+73gav///3JGWE4SBP////u3fvv7oDapf///nGJQIcWS////+7d+++gddot///4xUjPxhBn////7t393973wq3///2ajR46+/P////23f3f7/farf///2FaqbaWE/////bd/r/AgNqt///58DRKhxFz////9t3+v+712q3///kEHl51Af/////23f6/7vfCrf///3XyoIEw+////4Bd/3+Ad9qt///45g1NpGBz////9sD/f+6A2q3///mS5sCD0n/////3/f9/7uva4P///arZDPYXE/////f//v/AXYF9///6sY66u8nz////9//9//6++7////0BiMDmGAP/////////////////+bscboeTt//////////////////8KvXK1JKv///v/939////f//7//45RO5705v//9f9rAH//99/7fX//4KnADzIO///9gHt3f//jwDh/f/8+DhdyZ4n///3/e3dgADxde39//7jeSp3oO////f97d3//f937AX/+RWmtKJJP///9/3sAf///3ft7f//jbWwWs2T//+X/Y3d//+BAe39//zVNV2N9rf//+f95d3//993rQD/+c9wy1Q5b///8wHp3f//73fNdf/4XDM1EUG7///1/ewA///1AeB3///vg0NZp/P///f973X//4J37Xf/+9Ew3cdWN///gf2Dd///23fvd///o0MizRtf///3/egA4APvAPd3//l5Gx8r87P///YA73X/9++19/f//uSa4nEWW///9/3vd///96+AA//8mpNDxxx3///3/+93///3v/v3//oNd8DEkg////////////////////glziFr///////////////////4CqqqqqoD//////////////////vqM+54Lvv/////////////////+imDwAfei//////////////////6K5vhxjaL//////////////////oqKzQaMov/////////////////++9FxuaC+//////////////////4D6S1CToD/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////4+P////////////////////////n5/////////8DjgMGA8OPAw8D5wcHn////////88mcnJz5yfP58/OQkPP////////znJ/8n/mc8/zz55SU+f////////Ocz/zP+Zzz/PPnnJz5////////85Tn/OeAlPP88+ecnPn////////zlPPh85mU88Dz55yc+f////////Oc+fz5yZzznPPnnJz5////////w5z8/PzhnMOcw+ecnPn////////jyZycnPHJ45zj85yc8/////////PjwcHB+ePzwfP5wcHn///////////////////////////////////////////////////////////////6fvff8EHP/vbv//v///d7//////u8a+93XfP8d2x79fvA8Hv/////+9P7d3dd/fP3q3n9+b73e//////77/s6913+7/erev36vvd7/8BAQfgAe13AQH9f96v7/fu/90B/5mZk2+/7bfP5/7/Hq/v9+4/QOv/nZ2ZrAct9/Of/X/er+937s+97/+fn5mp9833/X+7v+6v73fu79/v/5+XmcQH5fcAAdfb9/vu9+7/gQH/n4eZzffp9/7r7/PYAw/3C/vd6/+fl5nsA+3X/t/37573//f98d3v/5+dmQLnAZfBB/fff2/4Af7vAO//n5mT7u/tt913AAHvv+/371/dAf8PAQfgAe933Xf++8gDz/fPX93X/////+7r7/fdd/7/v7e/97+/gLv/////7u/v/8EH/f//f//3/7/9ff///////////////////////////////////////////////////////f54Acv9v+P//////y/2f32ZM/9+/DABzeG/Of//////M+ebuYED/394F//OwN88//////85w5CZmTP/vbnPn88P3zzAHAHAPzyfnFmZM/+5s8+Pzz/PPMAcAcAfPr+ca5kz/9nXyZPOP+88z/z/z48+f5ynmTP/2dfImc6f7zzP/P/PzyADnKeZM//jz8gZzZ/nPM/8/8/nPn+c5wED/+PPyRnNn+c8z/z/z+c+fpznmTH/58/JmcmZ4ADP/P/P5jvmHOfP4f/nz8mZyAHnPM/8/8/mOAYM5/fP/+PPyZnJmec8z/wDz+Yr54Tn+b//w8/JmUmZ5zzP/APP5yPnlOcAAf/Tz8mZSZnnPM/8/8/nCCeY5/zv/9LPCZmJmec8z/z/z+cb55zn/M//ss/JmYmZ4ADP/P/P5zvnnOeZM/+zS/mZyAHnPM/8/8/nOAec54ED//N5+ZnJmec8z/z/z84L5gSnmTP/8znJmc+f5zzP/P/PjzzPnKeZM//zAcmByADnPM/8AcAfPM+ch5kz/wM52IHAAOc8z/wBwD8wA5ynmTP/8z/ZP+ef4AD//////zzPn2eBA///P7+f55/n/P//////PM+f55kz////////////////////////////////////////////////////// ","Qk0+BQAAAAAAAD4AAAAoAAAAoAAAAEAAAAABAAEAAAAAAAAFAADEDgAAxA4AAAIAAAACAAAAAAAAAP//////////////////////////////////////////////////////////////////////////////////////n/3t3//3///u9//////////////n+O7Y9+v3geD3//////////////vn71bz+/N97vf//////////////d/vVvX79X3u9//////////////+v+9X9/v3f+6A//wEK/xrmuH///9/j1f3+/cfoHX//fcYoP7Tff///r/vV/e792fe9//9FW7YVtev///d3/dX97v3d+/3//0Va6oBjgH//+vt+/33e/d/wID//RQXEDJED///9/nsAYf7hf3u9f/99FunBf3b///79897//v++O73//wGKPV3DUH///vvv7f8AP93gHf///3tJyKN3///gAD33/f796/ugP/8cW7AYhAV////feQB5/vnr+7r//4/bBVljfn///9/39vf+9/fwF3//uSMsJwkCf///v//v//7/9/+vv//OMSgQ4sl////////T977/gg///xipGfjCDP///////93jX3u67///s1Gjx19+f///////3p/bu7rv///sK1U20sJ////////ff9nXuu///z4GiVDiLn///gICD8AD2u4CA///IIPLzqA/////MzMm33/bb5/P///uvlQQJh9///87OzNYDlvv5z///xzBqbSMDn///z8/M1Pvm+/6////MlzYEHpP////Py8ziA/L7gAD//+1WyGewuJ///8/DzOb79Pv/df//1Yx11d5Pn///z8vM9gH26/9v///oDEYHMMAf///PzsyBc4DL4IP//83Y43Q8nb///8/Myfd39tvuu///4VeuVqSVf///h4CD8AD3u+67///xyidz3pzf///////3dff77rv///wVOAHmQd////////d39//gg///58HC7kzxP//////////////////3G8lTvQd//////////////////8itNaUSSf///3v34A/A/Z5j/////G2tgtZsn///TcGAC4B85mX/5//mqarsb7W///mywD/9n27yBv/H/857hlqhy3//+NkOMvyfbnJnf8f/wuGZqIoN3//+WQ5Y7J1PMmd/j///fBoazT+f//4JLllMmV8yZ78f/96Jhu46sb///kkWSQyZvzJnnz///RoZFmja///+SV5JnJf/MmffP//LyNj5X52f//5JXkmf//8yZ85///ck1xOIst///klOQR55/zJn7n//5NSaHjjjv//+SU5PXn7vMmfm///Qa74GJJB///5JTgFebk8yZ+T////BLnELX////klOd15mTzJn9P//wFVVVVVQH//+SU5mznZfMmfx///fUZ9zwXff//5BSF7Ocl8yZ/H//9FMHgA+9F//+ElOQMpyPzJn8f//0VzfDjG0X//+T3/ZTFI/Mmfx///RUVmg0ZRf///Pf8EEbnwCZ/P//996Ljc0F9///8AHWT7mXzIH+///wH0lqEnQH//+T25ZPnfPMmf7//////////////5PbsE+cA8+f/f//////////////v9N7z9z/z//9////////////////1/3PzP/P//v///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////w==",]
+        im_base64 = random.choice(ims)
         # 将base64字符串转换为字节
         img_data = base64.b64decode(im_base64)
         # 创建字节流
@@ -107,7 +111,7 @@ class AboutWindow(QWidget,Ui_Form):
         # print(self.winsize)
         baseColor = QColor(60, 60, 60)
         frontColor = QColor(255, 255, 60)
-        area = [int(0.95*self.winsize[0]),int(0.75*self.winsize[1])]
+        area = [int(0.95*self.winsize[0]),int(0.65*self.winsize[1])]
 
         if area[0]/area[1] >= self.pnum[0]/self.pnum[1]:
             self.psize = int(area[1]/self.pnum[1])
@@ -509,12 +513,16 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.Parent = parent
         self.unitCount = 0
 
-        self.backgroundDescribeText = ""      # noBackground, None, colorBackground((r,g,b)), colorMask((r,g,b))
+        self.backgroundDescribeText = "None"      # noBackground, None, colorBackground((r,g,b)), colorMask((r,g,b))
                                               # imgBackground("img_filename(not dir)","fillMode"), videoBackground("video_filename(not dir)","fillMode", vol)
                                               # imgMask("img_filename(not dir)","fillMode"), videoMask("video_filename(not dir)","fillMode", vol)
+        self.isorigin = True
         self.triggerList = []
+        self.inherit = 0
+
         self.ProgScreenSetting = {
             "background" : "noBackground",
+            "isorigin" : True,
             "trigger" : [],      # 原先的触发器键名拼写和内容都设置错误，已重新修改    # 二次改设计, 单个触发器改为 {"u" : -1 , "c" : -1 , "to" : 1}
             "inherit" : 0,
         }
@@ -546,7 +554,11 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.spin_Goto.setMaximum(65535)
         self.spin_Range.setMinimum(-65536)
         self.spin_Range.setMaximum(65535)
+        self.chk_from.setEnabled(False)
         self.tableWidget.rowMoved.connect(self.onRowMoved)
+
+        # tab 2
+        self.combo_inheritLevel.addItems(["不继承","弱继承","强继承"])
 
     def connect_signal(self):
         self.checkBox_enableBg.stateChanged.connect(self.onBgEnabledChanged)
@@ -561,6 +573,9 @@ class ProgramSettings(QDialog,Ui_ProgSet):
 
         self.tableWidget.itemSelectionChanged.connect(self.onSelectionChanged)
 
+        self.chk_isOrigin.stateChanged.connect(self.onIsOriginChanged)
+        self.combo_inheritLevel.currentIndexChanged.connect(self.onInheritChanged)
+
     def disconnect_signal(self):
         try:
             self.checkBox_enableBg.stateChanged.disconnect(self.onBgEnabledChanged)
@@ -574,6 +589,9 @@ class ProgramSettings(QDialog,Ui_ProgSet):
             self.chk_abs.stateChanged.disconnect(self.onAbstChanged)
 
             self.tableWidget.itemSelectionChanged.disconnect(self.onSelectionChanged)
+
+            self.chk_isOrigin.stateChanged.disconnect(self.onIsOriginChanged)
+            self.combo_inheritLevel.currentIndexChanged.disconnect(self.onInheritChanged)
         except Exception as e:
             print("disconnect_signal: ", e)
 
@@ -676,6 +694,12 @@ class ProgramSettings(QDialog,Ui_ProgSet):
             self.chk_from.setChecked(False)
             self.chk_from.setEnabled(False)
 
+    def onIsOriginChanged(self):
+        self.isorigin = self.chk_isOrigin.isChecked()
+
+    def onInheritChanged(self):
+        self.inherit = self.combo_inheritLevel.currentIndex()
+
     def set_value(self, progScreenSetting = None, unitCount = 0):
         self.disconnect_signal()
         self.unitCount = unitCount
@@ -693,6 +717,10 @@ class ProgramSettings(QDialog,Ui_ProgSet):
             self.ProgScreenSetting = progScreenSetting
             self.backgroundDescribeText = self.ProgScreenSetting["background"]
             self.triggerList = self.ProgScreenSetting["trigger"]
+            self.inherit = self.ProgScreenSetting["inherit"]
+            if "isorigin" in self.ProgScreenSetting.keys():
+                self.isorigin = self.ProgScreenSetting["isorigin"]
+
         self.set_ui_value()
 
         self.connect_signal()
@@ -736,8 +764,9 @@ class ProgramSettings(QDialog,Ui_ProgSet):
             if match:
                 self.comboBox_fill.setCurrentIndex(int(match.group(1)))
             
-            
+        self.chk_isOrigin.setChecked(self.isorigin)
         self.show_tgTable()
+        self.combo_inheritLevel.setCurrentIndex(self.inherit)
 
     def set_background(self):
         mode = self.comboBox_mode.currentIndex()
@@ -818,7 +847,10 @@ class ProgramSettings(QDialog,Ui_ProgSet):
 
     def get_setting(self):
         self.ProgScreenSetting["background"] = self.backgroundDescribeText
+        self.ProgScreenSetting["isorigin"] = self.isorigin
         self.ProgScreenSetting["trigger"] = self.triggerList
+        self.ProgScreenSetting["inherit"] = self.inherit
+        print(self.ProgScreenSetting)
 
         return self.ProgScreenSetting
 
@@ -834,6 +866,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.currentFileDir = ""
         self.currentFileName = ""
         self.thisFileSaved = True
+        self.keep_speed = False
         self.currentLine = None
         self.currentProg = None
         self.currentDisplayProgIndex = None
@@ -847,8 +880,9 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         # self.setMaximumSize(self.screenRect.width(),self.screenRect.height())
         self.setMinimumSize(self.width,self.height)
         self.initUI()
-        self.make_menu()
+
         self.read_setting()
+        self.make_menu()
 
     def initUI(self):
         self.BtnWidget = QWidget(self)
@@ -907,6 +941,10 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
         self.setWindowTitle(ti)
 
+    def show_about_window(self):
+        self.AboutWindow.show()
+        self.AboutWindow.initUI()
+
     def make_menu(self):
         fileMenu = self.menuBar().addMenu('文件')
         newAction = QAction('新建', self)
@@ -939,6 +977,12 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         topMostAction = QAction('置顶显示屏', self)
         topMostAction.triggered.connect(self.topMost)
         scnMenu.addAction(topMostAction)
+        scnMenu.addSeparator()
+        kepSpeedAction = QAction('显示屏保持速度', self)
+        kepSpeedAction.setCheckable(True)
+        kepSpeedAction.setChecked(self.keep_speed)
+        kepSpeedAction.triggered.connect(self.set_keep_speed)
+        scnMenu.addAction(kepSpeedAction)
 
         moreMenu = self.menuBar().addMenu('更多功能')
         setbgfolderAction = QAction('指定背景文件夹', self)
@@ -948,7 +992,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         copyLineAction.triggered.connect(self.LineController.copy_busLine)
         moreMenu.addAction(copyLineAction)
         showAboutAction = QAction('关于', self)
-        showAboutAction.triggered.connect(self.AboutWindow.show)
+        showAboutAction.triggered.connect(self.show_about_window)
         moreMenu.addAction(showAboutAction)
         quitAction = QAction('退出', self)
         quitAction.setShortcut('Ctrl+Q')
@@ -961,6 +1005,9 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             with open(setting_file,'r',encoding = 'utf-8') as r:
                 list_str = r.read()
                 self.settings = ast.literal_eval(list_str)
+
+        if "keep_speed" in self.settings.keys():
+            self.keep_speed = self.settings["keep_speed"]
 
     def save_setting(self):
         setting_file = "./resources/settings.info"
@@ -1082,11 +1129,14 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         return screen
     
     def force_changeProg(self, who):
+        jmpfrom = None
+        if who.cntProgIsOrigin:
+            jmpfrom = who.currentIndex
         for scn in self.LedScreens.values():
             if scn is not None:
                 if not (scn is who):
                     try:
-                        scn.currentIndex = self.currentDisplayProgIndex
+                        scn.change_cntIndex(cntindex = self.currentDisplayProgIndex, jmpfrom = jmpfrom)
                         scn.programTimeout()
                         print(f"{scn.toDisplay}被迫切换节目{self.currentDisplayProgIndex+1}")
                     except Exception as e:
@@ -1149,6 +1199,12 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
         self.save_setting()
 
+    def set_keep_speed(self):
+        self.keep_speed = not self.keep_speed
+        self.settings["keep_speed"] = self.keep_speed
+
+        self.save_setting()
+
     def change_program(self):   # 切换正在显示的节目
         line_row = self.currentLine
         if isinstance(line_row,int):
@@ -1160,7 +1216,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                     try:
                         if self.LineEditor.LineInfoList[line_row][screen]["enabled"]:
                             self.LedScreens[screen].screenProgramSheet = programSheet
-                            self.LedScreens[screen].currentIndex = row
+                            self.LedScreens[screen].change_cntIndex(cntindex = row)
                             self.LedScreens[screen].programTimeout()
                         else:
                             self.LedScreens[screen].close()
@@ -1283,7 +1339,7 @@ class ProgramSheetManager():
 
     def show_program(self):
         row = self.Parent.currentLine
-        print("show_program:self.Parent.currentLine:",row)
+        # print("show_program:self.Parent.currentLine:",row)
         if isinstance(row,int):
             self.programSheet = self.Parent.LineEditor.LineInfoList[row]["programSheet"]
             data = [[p[0],p[1]] for p in self.programSheet]

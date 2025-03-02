@@ -19,7 +19,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1,0,0">
+  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="3,14,2,1">
    <item>
     <widget class="QLabel" name="label_Version">
      <property name="font">
@@ -89,7 +89,7 @@
        <item>
         <widget class="QLabel" name="label_Declare">
          <property name="text">
-          <string>声明：本软件为开源软件，如果您通过“购买”获得本软件，那么您可能被骗了。</string>
+          <string/>
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>

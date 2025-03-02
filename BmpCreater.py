@@ -189,7 +189,7 @@ class Sys_Font_Reader():
 
         for fnt in scaled_font.keys():
             if fnt in self.font_path and self.is_Chinese(text):
-                image = image.crop((int(image.width*(1-scaled_font[fnt]/100)*0.5),0,int(image.width*(1-(1-scaled_font[fnt]/100)*0.5)),image.height))
+                image = image.crop((1+int(image.width*(1-scaled_font[fnt]/100)*0.5),0,int(image.width*(1-(1-scaled_font[fnt]/100)*0.5)),image.height))
 
         image = image.resize((int(image.width*scale/100),image.height),resample=Image.LANCZOS)
 
