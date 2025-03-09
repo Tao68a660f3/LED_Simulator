@@ -16,7 +16,6 @@ class Ui_SelfDefineScreen(object):
         SelfDefineScreen.setObjectName("SelfDefineScreen")
         SelfDefineScreen.resize(450, 220)
         SelfDefineScreen.setMinimumSize(QtCore.QSize(450, 220))
-        SelfDefineScreen.setMaximumSize(QtCore.QSize(450, 250))
         self.verticalLayout = QtWidgets.QVBoxLayout(SelfDefineScreen)
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()

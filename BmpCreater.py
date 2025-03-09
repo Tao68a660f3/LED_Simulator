@@ -228,23 +228,27 @@ class FontManager():
                 folder = ""
                 pattern = re.compile(r".*?,.*?,")
                 for i in range(len(file)):
-                    if file[i].startswith("ICON"):
+                    if file[i].startswith("ICON") or file[i].startswith("\ufeffICON"):
                         folder = file[i].split(",")[2][4:]
                         # print(folder,icon_info)
                         if folder.lower() == "default":
                             folder = os.path.dirname(icon_info)
                     else:
-                        match_result = pattern.match(file[i])[0]
-                        icon_name = '`'+match_result.split(",")[0]+'`'
-                        icon_file = match_result.split(",")[1]
-                        self.icon_dict[icon_name] = os.path.join(folder,icon_file)
-                        # print(icon_file,self.icon_dict[icon_name])
+                        try:
+                            match_result = pattern.match(file[i])[0]
+                            icon_name = '`'+match_result.split(",")[0]+'`'
+                            icon_file = match_result.split(",")[1]
+                            self.icon_dict[icon_name] = os.path.join(folder,icon_file)
+                            # print(icon_file,self.icon_dict[icon_name])
+                        except:
+                            pass
         # print(self.icon_dict)
 
 class BmpCreater():
     # 显示屏组件编写时，让图片默认位置是水平竖直均居中，如果横向滚动，竖直居中，竖直滚动，水平居中！
     # color_type:"RGB"和"1"两种
     def __init__(self,Manager=FontManager(),color_type="RGB",color=(255,255,255),ch_font="",asc_font="",only_sysfont = False,relative_path = ""):
+        self.invisibleChr = ["\n","\u2029"]
         self.FontManager = Manager
         self.only_sysfont = only_sysfont
         self.relative_path = relative_path
@@ -425,24 +429,50 @@ class BmpCreater():
             else:    # 垂直排列为多列
                 exps = exp_size[1]
             for i in range(len(image_list)):
+                if i+1 < len(image_list):
+                    next = image_list[i+1]["img"]
+                else:
+                    next = None
+                current_size = 0
+                next_size = 0
                 if not vertical:    # 水平排列分成多行
                     current_size = image_list[i]["img"].width
+                    if next is not None:
+                        next_size = next.width
                 else:    # 垂直排列为多列
                     current_size = image_list[i]["img"].height
+                    if next is not None:
+                        next_size = next.height
 
                 # print(i)
+                this_take_size = 0
+                next_take_size = 0
+                if space > 0:
+                    this_take_size = space + current_size
+                    next_take_size = space + next_size
+                elif space >= -100:
+                    this_take_size = int(current_size * ((100 + space) / 100))
+                    next_take_size = int(next_size * ((100 + space) / 100))
 
-                if t_li_size < exps and image_list[i]["chr"] not in ["\n","\u2029"]:
-                    t_li.append({"img": image_list[i]["img"], "chr": None})
-                    t_li_size += current_size
-                    if space > 0:
-                        t_li_size += space
-                    elif space >= -100:
-                        v = t_li_size + int(current_size * (space / 100))
-                        if v > 0:
-                            t_li_size = v
+                if image_list[i]["chr"] not in self.invisibleChr:
+                    if t_li_size == 0 or t_li_size + this_take_size <= exps:
+                        t_li.append({"img": image_list[i]["img"], "chr": None})
+                        t_li_size += this_take_size
 
-                if t_li_size + current_size > exps or i+1 == len(image_list) or image_list[i]["chr"] in ["\n","\u2029"]:
+                s = False
+                if t_li_size + next_take_size > exps:
+                    s = True
+                if i+1 == len(image_list):
+                    s = True
+                if image_list[i]["chr"] in self.invisibleChr:
+                    s = True
+                    if i-1 >= 0:
+                        if image_list[i-1]["chr"] not in self.invisibleChr and len(t_li) == 0:
+                            s = False
+                    if s:
+                        t_li.append({"img": image_list[i]["img"], "chr": None})
+
+                if s:
                     line_img = self.hconcat_images(t_li, vertical, space, style, {"stat": False, "line_space": line_space, "exp_size": exp_size})
                     li.append({"img": line_img, "chr": None})
                     t_li = []
@@ -535,6 +565,9 @@ class BmpCreater():
                 else:
                     font_tasks = list(sub_task)
                     for chr in font_tasks:
+                        this_chr = chr
+                        if chr in self.invisibleChr:
+                            chr = " "
                         if chr.isascii():
                             ch = self.ASC_Reader.get_text_bmp(chr,y_offset_asc,asc_font_size,ch_bold_size_x,ch_bold_size_y,100)
                         else:
@@ -550,7 +583,7 @@ class BmpCreater():
                         if chr.isascii() and vertical and roll_asc:
                             ch = ch.transpose(Image.ROTATE_270)
 
-                        IMAGES.append({"img": ch, "chr": chr})
+                        IMAGES.append({"img": ch, "chr": this_chr})
         # 拼接图像
         if new_width != None and new_height != None and not auto_scale:
             exp_size = [new_width, new_height]
@@ -573,11 +606,11 @@ class BmpCreater():
     
 if __name__ == "__main__":
     # t = "[{'char': '在本文中，', 'foreground': '#ffffff', 'background': '0'}, {'char': '我们', 'foreground': '#ffab81', 'background': '0'}, {'char': '介绍了', 'foreground': '#75ffca', 'background': '0'}, {'char': '四种', 'foreground': '#395dff', 'background': '0'}, {'char': '将单个文件', 'foreground': '#ffffff', 'background': '0'}, {'char': '恢复到', 'foreground': '#ff40b6', 'background': '0'}, {'char': '以前版本', 'foreground': '#ffff00', 'background': '0'}, {'char': '的方法', 'foreground': '#ffffff', 'background': '0'}]"
-    t = "西四丁字街"
-    ch_font="宋体"
-    asc_font="Arial"
+    t = '以下是一些主要的原因和分析哈分析：\n\n1. 未確認飛行物（UFO）目擊事件\n大量目擊報告\n\nhello\n\n'
+    ch_font="旧宋体"
+    asc_font="旧宋体"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,255,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=24, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=True, scale_sys_font_only=0, new_width = 80, new_height = 32, y_offset = 0, y_offset_asc = 0, style = [0,0], multi_line = {"stat":False, "line_space": 1.1 })
+    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=True, new_width = 128, new_height = 32, y_offset = 0, y_offset_asc = 0, style = [1,0], multi_line = {"stat":True, "line_space": 1.1 })
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]

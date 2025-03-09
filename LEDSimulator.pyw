@@ -530,7 +530,8 @@ class ProgramSettings(QDialog,Ui_ProgSet):
     def initUI(self):
         self.setModal(True)
         self.setWindowTitle("路牌节目设置（实验）")
-        self.setMinimumSize(600,300)
+        self.setMinimumSize(400,500)
+        self.resize(500,500)
 
         # tab 0
         self.comboBox_mode.addItems(["纯色背景","图片背景",])#"视频背景"])
@@ -1390,9 +1391,12 @@ class ProgramSheetManager():
         row = self.Parent.currentProg
         if isinstance(row,int):
             self.programSheet.pop(row)
+            self.show_program()
             self.Parent.thisFile_saveStat.emit(False)
-        self.show_program()
-        self.Parent.set_selected_row(self.Parent.tableWidget_ProgramSheet, max(0,row-1))
+        if len(self.programSheet) == 0:
+            self.Parent.currentProg = None
+        else:
+            self.Parent.set_selected_row(self.Parent.tableWidget_ProgramSheet, max(0,row-1))
 
     def copy_program(self):
         row = self.Parent.currentProg
@@ -1502,7 +1506,6 @@ class ProgramSettler():
         self.Parent.spinBox_Zoom.setMinimum(40)
         self.Parent.spinBox_Zoom.setValue(100)   
 
-        self.Parent.tableWidget_ProgramSheet.pressed.connect(self.show_scnUnit)
         self.Parent.tableWidget_Screens.itemSelectionChanged.connect(self.show_progArgv)
         self.Parent.tableWidget_Screens.rowMoved.connect(self.move_scnUnitProg)
         self.Parent.combo_LineScreens.currentTextChanged.connect(self.show_scnUnit)

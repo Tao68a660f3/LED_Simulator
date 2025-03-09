@@ -16,7 +16,6 @@ class Ui_NewALine(object):
         NewALine.setObjectName("NewALine")
         NewALine.resize(650, 250)
         NewALine.setMinimumSize(QtCore.QSize(650, 250))
-        NewALine.setMaximumSize(QtCore.QSize(650, 250))
         self.verticalLayout = QtWidgets.QVBoxLayout(NewALine)
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()

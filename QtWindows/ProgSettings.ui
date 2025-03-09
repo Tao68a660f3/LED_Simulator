@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>391</width>
-    <height>332</height>
+    <width>400</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,6 +33,12 @@
    </item>
    <item>
     <widget class="QScrollArea" name="scrollArea">
+     <property name="minimumSize">
+      <size>
+       <width>300</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="widgetResizable">
       <bool>true</bool>
      </property>
@@ -40,8 +46,8 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-114</y>
-        <width>358</width>
+        <y>0</y>
+        <width>367</width>
         <height>633</height>
        </rect>
       </property>
@@ -193,7 +199,14 @@
           </widget>
          </item>
          <item>
-          <widget class="DraggableTableWidget" name="tableWidget"/>
+          <widget class="DraggableTableWidget" name="tableWidget">
+           <property name="minimumSize">
+            <size>
+             <width>300</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -261,6 +274,12 @@
            </item>
            <item>
             <widget class="QPushButton" name="pushButton_Add">
+             <property name="minimumSize">
+              <size>
+               <width>30</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="text">
               <string>上传</string>
              </property>
@@ -268,6 +287,12 @@
            </item>
            <item>
             <widget class="QPushButton" name="pushButton_Delete">
+             <property name="minimumSize">
+              <size>
+               <width>30</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="text">
               <string>删除</string>
              </property>
