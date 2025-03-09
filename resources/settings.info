@@ -1,1 +1,1 @@
-{'background_folder': './BackgroundImg'}
+{'background_folder': './BackgroundImg', 'keep_speed': True}

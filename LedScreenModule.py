@@ -570,7 +570,7 @@ class ScreenController(QWidget):
                 u.rollCounter += 1
 
     def count_fps(self):
-        self.commonFps = self.fpsCounter*self.fpsChkSec
+        self.commonFps = (self.commonFps + self.fpsCounter*self.fpsChkSec) // 2
         self.fpsCounter = 0
         self.setWindowTitle(f'{self.toDisplay} @ {self.commonFps} FPS')
 
