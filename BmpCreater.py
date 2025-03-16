@@ -1,6 +1,6 @@
-from PIL import Image, ImageDraw, ImageFont, ImageChops
+from PIL import Image, ImageDraw, ImageFont
 # import numpy as np
-import binascii, re#, freetype
+import binascii, re, os, ast #, freetype
 
 class ASC_font_Reader():
     def __init__(self,relative_path,font_path):
@@ -50,8 +50,9 @@ class ASC_Bmp_Reader():
         x = value%16
         y = value//16
         ch = self.fnt_img.crop((x*self.ascii_size[0],y*self.ascii_size[1],(x+1)*self.ascii_size[0],(y+1)*self.ascii_size[1]))
-        ch = ImageChops.invert(ch)
         ch = ch.convert('1')
+        ch = ch.point(lambda x: not x)  # 直接反转二值图像
+        
         l = self.ascii_size[0]-1    ####!!
         r = 0
         if self.ascii_size[0] == self.ascii_size[1]:
@@ -138,12 +139,12 @@ class Sys_Font_Reader():
             self.font = ImageFont.truetype(self.font_path, font_size)
         except:    # 字体打不开时暂时用宋体代替
             self.font = ImageFont.truetype("simsun", font_size)
-        x_offseted_font = {"arial":2,"ARIALN":1,}
         scaled_font = {"FZYTK":72,}
-        extra_size = int(0.2*font_size) if text.isascii() else 0
+        extra_size = int(0.2*font_size) if text.isascii() else 0  # 加高ASCII字体以防止字符不完整
         s = text
-        s = "█| "+s+" |█"
-        ss = "█|  |█"
+        s = "+ "+s
+        ss = "+ "
+        adjusted_height = [0,0]
 
         # 创建一个Image对象
         image = Image.new("1", (1, 1))  # 1-bit image (black and white)
@@ -154,37 +155,41 @@ class Sys_Font_Reader():
         text_height = bbox[3] - bbox[1]
         # 多余的宽度
         bbox = draw.textbbox((0, 0), ss, font=self.font)
-        delta_width = int((bbox[2] - bbox[0])*0.5)
+        delta_width = bbox[2] - bbox[0]
         # delta_height = font_size-text_height
 
         offset = int(0.5*font_size)+int(0.5*extra_size)
         # print(s,offset,font_size,text_height,delta_y)
- 
-        image = Image.new("1", (text_width-2*delta_width, font_size+extra_size))#
+
+        # 获取参考字符的高度
+        chars = [s,ss]
+        for i in range(len(chars)):
+            t = chars[i]
+            image = Image.new("1", (text_width-delta_width, font_size+extra_size))
+            # 获取新的Draw对象
+            draw = ImageDraw.Draw(image)
+            draw.text((0, offset-y_offset), t, font=self.font, fill=1, anchor="lm")
+            for x in range(image.width):
+                for y in range(image.height):
+                    if image.getpixel((x,y)):
+                        adjusted_height[i] = y
+                        break
+                else:
+                    continue
+                break
+
+        image = Image.new("1", (text_width-delta_width, font_size+extra_size))
         # 获取新的Draw对象
         draw = ImageDraw.Draw(image)
 
-        for fnt in x_offseted_font.keys():
-            if fnt in self.font_path:
-                delta_width = delta_width - x_offseted_font[fnt]
         # 设置字体，绘制文本，加粗
         for i in range(xb):
             for j in range(yb):
-                draw.text((i-delta_width, j+offset-y_offset), s, font=self.font, fill=1, anchor="lm")
+                draw.text((i-delta_width, j+offset-y_offset+(-adjusted_height[0]+adjusted_height[1])), s, font=self.font, fill=1, anchor="lm")
 
         for fnt in scaled_font.keys():
             if fnt in self.font_path and self.is_Chinese(text):
-                image = image.crop((int(image.width*(1-scaled_font[fnt]/100)*0.5),0,int(image.width*(1-(1-scaled_font[fnt]/100)*0.5)),image.height))
-
-        ########################################
-        # for x in range(image.width):
-        #     print(int(delta_height/2),int(delta_height/2)+text_height-1)
-        #     # x=0
-        #     if int(delta_height/2) > 0:
-        #         image.putpixel((x, int(delta_height/2)), 1)
-        #     if int(delta_height/2)+text_height-1 < image.height:
-        #         image.putpixel((x, int(delta_height/2)+text_height-1), 1)
-        ########################################
+                image = image.crop((1+int(image.width*(1-scaled_font[fnt]/100)*0.5),0,int(image.width*(1-(1-scaled_font[fnt]/100)*0.5)),image.height))
 
         image = image.resize((int(image.width*scale/100),image.height),resample=Image.LANCZOS)
 
@@ -221,19 +226,29 @@ class FontManager():
             with open(icon_info,"r",encoding="utf-8") as f:
                 file = f.readlines()
                 folder = ""
+                pattern = re.compile(r".*?,.*?,")
                 for i in range(len(file)):
-                    if file[i].startswith("ICON"):
+                    if file[i].startswith("ICON") or file[i].startswith("\ufeffICON"):
                         folder = file[i].split(",")[2][4:]
+                        # print(folder,icon_info)
+                        if folder.lower() == "default":
+                            folder = os.path.dirname(icon_info)
                     else:
-                        icon_name = '`'+file[i].split(",")[0]+'`'
-                        icon_file = file[i].split(",")[1]
-                        self.icon_dict[icon_name] = folder+icon_file
+                        try:
+                            match_result = pattern.match(file[i])[0]
+                            icon_name = '`'+match_result.split(",")[0]+'`'
+                            icon_file = match_result.split(",")[1]
+                            self.icon_dict[icon_name] = os.path.join(folder,icon_file)
+                            # print(icon_file,self.icon_dict[icon_name])
+                        except:
+                            pass
         # print(self.icon_dict)
 
 class BmpCreater():
     # 显示屏组件编写时，让图片默认位置是水平竖直均居中，如果横向滚动，竖直居中，竖直滚动，水平居中！
     # color_type:"RGB"和"1"两种
     def __init__(self,Manager=FontManager(),color_type="RGB",color=(255,255,255),ch_font="",asc_font="",only_sysfont = False,relative_path = ""):
+        self.invisibleChr = ["\n","\u2029"]
         self.FontManager = Manager
         self.only_sysfont = only_sysfont
         self.relative_path = relative_path
@@ -246,7 +261,7 @@ class BmpCreater():
         except:
             self.asc_font = self.FontManager.font_dict["宋体"]
         self.color_type = color_type
-        self.color = (color[0],color[1],color[2])
+        self.color = (color[0],color[1],color[2],255)
 
         asc_font_type = self.asc_font.split(".")[-1].lower()
         ch_font_type = self.ch_font.split(".")[-1].lower()
@@ -283,105 +298,319 @@ class BmpCreater():
             ordered_strings.append(s[start:])
         return ordered_strings
 
-    def hconcat_images(self,image_list = [], vertical = False, space = 1, style = 0):
-        # style: -1,0,1，对齐方式
-        if len(image_list) == 0:
-            return Image.new(self.color_type,(10,10))
+    def hconcat_images(self,image_list = [], vertical = False, space = 1, style = [0, 0], multi_line = {"stat":False, "line_space": 0, "exp_size": []}):
+        # print(multi_line)
+        line_space = multi_line["line_space"]
+        exp_size = multi_line["exp_size"]
+        default_color = None
+        reverse = False
         if not vertical:
-            # 计算所有图像的最大高度和宽度之和
-            total_height = max(image.height for image in image_list)
-            total_width = sum(image.width for image in image_list)
-            # 创建一个新的图像作为画布，背景为白色
-            new_image = Image.new(self.color_type, (total_width+space*(len(image_list)-1), total_height))
+            sstyle = style[1]
         else:
-            total_height = sum(image.height for image in image_list)
-            total_width = max(image.width for image in image_list)
-            new_image = Image.new(self.color_type, (total_width, total_height+space*(len(image_list)-1)))        
-        # 在新图像上依次粘贴每个图像
-        x_offset = 0
-        y_offset = 0
-        if style > 0:
-            k = 0
-        elif style == 0:
-            k = 0.5
-        else:
-            k = 1
-        for image in image_list:
-            if vertical:
-                x_offset = int(k*(total_width-image.width))
-            else:
-                y_offset = int(k*(total_height-image.height))
-            # 计算每个图像粘贴的位置，使其顶部对齐
-            new_image.paste(image, (x_offset, y_offset))
+            sstyle = style[0]
+        
+
+        if line_space < 0 and len(exp_size) == 1:
+            reverse = True
+            line_space = -line_space
+
+        if self.color_type == "RGB":
+            color_type = "RGBA"
+            default_color = (0,0,0,0)
+        elif self.color_type == "1":
+            color_type = "1"
+            default_color = 0
+        # style: -1,0,1，对齐方式 左中右或上中下
+        if len(image_list) == 0:
+            return Image.new(color_type, (10,10), default_color)
+        
+        if multi_line["stat"] == False:  # 自身调用时，"stat"定义为False，"line_space"为原先值（再传过来），"exp_size"定义为[multi_line["line_space"]]， 这样其长度为1，与不使用多行，但传递了"line_space"的情况分开
+            # print("拼图第1种情况",len(image_list))
+            pmc = False   # percented_multiline_combine，以百分数表示的行距，如1.5->150%
+            if len(exp_size) == 1 :
+                pmc = True          # 表示第二次把每一行的图片拼合
+
             if not vertical:
-                x_offset += image.width
-                x_offset += space
-            else:
-                y_offset += image.height
-                y_offset += space        
-        return new_image
-
-    def create_character(self,vertical=False, roll_asc = False, text="", ch_font_size=16, asc_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, y_offset_asc = 0, style = 0):
-        IMAGES = []
-        tasks = self.find_backtick_strings(text)
-        for task in tasks:
-            if task in self.FontManager.icon_dict.keys():
-                try:
-                    ico = Image.open(self.relative_path+self.FontManager.icon_dict[task])
-                    if self.color_type == "1":
-                        ico = ImageChops.invert(ico)
-                        ico = ico.convert('1')
-                    IMAGES.append(ico)
-                except:
-                    pass     
-            else:
-                font_tasks = list(task)
-                for chr in font_tasks:
-                    if chr.isascii():
-                        ch = self.ASC_Reader.get_text_bmp(chr,y_offset_asc,asc_font_size,ch_bold_size_x,ch_bold_size_y,100)
-                    else:
-                        if scale_sys_font_only:
-                            sscale = scale
+                # 计算所有图像的最大高度和宽度之和
+                total_height = max(image["img"].height for image in image_list)
+                total_width = sum(image["img"].width for image in image_list)
+                # 创建一个新的图像作为画布，背景为白色
+                if space >= 0 and not pmc:
+                    new_image = Image.new(color_type, (total_width+space*(len(image_list)-1), total_height), default_color)
+                elif space >= -100 or pmc:
+                    if len(image_list) > 1:
+                        if pmc:
+                            for im in image_list[:-1]:
+                                total_width += int(im["img"].width * (line_space - 1))
+                            if total_width == 0:
+                                total_width += im["img"].width
                         else:
-                            sscale = 100
-                        ch = self.Ch_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,sscale)
+                            total_width = 0
+                            for im in image_list[:-1]:
+                                total_width += int(im["img"].width * (100 + space) / 100)
+                            total_width += im["img"].width
+                    new_image = Image.new(color_type, (total_width, total_height), default_color)
+            else:
+                total_height = sum(image["img"].height for image in image_list)
+                total_width = max(image["img"].width for image in image_list)
+                if space >= 0 and not pmc:
+                    new_image = Image.new(color_type, (total_width, total_height+space*(len(image_list)-1)), default_color)
+                elif space >= -100 or pmc:
+                    if len(image_list) > 1:                    
+                        if pmc:
+                            for im in image_list[:-1]:
+                                total_height += int(im["img"].height * (line_space - 1))
+                            if total_height == 0:
+                                total_height += im["img"].height
+                        else:
+                            total_height = 0
+                            for im in image_list[:-1]:
+                                total_height += int(im["img"].height * (100 + space) / 100)
+                            total_height += im["img"].height
+                    new_image = Image.new(color_type, (total_width, total_height), default_color)
+            # 在新图像上依次粘贴每个图像
+            x_offset = 0
+            y_offset = 0
+            real_x = 0
+            real_y = 0
+            if sstyle > 0:    # style指定图片的对齐方式
+                k = 0
+            elif sstyle == 0:
+                k = 0.5
+            else:
+                k = 1
+            for image in image_list:
+                if vertical:
+                    x_offset = int(k*(total_width-image["img"].width))
+                else:
+                    y_offset = int(k*(total_height-image["img"].height))
 
-                    if self.color_type == "RGB":
-                        # 创建一个新的彩色图像，模式为RGB，大小与原图相同
-                        cch = Image.new("RGB", ch.size, self.color)                        
-                        # 将原图的非黑色部分（即白色部分）用指定颜色替换
-                        for x in range(ch.width):
-                            for y in range(ch.height):
-                                if ch.getpixel((x, y)) != 0:  # 白色部分
-                                    cch.putpixel((x, y), self.color)
-                                else:  # 黑色部分，保持透明或设为其他颜色
-                                    cch.putpixel((x, y), (0, 0, 0))  # 这里设置为黑色
-                        ch = cch
+                if reverse and len(exp_size) == 1:
+                    if vertical:
+                        real_y = total_height - image["img"].height - y_offset
+                        real_x = x_offset
+                    else:
+                        real_x = total_width - image["img"].width - x_offset
+                        real_y = y_offset
+                else:
+                    real_y = y_offset
+                    real_x = x_offset
+                        
+                # print(reverse and len(exp_size) == 1, x_offset,y_offset," ",real_x,real_y)
 
-                    if chr.isascii() and vertical and roll_asc:
-                        ch = ch.transpose(Image.ROTATE_270)
+                # 计算每个图像粘贴的位置
+                new_image.paste(image["img"], (real_x, real_y), image["img"])
+                if not vertical:
+                    if space >= 0 and not pmc:
+                        x_offset += image["img"].width
+                        x_offset += space
+                    elif space >= -100 and not pmc:
+                        x_offset += int(image["img"].width * (100 + space) / 100)
+                    if pmc:
+                        x_offset += int(image["img"].width * line_space)
+                else:
+                    if space >= 0 and not pmc:
+                        y_offset += image["img"].height
+                        y_offset += space
+                    elif space >= -100 and not pmc:
+                        y_offset += int(image["img"].height * (100 + space) / 100)
+                    if pmc:
+                        y_offset += int(image["img"].height * line_space)
 
-                    IMAGES.append(ch)
+            return new_image
+        
+        elif multi_line["stat"] == True and len(exp_size) == 2:
+            # print("拼图第2种情况",len(image_list))
+            li = []
+            t_li = []
+            t_li_size = 0
+            if not vertical:    # 水平排列分成多行
+                exps = exp_size[0]
+            else:    # 垂直排列为多列
+                exps = exp_size[1]
+            for i in range(len(image_list)):
+                if i+1 < len(image_list):
+                    next = image_list[i+1]["img"]
+                else:
+                    next = None
+                current_size = 0
+                next_size = 0
+                if not vertical:    # 水平排列分成多行
+                    current_size = image_list[i]["img"].width
+                    if next is not None:
+                        next_size = next.width
+                else:    # 垂直排列为多列
+                    current_size = image_list[i]["img"].height
+                    if next is not None:
+                        next_size = next.height
+
+                # print(i)
+                this_take_size = 0
+                next_take_size = 0
+                if space > 0:
+                    this_take_size = space + current_size
+                    next_take_size = space + next_size
+                elif space >= -100:
+                    this_take_size = int(current_size * ((100 + space) / 100))
+                    next_take_size = int(next_size * ((100 + space) / 100))
+
+                if image_list[i]["chr"] not in self.invisibleChr:
+                    if t_li_size == 0 or t_li_size + this_take_size <= exps:
+                        t_li.append({"img": image_list[i]["img"], "chr": None})
+                        t_li_size += this_take_size
+
+                s = False
+                if t_li_size + next_take_size > exps:
+                    s = True
+                if i+1 == len(image_list):
+                    s = True
+                if image_list[i]["chr"] in self.invisibleChr:
+                    s = True
+                    if i-1 >= 0:
+                        if image_list[i-1]["chr"] not in self.invisibleChr and len(t_li) == 0:
+                            s = False
+                    if s:
+                        t_li.append({"img": image_list[i]["img"], "chr": None})
+
+                if s:
+                    line_img = self.hconcat_images(t_li, vertical, space, style, {"stat": False, "line_space": line_space, "exp_size": exp_size})
+                    li.append({"img": line_img, "chr": None})
+                    t_li = []
+                    t_li_size = 0
+
+            return self.hconcat_images(li, not vertical, space, style, {"stat": False, "line_space": line_space, "exp_size": [line_space]})
+            
+        else:
+            # print("拼图第3种情况")
+            return Image.new(color_type,(10,10), default_color)
+        
+    def fill_image_with_color(self, task_1 = "0", image = Image.new("1", (10,10)), foc = (255, 255, 255, 255), bac = (0, 0, 0, 0)):
+        # 创建一个新的彩色图像，模式为RGBA，大小与原图相同
+        im = Image.new("RGBA", image.size)
+        if task_1 == "0":
+            # 将原图的非黑色部分（即白色部分）用指定颜色替换
+            for x in range(image.width):
+                for y in range(image.height):
+                    if image.getpixel((x, y)) != 0:  # 白色部分
+                        im.putpixel((x, y), self.color)
+                    else:  # 黑色部分，保持透明或设为其他颜色
+                        im.putpixel((x, y), (0, 0, 0, 0))  # 这里设置为黑色
+        else:
+            for x in range(image.width):
+                for y in range(image.height):
+                    if image.getpixel((x, y)) != 0:
+                        im.putpixel((x, y), foc)
+                    else:
+                        im.putpixel((x, y), bac)
+            
+        return im
+
+    def create_character(self,vertical=False, roll_asc = False, text="", ch_font_size=16, asc_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, y_offset_asc = 0, style = [0, 0], multi_line = {"stat":False, "line_space": 0 }):
+        IMAGES = []
+        tasks = []
+        foc = (255, 255, 255, 255)
+        bac = (0, 0, 0, 0)
+
+        if text == "":
+            text = " "
+
+        try:
+            coloredstritems = ast.literal_eval(text)
+            s = ""
+            for coloredstr in coloredstritems:
+                task = [self.find_backtick_strings(coloredstr['char']),coloredstr['foreground'],coloredstr['background']]
+                tasks.append(task)
+                s += coloredstr['char']
+            text = s    # 将有颜色的字符串提取出来给缩放部分使用
+        except:
+            tasks = [[self.find_backtick_strings(text),"0","0"]]  # [任务列表，前景色，背景色]
+        # print(tasks)
+        for task in tasks:
+            # 获取前景色背景色
+            if task[1] != "0":
+                tup = (3, 5, 7, 1)
+                fore_col_hex = task[1]
+                if len(task[1]) == 7 :
+                    fore_col_hex = "#ff" + fore_col_hex[1:]
+                foc = tuple(int(fore_col_hex[i:i+2], 16) for i in tup)
+                if task[2] != "0":
+                    back_col_hex = task[2]
+                    if len(task[2]) == 7 :
+                        back_col_hex = "#ff" + back_col_hex[1:]
+                    bac = tuple(int(back_col_hex[i:i+2], 16) for i in tup)
+                else:
+                    bac = (0, 0, 0, 0)
+
+            # print(task)
+            # print(self.FontManager.icon_dict.keys())
+
+            for sub_task in task[0]:   # sub_task：剪开了的字符串
+                # print(sub_task)
+                if sub_task in self.FontManager.icon_dict.keys():
+                    try:
+                        ico = Image.open(self.relative_path+self.FontManager.icon_dict[sub_task])
+                        if self.color_type == "1":
+                            ico = ico.convert('1')
+                            ico = ico.point(lambda x: not x)  # 直接反转二值图像
+                        elif self.color_type == "RGB":
+                            if ico.mode == "1":
+                                ico = ico.point(lambda x: not x)  # 直接反转二值图像
+                                ico = self.fill_image_with_color(task[1], ico, foc, bac)
+                            else:
+                                ico = ico.convert("RGBA")
+                        icon = {"img": ico, "chr": None}
+                        IMAGES.append(icon)
+                    except:
+                        pass     
+                else:
+                    font_tasks = list(sub_task)
+                    for chr in font_tasks:
+                        this_chr = chr
+                        if chr in self.invisibleChr:
+                            chr = " "
+                        if chr.isascii():
+                            ch = self.ASC_Reader.get_text_bmp(chr,y_offset_asc,asc_font_size,ch_bold_size_x,ch_bold_size_y,100)
+                        else:
+                            if scale_sys_font_only:
+                                sscale = scale
+                            else:
+                                sscale = 100
+                            ch = self.Ch_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,sscale)
+
+                        if self.color_type == "RGB":
+                            ch = self.fill_image_with_color(task[1], ch, foc, bac)
+
+                        if chr.isascii() and vertical and roll_asc:
+                            ch = ch.transpose(Image.ROTATE_270)
+
+                        IMAGES.append({"img": ch, "chr": this_chr})
         # 拼接图像
-        new_image = self.hconcat_images(IMAGES,vertical,space,style)
+        if new_width != None and new_height != None and not auto_scale:
+            exp_size = [new_width, new_height]
+        else:
+            exp_size = []
+        multi_line["exp_size"] = exp_size
+        new_image = self.hconcat_images(IMAGES,vertical,space,style,multi_line)
         img_width = new_image.width
         img_height = new_image.height
         # 缩放图像横向宽度
         if (auto_scale and not scale_sys_font_only) and new_width != None and new_height != None:
             if len(text) <= 2*new_width/new_height and img_width > new_width:
-                new_image = new_image.resize((new_width,img_height),resample=Image.LANCZOS)
+                new_image = new_image.resize((new_width,img_height),resample=Image.BOX)
             if len(text) > 2*new_width/new_height and img_width > new_width:
-                new_image = new_image.resize((int(img_width*(new_height/2)/ch_font_size),img_height),resample=Image.LANCZOS)
+                new_image = new_image.resize((int(img_width*(new_height/2)/ch_font_size),img_height),resample=Image.BOX)
         if (not auto_scale and not scale_sys_font_only):
-            new_image = new_image.resize((int(img_width*scale/100),img_height),resample=Image.LANCZOS)
+            new_image = new_image.resize((int(img_width*scale/100),img_height),resample=Image.BOX)
         # 保存图像
         return new_image
     
 if __name__ == "__main__":
-    ch_font="微软雅黑"
-    asc_font=ch_font
-    FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,200,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=0, roll_asc = False, text="`wheelchair32x32`铁皮青蛙提helloworld醒你sｄ¶ｆｅｉj：工人先锋号，青年文明号无障碍客车0123456789开过来了gj", ch_font_size=20, asc_font_size=24, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=0, scale_sys_font_only=1, new_width = 120, new_height = 32, y_offset = 1, y_offset_asc = 0, style = 0)
+    # t = "[{'char': '在本文中，', 'foreground': '#ffffff', 'background': '0'}, {'char': '我们', 'foreground': '#ffab81', 'background': '0'}, {'char': '介绍了', 'foreground': '#75ffca', 'background': '0'}, {'char': '四种', 'foreground': '#395dff', 'background': '0'}, {'char': '将单个文件', 'foreground': '#ffffff', 'background': '0'}, {'char': '恢复到', 'foreground': '#ff40b6', 'background': '0'}, {'char': '以前版本', 'foreground': '#ffff00', 'background': '0'}, {'char': '的方法', 'foreground': '#ffffff', 'background': '0'}]"
+    t = '以下是一些主要的原因和分析哈分析：\n\n1. 未確認飛行物（UFO）目擊事件\n大量目擊報告\n\nhello\n\n'
+    ch_font="旧宋体"
+    asc_font="旧宋体"
+    FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,255,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
+    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=True, new_width = 128, new_height = 32, y_offset = 0, y_offset_asc = 0, style = [1,0], multi_line = {"stat":True, "line_space": 1.1 })
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]

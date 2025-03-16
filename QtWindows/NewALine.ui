@@ -16,12 +16,6 @@
     <height>250</height>
    </size>
   </property>
-  <property name="maximumSize">
-   <size>
-    <width>650</width>
-    <height>250</height>
-   </size>
-  </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
@@ -101,7 +95,7 @@
      <item>
       <widget class="QLabel" name="label_12">
        <property name="text">
-        <string>灯珠规格</string>
+        <string>点阵类型</string>
        </property>
       </widget>
      </item>
@@ -145,7 +139,7 @@
      <item>
       <widget class="QLabel" name="label_13">
        <property name="text">
-        <string>灯珠规格</string>
+        <string>点阵类型</string>
        </property>
       </widget>
      </item>
@@ -189,7 +183,7 @@
      <item>
       <widget class="QLabel" name="label_14">
        <property name="text">
-        <string>灯珠规格</string>
+        <string>点阵类型</string>
        </property>
       </widget>
      </item>
@@ -233,7 +227,7 @@
      <item>
       <widget class="QLabel" name="label_15">
        <property name="text">
-        <string>灯珠规格</string>
+        <string>点阵类型</string>
        </property>
       </widget>
      </item>

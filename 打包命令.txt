@@ -1,15 +1,5 @@
-python -m nuitka --onefile --disable-console --enable-plugin=pyqt5 --remove-output player.py
 
-用这个：
-python -m nuitka --standalone --disable-console --remove-output --enable-plugin=pyqt5 --windows-icon-from-ico="bitbug_favicon.ico" LEDSimulator.pyw
-
-python -m nuitka --standalone --remove-output --enable-plugin=pyqt5 --windows-icon-from-ico="bitbug_favicon.ico" LEDSimulator.py
-
-python -m nuitka --standalone --disable-console --remove-output --enable-plugin=pyqt5 --lto=no --windows-icon-from-ico="bitbug_favicon.ico" LEDSimulator.pyw
 
 pyinstaller -D -i=./bitbug_favicon.ico LEDSimulator.pyw
 
 
-python -m nuitka --standalone --remove-output --enable-plugin=pyqt5 --lto=no --windows-icon-from-ico="bitbug_favicon.ico" LEDSimulator.py
-
-python -m nuitka --standalone --remove-output --enable-plugin=pyqt5 --no-prefer-optimization --windows-icon-from-ico="bitbug_favicon.ico" LEDSimulator.py
