@@ -1449,15 +1449,15 @@ class ScreenUnit():
         if "y_offset_global" in self.progSheet.keys():
             self.y_offset = self.progSheet["y_offset_global"]
 
-        self.x += self.x_offset
-        self.y += self.y_offset
-
         if "滚动" in self.appearance:
             self.rollSpace = self.progSheet["argv_2"]
             if ("左" in self.appearance or "右"  in self.appearance):
                 self.x = -self.pointNum[0]
             elif ("上" in self.appearance or "下"  in self.appearance):
                 self.y = -self.pointNum[1]
+
+        self.x += self.x_offset
+        self.y += self.y_offset    # 一定要按这个顺序来：先计算滚动，再加偏移，再计算移到中间
 
         if "移到中间" in self.appearance:
             if "左" in self.appearance:

@@ -95,7 +95,7 @@
      <item>
       <widget class="QLabel" name="label_12">
        <property name="text">
-        <string>灯珠规格</string>
+        <string>点阵类型</string>
        </property>
       </widget>
      </item>
@@ -139,7 +139,7 @@
      <item>
       <widget class="QLabel" name="label_13">
        <property name="text">
-        <string>灯珠规格</string>
+        <string>点阵类型</string>
        </property>
       </widget>
      </item>
@@ -183,7 +183,7 @@
      <item>
       <widget class="QLabel" name="label_14">
        <property name="text">
-        <string>灯珠规格</string>
+        <string>点阵类型</string>
        </property>
       </widget>
      </item>
@@ -227,7 +227,7 @@
      <item>
       <widget class="QLabel" name="label_15">
        <property name="text">
-        <string>灯珠规格</string>
+        <string>点阵类型</string>
        </property>
       </widget>
      </item>

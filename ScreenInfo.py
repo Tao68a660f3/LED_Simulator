@@ -1,123 +1,85 @@
+# 屏幕尺寸相关信息
+pointKindDict = {
+    "(6,6)":"midSize",
+    "(6,8)":"midSizeScaled68",
+    "(6,9)":"midSizeScaled",
+    "(8,8)":"bigSize",
+    "(8,10)":"bigSizeScaled810",
+    "(8,12)":"bigSizeScaled",
+    "(9,10)":"bigSizeScaled910",
+    "(12,12)":"bigSize1212",
+    "(4,4)":"smallSize",
+    "(4,6)":"smallSizeScaled",
+    "(3,3)":"miniSize",
+}
+
+
 template_screenInfo = {
-    "midSize_1":{
+    "midSize":{
         "position":[0,0],
         "pointNum":[32,16],
         "pointSize":4,
         "scale":(6,6),
-        # "color0":(80,40,40),
-        # "color1":(255,40,40)
     },
-    "bigSize_1":{
-        "position":[0,0],
-        "pointNum":[32,16],
-        "pointSize":6,
-        "scale":(8,8),
-        # "color0":(80,40,40),
-        # "color1":(255,40,40)
-    },
-    "bigSizeScaled_1":{
-        "position":[0,0],
-        "pointNum":[32,16],
-        "pointSize":6,
-        "scale":(8,12),
-        # "color0":(80,40,40),
-        # "color1":(255,40,40)
-    },
-    "midSizeScaled68_1":{
+    "midSizeScaled68":{
         "position":[0,0],
         "pointNum":[32,16],
         "pointSize":4,
         "scale":(6,8),
-        # "color0":(80,40,40),
-        # "color1":(255,40,40)
     },
-    "midSizeScaled810_1":{
-        "position":[0,0],
-        "pointNum":[32,16],
-        "pointSize":6,
-        "scale":(8,10),
-        # "color0":(80,40,40),
-        # "color1":(255,40,40)
-    },
-    "miniSize_1":{
-        "position":[0,0],
-        "pointNum":[32,16],
-        "pointSize":2,
-        "scale":(3,3),
-        # "color0":(80,40,40),
-        # "color1":(255,40,40)
-    },
-    "smallSize_1":{
-        "position":[0,0],
-        "pointNum":[32,16],
-        "pointSize":3,
-        "scale":(4,4),
-        # "color0":(80,40,40),
-        # "color1":(255,40,40)
-    },
-    "smallSizeScaled_1":{
-        "position":[0,0],
-        "pointNum":[32,16],
-        "pointSize":3,
-        "scale":(4,6),
-        # # "color0":(80,40,40),
-        # # "color1":(255,40,40)
-    },
-    "midSize_RGB":{
+    "midSizeScaled":{
         "position":[0,0],
         "pointNum":[32,16],
         "pointSize":4,
-        "scale":(6,6),
-        # # "color0":(40,40,40)
+        "scale":(6,9),
     },
-    "bigSize_RGB":{
+    "bigSize":{
         "position":[0,0],
         "pointNum":[32,16],
         "pointSize":6,
         "scale":(8,8),
-        # # "color0":(40,40,40)
     },
-    "bigSizeScaled_RGB":{
-        "position":[0,0],
-        "pointNum":[32,16],
-        "pointSize":6,
-        "scale":(8,12),
-        # # "color0":(40,40,40)
-    },
-    "midSizeScaled68_RGB":{
-        "position":[0,0],
-        "pointNum":[32,16],
-        "pointSize":4,
-        "scale":(6,8),
-        # "color0":(40,40,40),
-    },
-    "midSizeScaled810_RGB":{
+    "bigSizeScaled810":{
         "position":[0,0],
         "pointNum":[32,16],
         "pointSize":6,
         "scale":(8,10),
-        # "color0":(40,40,40),
     },
-    "miniSize_RGB":{
+    "bigSizeScaled":{
         "position":[0,0],
         "pointNum":[32,16],
-        "pointSize":2,
-        "scale":(3,3),
-        # # "color0":(40,40,40)
+        "pointSize":6,
+        "scale":(8,12),
     },
-    "smallSize_RGB":{
+    "bigSizeScaled910":{
+        "position":[0,0],
+        "pointNum":[32,16],
+        "pointSize":7,
+        "scale":(9,10),
+    },
+    "bigSize1212":{
+        "position":[0,0],
+        "pointNum":[32,16],
+        "pointSize":9,
+        "scale":(12,12),
+    },
+    "smallSize":{
         "position":[0,0],
         "pointNum":[32,16],
         "pointSize":3,
         "scale":(4,4),
-        # # "color0":(40,40,40)
     },
-    "smallSizeScaled_RGB":{
+    "smallSizeScaled":{
         "position":[0,0],
         "pointNum":[32,16],
         "pointSize":3,
         "scale":(4,6),
-        # # "color0":(40,40,40)
+    },
+    "miniSize":{
+        "position":[0,0],
+        "pointNum":[32,16],
+        "pointSize":2,
+        "scale":(3,3),
     },
 }
 template_monochromeColors = {

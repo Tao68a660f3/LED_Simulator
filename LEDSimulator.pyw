@@ -17,11 +17,9 @@ from ProgSettings import *
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
-version = "体验版"
-release_date = "20250302"
+version = "1.4"
+release_date = "20250316"
 
-# 屏幕尺寸相关信息
-pointKindDict = {"(6,6)":"midSize","(8,8)":"bigSize","(8,12)":"bigSizeScaled","(6,8)":"midSizeScaled68","(8,10)":"midSizeScaled810","(3,3)":"miniSize","(4,4)":"smallSize","(4,6)":"smallSizeScaled"}
 ledTypes = [i for i in pointKindDict.keys()]
 scales = [ast.literal_eval(i) for i in ledTypes]
 flushRateList = ["60","54","50","48","30","24","18","15","5"]
@@ -2099,11 +2097,10 @@ class LineSettler():
         
         if isinstance(row,int):            
             for scn in screenLink.values():
-                colorMode = self.Parent.LineEditor.LineInfoList[row][scn]["colorMode"]
                 scnSize = self.Parent.LineEditor.LineInfoList[row][scn]["screenSize"]
                 pointKind = str(self.Parent.LineEditor.LineInfoList[row][scn]["screenSize"][2]).replace(" ","")
                 pointKind = pointKindDict[pointKind]
-                newScn = copy.deepcopy(template_screenInfo[pointKind+"_"+colorMode])
+                newScn = copy.deepcopy(template_screenInfo[pointKind])
                 newScn["pointNum"] = [scnSize[0],scnSize[1]]
                 self.Parent.LineEditor.LineInfoList[row][scn]["screenUnit"] = [newScn]
 
@@ -2150,13 +2147,12 @@ class LineSettler():
         row = self.Parent.currentLine
         if isinstance(row,int):
             screen = self.get_currentScreen()
-            colorMode = self.Parent.LineEditor.LineInfoList[row][screen]["colorMode"]
             screenSize = [self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
             screenScale = self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][2]
             pointKind = str(screenScale).replace(" ","")
             pointKind = pointKindDict[pointKind]
             layout = []
-            layout.append(copy.deepcopy(template_screenInfo[pointKind+"_"+colorMode]))
+            layout.append(copy.deepcopy(template_screenInfo[pointKind]))
             layout[-1]["position"] = [0,0]
             layout[-1]["pointNum"] = [screenSize[0],screenSize[1]]
 
@@ -2187,13 +2183,13 @@ class LineSettler():
         old_scale = self.customLayouts[index]["scale"]
         return old_pointNum,old_scale
 
-    def add_custom_layout(self,index,pointKind,colormode,wh = "w",w = 0,h = 0):
+    def add_custom_layout(self,index,pointKind,wh = "w",w = 0,h = 0):
         row = self.Parent.currentLine
         if isinstance(row,int):
             self.Parent.ProgramSheetManager.show_program()
             old_pointNum = self.customLayouts[index]["pointNum"]
             old_scale = self.customLayouts[index]["scale"]
-            to_add = copy.deepcopy(template_screenInfo[pointKind+"_"+colormode])
+            to_add = copy.deepcopy(template_screenInfo[pointKind])
             pointScale = to_add["scale"]
             x0,y0 = self.customLayouts[index]["position"][0],self.customLayouts[index]["position"][1]
             if wh == "h":
@@ -2224,10 +2220,10 @@ class LineSettler():
                 to_add,self.customLayouts[index] = self.customLayouts[index],to_add
                 self.customLayouts.append(to_add)
 
-    def change_custom_layout(self,index,pointKind,colormode):
+    def change_custom_layout(self,index,pointKind):
         old_pointNum = self.customLayouts[index]["pointNum"]
         old_scale = self.customLayouts[index]["scale"]
-        to_add = copy.deepcopy(template_screenInfo[pointKind+"_"+colormode])
+        to_add = copy.deepcopy(template_screenInfo[pointKind])
         pointScale = to_add["scale"]
         to_add["position"] = self.customLayouts[index]["position"]
         to_add["pointNum"] = [int(old_pointNum[0]*old_scale[0]/pointScale[0]),int(old_pointNum[1]*old_scale[1]/pointScale[1])]
@@ -2255,11 +2251,11 @@ class LineSettler():
                 w = SelfDefineLayoutDialog.spin_SetWidth.value()
                 h = SelfDefineLayoutDialog.spin_SetHeight.value()
                 if layout == "更改屏幕":
-                    self.change_custom_layout(index,pointKind,colormode)
+                    self.change_custom_layout(index,pointKind)
                 elif layout == "垂直布局":
-                    self.add_custom_layout(index,pointKind,colormode,"h",w,h)
+                    self.add_custom_layout(index,pointKind,"h",w,h)
                 elif layout == "水平布局":
-                    self.add_custom_layout(index,pointKind,colormode,"w",w,h)
+                    self.add_custom_layout(index,pointKind,"w",w,h)
                 self.layoutHistory.append(copy.deepcopy(self.customLayouts))
                 self.layoutHistoryCount = len(self.layoutHistory)-1
                 self.show_custom_layout_btn()
@@ -2305,7 +2301,7 @@ class LineSettler():
         return p,si
 
     def get_toadd_screenunit(self,xy,npxnpy,sizeName,ColorMode,singColor):
-        scname = sizeName+"_"+ColorMode
+        scname = sizeName   # 这个function需要colorMode
         scn = copy.deepcopy(template_screenInfo[scname])
         scn["position"] = xy
         scn["pointNum"] = npxnpy
