@@ -230,7 +230,7 @@ class ScreenController(QWidget):
         # if self.Parent is not None:
         #     self.Parent.change_currentDisplayProgIndex(self)
         self.programTimeout()
-        self.start_recording_gif()
+        QTimer.singleShot(self.flushRate*2, self.start_recording_gif)
 
     def stop_recording_gif(self):
         self.gifRecording = False
@@ -571,13 +571,13 @@ class ScreenController(QWidget):
 
     def count_fps(self):
         self.commonFps = (self.commonFps + self.fpsCounter*self.fpsChkSec) // 2
+        self.gifFps = min(int(self.commonFps*0.7+self.gifFps*0.3),50)
         self.fpsCounter = 0
         self.setWindowTitle(f'{self.toDisplay} @ {self.commonFps} FPS')
 
     def get_fps(self):
-        fps = self.commonFps
-        self.gifFps = min(max(fps,self.gifFps),50)
-        fps = str(fps)
+        fps = str(self.commonFps)
+        # fps += f"  {self.toDisplay} GIF_Fps:({self.gifFps})  "
         if self.gifRecording:
             fps += f"  {self.toDisplay} 正在录制GIF({self.gifFps})  "
         return fps
