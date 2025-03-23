@@ -17,7 +17,7 @@ from ProgSettings import *
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
-version = "1.4"
+version = "1.4.1"
 release_date = "20250316"
 
 ledTypes = [i for i in pointKindDict.keys()]
@@ -301,8 +301,8 @@ class SelfDefineLayout(QDialog,Ui_SelfDefineScreen):
         can_h = int(self.pn[1]*self.ps[1]/pointScale[1])
         self.lab_AvailWidth.setText(str(can_w))
         self.lab_AvailHeight.setText(str(can_h))
-        self.spin_SetWidth.setMinimum(4)
-        self.spin_SetHeight.setMinimum(4)
+        self.spin_SetWidth.setMinimum(1)
+        self.spin_SetHeight.setMinimum(1)
         self.spin_SetWidth.setMaximum(can_w)
         self.spin_SetHeight.setMaximum(can_h)
         self.spin_SetWidth.setValue(can_w)
@@ -1721,10 +1721,10 @@ class ProgramSettler():
             self.Parent.label_Argv_3.setText("步长")
             self.Parent.spinBox_Argv_1.setMaximum(60)
             self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(256)
+            self.Parent.spinBox_Argv_2.setMaximum(65535)
             self.Parent.spinBox_Argv_2.setMinimum(-1)
             self.Parent.spinBox_Argv_2.setValue(-1)
-            self.Parent.spinBox_Argv_3.setMaximum(60)
+            self.Parent.spinBox_Argv_3.setMaximum(65535)
             self.Parent.spinBox_Argv_3.setMinimum(1)
         elif "移到" in mode:
             self.Parent.label_Argv_1.setText("移动速度")
@@ -1732,9 +1732,9 @@ class ProgramSettler():
             self.Parent.label_Argv_3.setText("步长")
             self.Parent.spinBox_Argv_1.setMaximum(60)
             self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(60)
+            self.Parent.spinBox_Argv_2.setMaximum(65535)
             self.Parent.spinBox_Argv_2.setMinimum(1)
-            self.Parent.spinBox_Argv_3.setMaximum(60)
+            self.Parent.spinBox_Argv_3.setMaximum(65535)
             self.Parent.spinBox_Argv_3.setMinimum(1)
         elif "移开" in mode:
             self.Parent.label_Argv_1.setText("移动速度")
@@ -1742,9 +1742,9 @@ class ProgramSettler():
             self.Parent.label_Argv_3.setText("步长")
             self.Parent.spinBox_Argv_1.setMaximum(60)
             self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(60)
+            self.Parent.spinBox_Argv_2.setMaximum(65535)
             self.Parent.spinBox_Argv_2.setMinimum(1)
-            self.Parent.spinBox_Argv_3.setMaximum(60)
+            self.Parent.spinBox_Argv_3.setMaximum(65535)
             self.Parent.spinBox_Argv_3.setMinimum(1)
         elif "跳跃" in mode:
             self.Parent.label_Argv_1.setText("移动速度")
@@ -1752,9 +1752,9 @@ class ProgramSettler():
             self.Parent.label_Argv_3.setText("停靠时间")
             self.Parent.spinBox_Argv_1.setMaximum(60)
             self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(32)
+            self.Parent.spinBox_Argv_2.setMaximum(65535)
             self.Parent.spinBox_Argv_2.setMinimum(1)
-            self.Parent.spinBox_Argv_3.setMaximum(60)
+            self.Parent.spinBox_Argv_3.setMaximum(65535)
             self.Parent.spinBox_Argv_3.setMinimum(0)
         elif "翻屏" in mode:
             self.Parent.label_Argv_1.setText("移动速度")
@@ -1762,9 +1762,9 @@ class ProgramSettler():
             self.Parent.label_Argv_3.setText("停靠时间")
             self.Parent.spinBox_Argv_1.setMaximum(60)
             self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(32)
+            self.Parent.spinBox_Argv_2.setMaximum(65535)
             self.Parent.spinBox_Argv_2.setMinimum(1)
-            self.Parent.spinBox_Argv_3.setMaximum(60)
+            self.Parent.spinBox_Argv_3.setMaximum(65535)
             self.Parent.spinBox_Argv_3.setMinimum(0)
         elif "扇形圆形" in mode:
             self.Parent.label_Argv_1.setText("综合速度")
@@ -1772,7 +1772,7 @@ class ProgramSettler():
             self.Parent.label_Argv_3.setText("连续移动？")
             self.Parent.spinBox_Argv_1.setMaximum(120)
             self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(64)
+            self.Parent.spinBox_Argv_2.setMaximum(65535)
             self.Parent.spinBox_Argv_2.setMinimum(2)
             self.Parent.spinBox_Argv_3.setMaximum(1)
             self.Parent.spinBox_Argv_3.setMinimum(0)
@@ -1782,7 +1782,7 @@ class ProgramSettler():
             self.Parent.label_Argv_3.setText("显示窗户？")
             self.Parent.spinBox_Argv_1.setMaximum(60)
             self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(1024)
+            self.Parent.spinBox_Argv_2.setMaximum(65535)
             self.Parent.spinBox_Argv_2.setMinimum(2)
             self.Parent.spinBox_Argv_3.setMaximum(1)
             self.Parent.spinBox_Argv_3.setMinimum(0)
@@ -1799,9 +1799,9 @@ class ProgramSettler():
             self.Parent.label_Argv_1.setText("亮时长")
             self.Parent.label_Argv_2.setText("灭时长")
             self.Parent.label_Argv_3.setText("")
-            self.Parent.spinBox_Argv_1.setMaximum(60)
+            self.Parent.spinBox_Argv_1.setMaximum(65535)
             self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(60)
+            self.Parent.spinBox_Argv_2.setMaximum(65535)
             self.Parent.spinBox_Argv_2.setMinimum(1)
             self.Parent.spinBox_Argv_3.setEnabled(False)
         elif mode == "静止":
@@ -2227,7 +2227,10 @@ class LineSettler():
         pointScale = to_add["scale"]
         to_add["position"] = self.customLayouts[index]["position"]
         to_add["pointNum"] = [int(old_pointNum[0]*old_scale[0]/pointScale[0]),int(old_pointNum[1]*old_scale[1]/pointScale[1])]
-        self.customLayouts[index] = to_add
+        if 0 not in to_add["pointNum"]:
+            self.customLayouts[index] = to_add
+        else:
+            print("无效尺寸！")
 
     def onButtonClick(self,colormode):
         row = self.Parent.currentLine
