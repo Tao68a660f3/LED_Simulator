@@ -68,8 +68,13 @@ class ASC_Bmp_Reader():
                 l = r
                 r = tmp
 
-            if asc == " ":
-                r = l+int(0.25*self.ascii_size[0])    ####!!
+                if asc == " ":
+                    r = l+int(0.25*self.ascii_size[0])    ####!!
+                
+            else:
+                if asc == " ":
+                    ch = Image.new("1", (r-l, ch.height))
+                    r -= 1
 
             r = r+2 if r+2 <= self.ascii_size[0] else r+1
         else:
@@ -248,7 +253,7 @@ class BmpCreater():
     # 显示屏组件编写时，让图片默认位置是水平竖直均居中，如果横向滚动，竖直居中，竖直滚动，水平居中！
     # color_type:"RGB"和"1"两种
     def __init__(self,Manager=FontManager(),color_type="RGB",color=(255,255,255),ch_font="",asc_font="",only_sysfont = False,relative_path = ""):
-        self.invisibleChr = ["\n","\u2029"]
+        self.lineBreakChr = ["\n","\u2029"]
         self.FontManager = Manager
         self.only_sysfont = only_sysfont
         self.relative_path = relative_path
@@ -454,7 +459,7 @@ class BmpCreater():
                     this_take_size = int(current_size * ((100 + space) / 100))
                     next_take_size = int(next_size * ((100 + space) / 100))
 
-                if image_list[i]["chr"] not in self.invisibleChr:
+                if image_list[i]["chr"] not in self.lineBreakChr:
                     if t_li_size == 0 or t_li_size + this_take_size <= exps:
                         t_li.append({"img": image_list[i]["img"], "chr": None})
                         t_li_size += this_take_size
@@ -464,12 +469,12 @@ class BmpCreater():
                     s = True
                 if i+1 == len(image_list):
                     s = True
-                if image_list[i]["chr"] in self.invisibleChr:
+                if image_list[i]["chr"] in self.lineBreakChr:
                     s = True
                     if i-1 >= 0:
-                        if image_list[i-1]["chr"] not in self.invisibleChr and len(t_li) == 0:
+                        if image_list[i-1]["chr"] not in self.lineBreakChr and len(t_li) == 0:
                             s = False
-                    if s:
+                    if s and not image_list[i]["chr"] in self.lineBreakChr:
                         t_li.append({"img": image_list[i]["img"], "chr": None})
 
                 if s:
@@ -566,7 +571,7 @@ class BmpCreater():
                     font_tasks = list(sub_task)
                     for chr in font_tasks:
                         this_chr = chr
-                        if chr in self.invisibleChr:
+                        if chr in self.lineBreakChr:
                             chr = " "
                         if chr.isascii():
                             ch = self.ASC_Reader.get_text_bmp(chr,y_offset_asc,asc_font_size,ch_bold_size_x,ch_bold_size_y,100)
