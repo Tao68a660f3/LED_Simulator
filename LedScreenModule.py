@@ -863,7 +863,7 @@ class ScreenController(QWidget):
                         obj.rollCounter = 0
                     else:
                         if obj.rollCounter <= arg3*self.expectedFps:
-                            obj.counter += obj.rollCounter // arg3*self.expectedFps
+                            obj.counter += obj.rollCounter // (arg3*self.expectedFps)
                         if obj.rollCounter > arg3*self.expectedFps:
                             obj.x = -obj.pointNum[0]+obj.Bitmap.size[0]
                         if obj.rollCounter > 2*arg3*self.expectedFps:
@@ -874,7 +874,7 @@ class ScreenController(QWidget):
                         obj.rollCounter = 0
                     else:
                         if obj.rollCounter <= arg3*self.expectedFps:
-                            obj.counter += obj.rollCounter // arg3*self.expectedFps
+                            obj.counter += obj.rollCounter // (arg3*self.expectedFps)
                         if obj.rollCounter > arg3*self.expectedFps:
                             obj.x = 0
                         if obj.rollCounter > 2*arg3*self.expectedFps:
@@ -891,7 +891,7 @@ class ScreenController(QWidget):
                         obj.rollCounter = 0
                     else:
                         if obj.rollCounter <= arg3*self.expectedFps:
-                            obj.counter += obj.rollCounter // arg3*self.expectedFps
+                            obj.counter += obj.rollCounter // (arg3*self.expectedFps)
                         if obj.rollCounter > arg3*self.expectedFps:
                             obj.x = 0
                         if obj.rollCounter > 2*arg3*self.expectedFps:
@@ -902,7 +902,7 @@ class ScreenController(QWidget):
                         obj.rollCounter = 0
                     else:
                         if obj.rollCounter <= arg3*self.expectedFps:
-                            obj.counter += obj.rollCounter // arg3*self.expectedFps
+                            obj.counter += obj.rollCounter // (arg3*self.expectedFps)
                         if obj.rollCounter > arg3*self.expectedFps:
                             obj.x = -obj.pointNum[0]+obj.Bitmap.size[0]
                         if obj.rollCounter > 2*arg3*self.expectedFps:
@@ -919,7 +919,7 @@ class ScreenController(QWidget):
                         obj.rollCounter = 0
                     else:
                         if obj.rollCounter <= arg3*self.expectedFps:
-                            obj.counter += obj.rollCounter // arg3*self.expectedFps
+                            obj.counter += obj.rollCounter // (arg3*self.expectedFps)
                         if obj.rollCounter > arg3*self.expectedFps:
                             obj.y = -obj.pointNum[1]+obj.Bitmap.size[1]
                         if obj.rollCounter > 2*arg3*self.expectedFps:
@@ -930,7 +930,7 @@ class ScreenController(QWidget):
                         obj.rollCounter = 0
                     else:
                         if obj.rollCounter <= arg3*self.expectedFps:
-                            obj.counter += obj.rollCounter // arg3*self.expectedFps
+                            obj.counter += obj.rollCounter // (arg3*self.expectedFps)
                         if obj.rollCounter > arg3*self.expectedFps:
                             obj.y = 0
                         if obj.rollCounter > 2*arg3*self.expectedFps:
@@ -947,7 +947,7 @@ class ScreenController(QWidget):
                         obj.rollCounter = 0
                     else:
                         if obj.rollCounter <= arg3*self.expectedFps:
-                            obj.counter += obj.rollCounter // arg3*self.expectedFps
+                            obj.counter += obj.rollCounter // (arg3*self.expectedFps)
                         if obj.rollCounter > arg3*self.expectedFps:
                             obj.y = 0
                         if obj.rollCounter > 2*arg3*self.expectedFps:
@@ -958,7 +958,7 @@ class ScreenController(QWidget):
                         obj.rollCounter = 0
                     else:
                         if obj.rollCounter <= arg3*self.expectedFps:
-                            obj.counter += obj.rollCounter // arg3*self.expectedFps
+                            obj.counter += obj.rollCounter // (arg3*self.expectedFps)
                         if obj.rollCounter > arg3*self.expectedFps:
                             obj.y = -obj.pointNum[1]+obj.Bitmap.size[1]
                         if obj.rollCounter > 2*arg3*self.expectedFps:

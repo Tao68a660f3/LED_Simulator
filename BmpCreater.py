@@ -465,16 +465,16 @@ class BmpCreater():
                         t_li_size += this_take_size
 
                 s = False
-                if t_li_size + next_take_size > exps:
+                if t_li_size + next_take_size > exps:  # 下一个字符在行尾，s用于换行
                     s = True
-                if i+1 == len(image_list):
+                if i+1 == len(image_list):    # 所有字符的最后一个字符
                     s = True
-                if image_list[i]["chr"] in self.lineBreakChr:
+                if image_list[i]["chr"] in self.lineBreakChr:  # 换行符
                     s = True
                     if i-1 >= 0:
                         if image_list[i-1]["chr"] not in self.lineBreakChr and len(t_li) == 0:
                             s = False
-                    if s and not image_list[i]["chr"] in self.lineBreakChr:
+                    if image_list[i]["chr"] in self.lineBreakChr and len(t_li) == 0:  # 条件：是换行符且是行首，添加以占位
                         t_li.append({"img": image_list[i]["img"], "chr": None})
 
                 if s:
