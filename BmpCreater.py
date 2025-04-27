@@ -471,27 +471,27 @@ class BmpCreater():
                         t_li_size += this_take_size
 
                 s = False
-                t_li_length = len(t_li)
-                if t_li_size + next_take_size > exps:  # 下一个字符在行尾，s用于换行
-                    s = True
-                    auto_s_ed = True
-                if i+1 == len(image_list):    # 所有字符的最后一个字符
-                    s = True
-                    auto_s_ed = True
-                if cnt_chr in self.lineBreakChr:  # 换行符
-                    if t_li_length == 0 and not auto_s_ed:  # 条件：是换行符且是行首，添加以占位
-                        t_li.append({"img": image_list[i]["img"], "chr": None})
+                if cnt_chr not in self.lineBreakChr:    # 不是换行符
+                    if t_li_size + next_take_size > exps:  # 下一个字符在行尾，s用于换行
+                        s = True
+                        auto_s_ed = True
+                    if i+1 == len(image_list):    # 所有字符的最后一个字符
+                        s = True
+                        auto_s_ed = True
+                        
+                else:  # 换行符
+                    if len(t_li) == 0:
+                        if not auto_s_ed:
+                            t_li.append({"img": image_list[i]["img"], "chr": None})
+                            s = True
+                            auto_s_ed = False
+                        if auto_s_ed:
+                            auto_s_ed = False
+                    else:
                         s = True
                         auto_s_ed = False
-                    if t_li_length > 0:
-                        s = True
-                        auto_s_ed = False
-                    if pre_chr not in self.lineBreakChr and t_li_length == 0 and pre_chr is not None:
-                        s = False
-                    if nxt_chr is None:
-                        t_li.append({"img": image_list[i]["img"], "chr": None})
 
-                if s:
+                if s:    # 换行操作
                     line_img = self.hconcat_images(t_li, vertical, space, style, {"stat": False, "line_space": line_space, "exp_size": exp_size})
                     li.append({"img": line_img, "chr": None})
                     t_li = []
@@ -625,7 +625,7 @@ class BmpCreater():
     
 if __name__ == "__main__":
     # t = "[{'char': '在本文中，', 'foreground': '#ffffff', 'background': '0'}, {'char': '我们', 'foreground': '#ffab81', 'background': '0'}, {'char': '介绍了', 'foreground': '#75ffca', 'background': '0'}, {'char': '四种', 'foreground': '#395dff', 'background': '0'}, {'char': '将单个文件', 'foreground': '#ffffff', 'background': '0'}, {'char': '恢复到', 'foreground': '#ff40b6', 'background': '0'}, {'char': '以前版本', 'foreground': '#ffff00', 'background': '0'}, {'char': '的方法', 'foreground': '#ffffff', 'background': '0'}]"
-    t = '以下是一些主要的原因和分析哈分析：\n\n1. 未確認飛行物（UFO）目擊事件\n大量目擊報告\n\nhello\n\n\n'
+    t = '\n\n换行测试\n测试开始\n第一项：\n第二项：\n\n第三项：\n测试文本\n第四项：\n测试文本\n\n第五项：\n测试文本\n\n\n第六项：\n测试文本测试文本\n第七项：\n测试文本测试文本\n\n第八项：\n测试文本测试文本\n\n\n测试结束\n\n'
 #     t = '''\n\n　！＂＃＄％＆＇（）＊＋，－．／\n\n
 # ０１２３４５６７８９：；＜＝＞？
 # ＠ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯ
@@ -635,7 +635,7 @@ if __name__ == "__main__":
     ch_font="宋体"
     asc_font="ASC1608"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,255,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=True, new_width = 256, new_height = 32, y_offset = 0, y_offset_asc = 0, style = [1,0], multi_line = {"stat":True, "line_space": 1.0 })
+    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=True, new_width = 128, new_height = 32, y_offset = 0, y_offset_asc = 0, style = [-1,0], multi_line = {"stat":True, "line_space": 1.0 })
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]
