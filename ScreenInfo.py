@@ -1,18 +1,4 @@
 # 屏幕尺寸相关信息
-pointKindDict = {
-    "(6,6)":"midSize",
-    "(6,8)":"midSizeScaled68",
-    "(6,9)":"midSizeScaled",
-    "(8,8)":"bigSize",
-    "(8,10)":"bigSizeScaled810",
-    "(8,12)":"bigSizeScaled",
-    "(9,10)":"bigSizeScaled910",
-    "(12,12)":"bigSize1212",
-    "(4,4)":"smallSize",
-    "(4,6)":"smallSizeScaled",
-    "(3,3)":"miniSize",
-}
-
 
 template_screenInfo = {
     "midSize":{
@@ -82,6 +68,13 @@ template_screenInfo = {
         "scale":(3,3),
     },
 }
+
+pointKindDict = {}
+
+for key,value in template_screenInfo.items():
+	pointKindDict[str(value["scale"]).replace(" ","")] = key
+
+
 template_monochromeColors = {
     "white":((60,60,60),(255,255,255)),
     "red":((80,60,60),(255,90,90)),
