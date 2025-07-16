@@ -60,7 +60,7 @@ class ScreenController(QWidget):
         self.gifRecording = False
         self.progStopGif = False
         # self.endGifFrame = 0
-        self.fpsChkSec = 2
+        self.fpsChkSecCalcNum = 2
         self.fpsCounter = 0
         self.commonFps = flushRate
         self.expectedFps = flushRate
@@ -89,7 +89,7 @@ class ScreenController(QWidget):
         self.timer2.start(200)
         self.timer3 = QTimer(self)
         self.timer3.timeout.connect(self.count_fps)
-        self.timer3.start(1000//self.fpsChkSec)
+        self.timer3.start(1000//self.fpsChkSecCalcNum)
 
         self.read_setting()
         self.setWindowTitle(self.toDisplay)
@@ -101,6 +101,13 @@ class ScreenController(QWidget):
         self.setContextMenuPolicy(Qt.CustomContextMenu) # 右键菜单
         self.customContextMenuRequested.connect(self.showContextMenu)
         self.counterPlusOne.connect(self.triggerProgramTimeout)
+
+    def setInitFps(self):
+        self.commonFps = self.expectedFps
+
+    def initFps(self):
+        self.setInitFps()
+        QTimer.singleShot(400, self.setInitFps)
 
     def read_setting(self):
         setting_file = "./resources/settings.info"
@@ -265,6 +272,8 @@ class ScreenController(QWidget):
             for g in self.tmpGifNames:
                 g = os.path.join("./ScreenShots",g)
                 os.remove(g)
+
+        self.initFps()
 
     def checkTimeStr(self):
         chinese_week_day = {
@@ -433,6 +442,7 @@ class ScreenController(QWidget):
                     print("programTimeout:", e)
 
         self.checkTimeStr()
+        self.initFps()
 
     def backgroundPerformer(self):
         self.maskMode = False
@@ -570,7 +580,7 @@ class ScreenController(QWidget):
                 u.rollCounter += 1
 
     def count_fps(self):
-        self.commonFps = (self.commonFps + self.fpsCounter*self.fpsChkSec) // 2
+        self.commonFps = (self.commonFps + self.fpsCounter*self.fpsChkSecCalcNum) // 2
         self.gifFps = min(int(self.commonFps*0.7+self.gifFps*0.3),50)
         self.fpsCounter = 0
         self.setWindowTitle(f'{self.toDisplay} @ {self.commonFps} FPS')
