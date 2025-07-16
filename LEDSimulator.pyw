@@ -18,7 +18,7 @@ from ProgSettings import *
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
 version = "1.4.2"
-release_date = "20250612"
+release_date = "20250716"
 
 ledTypes = [i for i in pointKindDict.keys()]
 scales = [ast.literal_eval(i) for i in ledTypes]
@@ -946,7 +946,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
     def make_menu(self):
         fileMenu = self.menuBar().addMenu('文件')
-        newAction = QAction('新建', self)
+        newAction = QAction('新建BSU文件', self)
         newAction.triggered.connect(self.new_file)
         fileMenu.addAction(newAction)
         openAction = QAction('打开', self)
