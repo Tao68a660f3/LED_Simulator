@@ -2,7 +2,7 @@ import sys, time, datetime, os, imageio, random, re
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction
 from PyQt5.QtGui import QPainter, QColor, QImage
-from PyQt5.QtCore import QTimer, Qt, QThread, pyqtSignal
+from PyQt5.QtCore import QTimer, Qt, QThread, QRunnable, QThreadPool, pyqtSignal
 from PIL import Image
 from ScreenInfo import *
 from LineInfo import *
@@ -13,6 +13,8 @@ undefinedProgramSheet = [['测试信息', 900, {'frontScreen': [[{'position': [0
 sector_area_eft = ["向右扇形圆形","向左扇形圆形","向下扇形圆形","向上扇形圆形"]
 hwindow_area_eft = ["向左开百叶窗","向右开百叶窗","向上开百叶窗","向下开百叶窗","向左关百叶窗","向右关百叶窗","向上关百叶窗","向下关百叶窗"]
 window_area_eft = ["开水平窗户","关水平窗户","开竖直窗户","关竖直窗户"]
+
+
 
 class Thread_BmpUpdater(QThread):
     def __init__(self, parent = None):
@@ -28,6 +30,50 @@ class Thread_BmpUpdater(QThread):
 
     def stop(self):
         self.is_running = False
+
+class SaveGifTask(QRunnable):
+    def __init__(self, parent, frames, tmpGifNames, toDisplay, gifFps, temp):
+        super().__init__()
+        self.parent = parent
+        self.frames = frames.copy() if frames else []
+        self.tmpGifNames = tmpGifNames
+        self.toDisplay = toDisplay
+        self.gifFps = gifFps
+        self.temp = temp
+
+    def run(self):
+        try:
+            # 保存未完成的帧（无论 temp 是 True 还是 False）
+            if self.frames:
+                temp_file = datetime.datetime.now().strftime(f"temp_{self.toDisplay}_%Y%m%d%H%M%S.gif")
+                self.frames[0].save(
+                    os.path.join("./ScreenShots", temp_file),
+                    save_all=True,
+                    append_images=self.frames[1:],
+                    optimize=False,
+                    duration=100,
+                    loop=0,
+                    disposal=2
+                )
+                self.frames = []
+                self.tmpGifNames.append(temp_file)
+
+            # 如果 temp=False，合并临时文件
+            if not self.temp:
+                output_file = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S_output.gif")
+                combined_gif = imageio.get_writer(os.path.join("./ScreenShots", output_file), fps=self.gifFps, loop=0)
+                for g in self.tmpGifNames:
+                    gif = imageio.get_reader(os.path.join("./ScreenShots", g))
+                    for frame in gif:
+                        combined_gif.append_data(frame)
+                    gif.close()
+                combined_gif.close()
+                self.frames = []
+                # 清理临时文件
+                for g in self.tmpGifNames:
+                    os.remove(os.path.join("./ScreenShots", g))
+        except Exception as e:
+            print("Error in save_gif thread:", e)
 
 class ScreenController(QWidget):
     counterPlusOne = pyqtSignal()
@@ -65,7 +111,7 @@ class ScreenController(QWidget):
         self.commonFps = flushRate
         self.expectedFps = flushRate
         self.owingFps = 0
-        self.gifFps = 0
+        self.gifFps = flushRate
         self.flushRate = 1000 // flushRate
         self.units = []
         self.gifFrames = []
@@ -103,7 +149,7 @@ class ScreenController(QWidget):
         self.counterPlusOne.connect(self.triggerProgramTimeout)
 
     def setInitFps(self):
-        self.commonFps = self.expectedFps
+        self.commonFps = self.gifFps
 
     def initFps(self):
         self.setInitFps()
@@ -246,34 +292,19 @@ class ScreenController(QWidget):
     def p_stop_recording_gif(self):
         self.progStopGif = True
 
-    def save_gif(self, temp = False):
-        if temp:
-            try:
-                fileName = datetime.datetime.now().strftime(f"temp_{self.toDisplay}_%Y%m%d%H%M%S.gif")
-                self.gifFrames[0].save(os.path.join("./ScreenShots",fileName), save_all=True, append_images=self.gifFrames[1:], optimize=False, duration=100, loop=0, disposal=2)
-                self.gifFrames = []
-                self.tmpGifNames.append(fileName)
-            except Exception as e:
-                print("save_gif: ", e)
-        else:
-            self.save_gif(True)
-            fileName = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S_output.gif")
-            combined_gif = imageio.get_writer(os.path.join("./ScreenShots",fileName), fps = self.gifFps, loop = 0)
-            print(self.tmpGifNames)
-            for g in self.tmpGifNames:
-                g = os.path.join("./ScreenShots",g)
-                gif = imageio.get_reader(g)
-                for frame in gif:
-                    combined_gif.append_data(frame)
-                gif.close()
-            
-            combined_gif.close()
+    def save_gif(self, temp=False):
+        task = SaveGifTask(
+            parent=self,
+            frames=self.gifFrames,
+            tmpGifNames=self.tmpGifNames,
+            toDisplay=self.toDisplay,
+            gifFps=self.gifFps,
+            temp=temp
+        )
+        self.gifFrames = []  # 清空帧（仅 temp=True 时需要）
+        QThreadPool.globalInstance().start(task)
 
-            for g in self.tmpGifNames:
-                g = os.path.join("./ScreenShots",g)
-                os.remove(g)
-
-        self.initFps()
+        # self.initFps()
 
     def checkTimeStr(self):
         chinese_week_day = {
