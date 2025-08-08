@@ -17,8 +17,8 @@ from ProgSettings import *
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
-version = "1.4.4(内测版)"
-release_date = "20250728"
+version = "1.4.2"
+release_date = "20250716"
 
 ledTypes = [i for i in pointKindDict.keys()]
 scales = [ast.literal_eval(i) for i in ledTypes]
@@ -26,6 +26,7 @@ flushRateList = ["60","54","50","48","30","24","18","15","5"]
 
 screenLink = {"前路牌":"frontScreen","后路牌":"backScreen","前侧路牌":"frontSideScreen","后侧路牌":"backSideScreen"}
 showStyles = ["静止","闪烁","向左滚动","向右滚动","向上滚动","向下滚动","跳跃向左移动","跳跃向右移动","跳跃向上移动","跳跃向下移动","向左移到中间","向右移到中间","向上移到中间","向下移到中间","中间向左移开","中间向右移开","中间向上移开","中间向下移开","向左扇形圆形","向右扇形圆形","向上扇形圆形","向下扇形圆形","向左开百叶窗","向右开百叶窗","向上开百叶窗","向下开百叶窗","开水平窗户","关水平窗户","开竖直窗户","关竖直窗户","向左翻屏","向右翻屏","向上翻屏","向下翻屏","上下反复跳跃移动",]
+
 
 
 class AboutWindow(QWidget,Ui_Form):
@@ -155,7 +156,7 @@ class NewALine(QDialog,Ui_NewALine):
         super().__init__(parent)
         self.setupUi(self)
         self.initUI()
-        self.setWindowTitle("LED模拟器 新建线路")
+        self.setWindowTitle("LED模拟器 新增线路")
         self.setModal(True)
 
     def initUI(self):
@@ -1018,14 +1019,15 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         if not self.thisFileSaved:
             self.save_file(pop=True)
         # 删除屏幕截图文件夹中可能存在的GIF临时文件
-        try:
-            figure = os.listdir("./ScreenShots")
-            for f in figure:
-                if f.startswith("temp"):
-                    tempGIF = os.path.join("./ScreenShots",f)
-                    os.remove(tempGIF)
-        except:
-            pass
+        if os.path.exists(GIF_TEMP_DIR):
+            try:
+                figure = os.listdir(GIF_TEMP_DIR)
+                for f in figure:
+                    if f.startswith("temp"):
+                        tempGIF = os.path.join(GIF_TEMP_DIR,f)
+                        os.remove(tempGIF)
+            except:
+                pass
         self.close()
 
     def getFps(self):

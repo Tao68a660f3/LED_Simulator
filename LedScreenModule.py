@@ -14,7 +14,168 @@ sector_area_eft = ["向右扇形圆形","向左扇形圆形","向下扇形圆形
 hwindow_area_eft = ["向左开百叶窗","向右开百叶窗","向上开百叶窗","向下开百叶窗","向左关百叶窗","向右关百叶窗","向上关百叶窗","向下关百叶窗"]
 window_area_eft = ["开水平窗户","关水平窗户","开竖直窗户","关竖直窗户"]
 
+GIF_TEMP_DIR = "./ScreenShots/temp"
+GIF_OUTPUT_DIR = "./ScreenShots"
 
+class SaveGifTask(QRunnable):
+    def __init__(self, parent, frames, tmpGifNames, toDisplay, gifFps, temp, 
+                 temp_dir=GIF_TEMP_DIR, 
+                 output_dir=GIF_OUTPUT_DIR):
+        super().__init__()
+        self.parent = parent
+        self.frames = frames.copy() if frames else []
+        self.tmpGifNames = tmpGifNames
+        self.toDisplay = toDisplay
+        self.gifFps = gifFps
+        self.temp = temp
+        self.temp_dir = temp_dir  # 临时文件目录
+        self.output_dir = output_dir  # 最终输出目录
+        
+        # 确保目录存在
+        os.makedirs(self.temp_dir, exist_ok=True)
+        os.makedirs(self.output_dir, exist_ok=True)
+
+    def _wait_for_file_ready(self, file_path, max_retries=10, delay=0.5):
+        """等待文件就绪（存在且未被占用）"""
+        retries = 0
+        while retries < max_retries:
+            # 检查文件是否存在
+            if not os.path.exists(file_path):
+                time.sleep(delay)
+                retries += 1
+                continue
+            
+            # 检查文件是否可读
+            try:
+                with open(file_path, 'rb') as f:
+                    # 尝试读取文件头
+                    header = f.read(6)
+                    # 检查是否是GIF文件头
+                    if header in (b'GIF87a', b'GIF89a'):
+                        return True
+            except (IOError, OSError):
+                # 文件可能被占用，等待后重试
+                pass
+            
+            time.sleep(delay)
+            retries += 1
+        
+        return False
+
+    def _sort_files_by_timestamp(self, file_paths):
+        """根据文件名中的时间戳对文件进行排序"""
+        # 提取文件名中的时间戳部分
+        def extract_timestamp(path):
+            filename = os.path.basename(path)
+            # 文件名格式: temp_{display}_YYYYmmddHHMMSS_ffffff.gif
+            parts = filename.split('_')
+            if len(parts) >= 3:
+                # 组合日期和时间部分: YYYYmmddHHMMSS_ffffff
+                return parts[2] + '_' + parts[3].split('.')[0]
+            return filename  # 如果格式不符合预期，返回原始文件名
+        
+        # 按时间戳排序
+        return sorted(file_paths, key=extract_timestamp)
+
+    def run(self):
+        try:
+            # 保存未完成的帧（无论 temp 是 True 还是 False）
+            if self.frames:
+                # 生成唯一文件名（使用毫秒避免重复）
+                temp_file = datetime.datetime.now().strftime(
+                    f"temp_{self.toDisplay}_%Y%m%d%H%M%S_%f.gif"  # 添加毫秒避免重复
+                )
+                temp_path = os.path.join(self.temp_dir, temp_file)
+                
+                # 第一时刻记录临时文件路径
+                self.tmpGifNames.append(temp_path)
+                print(f"temped: {temp_file}")
+                
+                # 然后保存文件
+                self.frames[0].save(
+                    temp_path,
+                    save_all=True,
+                    append_images=self.frames[1:],
+                    optimize=False,
+                    duration=100,
+                    loop=0,
+                    disposal=2
+                )
+                
+                self.frames = []  # 清空帧数据
+
+            # 如果 temp=False，合并临时文件
+            if not self.temp:
+                # 去重处理：确保只处理唯一的文件
+                unique_files = list(set(self.tmpGifNames))
+                
+                # 按时间戳排序文件
+                sorted_files = self._sort_files_by_timestamp(unique_files)
+                
+                # 使用第一个临时文件的时间戳作为输出文件名基础
+                if sorted_files:
+                    base_name = os.path.basename(sorted_files[0])
+                    # 提取时间戳部分: temp_{display}_YYYYmmddHHMMSS_ffffff.gif
+                    parts = base_name.split('_')
+                    if len(parts) >= 4:
+                        # 组合日期和时间部分（到秒）
+                        time_str = parts[2]  # 秒级时间戳
+                    else:
+                        time_str = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                else:
+                    time_str = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                
+                output_file = f"{self.toDisplay}_{time_str}_output.gif"
+                output_path = os.path.join(self.output_dir, output_file)
+                
+                # 等待所有临时文件就绪
+                all_ready = True
+                print("Wait for all temped gif file ready...")
+                for gif_path in sorted_files:
+                    if not self._wait_for_file_ready(gif_path):
+                        print(f"Timeout waiting for file: {gif_path}")
+                        all_ready = False
+                
+                if all_ready:
+                    print("All temped gif file are ready!")
+                else:
+                    raise Exception("Some temporary files are not ready for merging")
+                
+                # 合并所有临时文件
+                print("Registered gif files (sorted):")
+                for g in sorted_files:
+                    print(g)
+                
+                combined_gif = imageio.get_writer(output_path, fps=self.gifFps, loop=0)
+                for gif_path in sorted_files:
+                    try:
+                        with imageio.get_reader(gif_path) as gif_reader:
+                            for frame in gif_reader:
+                                combined_gif.append_data(frame)
+                    except Exception as e:
+                        print(f"Error reading temporary file {gif_path}: {e}")
+                combined_gif.close()
+                print(f"Success! {output_file}")
+
+                # 清理临时文件
+                print("Delete temped gif files...")
+                for gif_path in sorted_files:
+                    try:
+                        if os.path.exists(gif_path):
+                            os.remove(gif_path)
+                        else:
+                            print(f"File not found, skipping delete: {gif_path}")
+                    except Exception as e:
+                        print(f"Error deleting temporary file {gif_path}: {e}")
+                
+                # 清空原始列表（包含所有实例，包括可能的重复）
+                self.tmpGifNames.clear()
+                print("Done!")
+                
+        except Exception as e:
+            print("Error in save_gif thread:", e)
+            import traceback
+            traceback.print_exc()
 
 class Thread_BmpUpdater(QThread):
     def __init__(self, parent = None):
@@ -30,50 +191,6 @@ class Thread_BmpUpdater(QThread):
 
     def stop(self):
         self.is_running = False
-
-class SaveGifTask(QRunnable):
-    def __init__(self, parent, frames, tmpGifNames, toDisplay, gifFps, temp):
-        super().__init__()
-        self.parent = parent
-        self.frames = frames.copy() if frames else []
-        self.tmpGifNames = tmpGifNames
-        self.toDisplay = toDisplay
-        self.gifFps = gifFps
-        self.temp = temp
-
-    def run(self):
-        try:
-            # 保存未完成的帧（无论 temp 是 True 还是 False）
-            if self.frames:
-                temp_file = datetime.datetime.now().strftime(f"temp_{self.toDisplay}_%Y%m%d%H%M%S.gif")
-                self.frames[0].save(
-                    os.path.join("./ScreenShots", temp_file),
-                    save_all=True,
-                    append_images=self.frames[1:],
-                    optimize=False,
-                    duration=100,
-                    loop=0,
-                    disposal=2
-                )
-                self.frames = []
-                self.tmpGifNames.append(temp_file)
-
-            # 如果 temp=False，合并临时文件
-            if not self.temp:
-                output_file = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S_output.gif")
-                combined_gif = imageio.get_writer(os.path.join("./ScreenShots", output_file), fps=self.gifFps, loop=0)
-                for g in self.tmpGifNames:
-                    gif = imageio.get_reader(os.path.join("./ScreenShots", g))
-                    for frame in gif:
-                        combined_gif.append_data(frame)
-                    gif.close()
-                combined_gif.close()
-                self.frames = []
-                # 清理临时文件
-                for g in self.tmpGifNames:
-                    os.remove(os.path.join("./ScreenShots", g))
-        except Exception as e:
-            print("Error in save_gif thread:", e)
 
 class ScreenController(QWidget):
     counterPlusOne = pyqtSignal()
@@ -303,8 +420,6 @@ class ScreenController(QWidget):
         )
         self.gifFrames = []  # 清空帧（仅 temp=True 时需要）
         QThreadPool.globalInstance().start(task)
-
-        # self.initFps()
 
     def checkTimeStr(self):
         chinese_week_day = {
