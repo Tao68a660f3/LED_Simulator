@@ -1,4 +1,4 @@
-
+python -m nuitka --standalone --remove-output --disable-ccache --lto=yes --windows-console-mode=disable --enable-plugin=pyqt5 --include-qt-plugins=platforms,styles,imageformats --windows-icon-from-ico="bitbug_favicon.ico" LEDSimulator.pyw
 
 pyinstaller -D -i=./bitbug_favicon.ico LEDSimulator.pyw
 
