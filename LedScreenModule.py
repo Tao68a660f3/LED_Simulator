@@ -2,7 +2,7 @@ import sys, time, datetime, os, imageio, random, re
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction
 from PyQt5.QtGui import QPainter, QColor, QImage
-from PyQt5.QtCore import QTimer, Qt, QThread, QRunnable, QThreadPool, pyqtSignal
+from PyQt5.QtCore import QTimer, Qt, QThread, QRunnable, QThreadPool, pyqtSignal, QMutex, QWaitCondition, QObject
 from PIL import Image
 from ScreenInfo import *
 from LineInfo import *
@@ -178,19 +178,32 @@ class SaveGifTask(QRunnable):
             traceback.print_exc()
 
 class Thread_BmpUpdater(QThread):
-    def __init__(self, parent = None):
-        super(Thread_BmpUpdater, self).__init__()
-        self.myparent = parent
-        self.is_running = True
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._mutex = QMutex()
+        self._condition = QWaitCondition()
+        self._is_running = True
 
     def run(self):
-        print(self.is_running)
-        while self.is_running:
-            self.myparent.checkTimeStr()
-            time.sleep(0.5)
+        while True:
+            self._mutex.lock()
+            if not self._is_running:
+                self._mutex.unlock()
+                break
+                
+            # 替换time.sleep为Qt的等待机制
+            if not self._condition.wait(self._mutex, 500):  # 500ms
+                # 超时后执行任务
+                if self.parent():
+                    self.parent().checkTimeStr()
+            self._mutex.unlock()
 
     def stop(self):
-        self.is_running = False
+        self._mutex.lock()
+        self._is_running = False
+        self._condition.wakeAll()
+        self._mutex.unlock()
+        self.wait(1000)  # 等待最多1秒
 
 class ScreenController(QWidget):
     counterPlusOne = pyqtSignal()
@@ -341,8 +354,50 @@ class ScreenController(QWidget):
             pass
 
     def closeEvent(self, event):
+        # 1. 停止定时器
+        self.timer1.stop()
+        self.timer2.stop()
+        self.timer3.stop()
+        
+        # 2. 停止并删除线程
         self.stopThread_BmpUpdater()
+        
+        # 3. 断开所有信号
+        self.disconnect_all_signals()
+        
+        # 4. 释放图像资源
+        self.release_image_resources()
+        
+        # 5. 调用父类方法
+        super().closeEvent(event)
+        
+        # 6. 强制删除
         self.deleteLater()
+        
+        # 7. 垃圾回收
+        import gc
+        gc.collect()
+
+    def disconnect_all_signals(self):
+        # 断开所有信号连接
+        for child in self.findChildren(QObject):
+            try:
+                child.blockSignals(True)
+                child.disconnect()
+            except:
+                pass
+
+    def release_image_resources(self):
+        # 释放PIL图像资源
+        if hasattr(self, 'BackImg'):
+            self.BackImg.close()
+            del self.BackImg
+        
+        # 释放单元中的图像
+        for unit in getattr(self, 'units', []):
+            if hasattr(unit, 'Bitmap'):
+                unit.Bitmap.close()
+        self.units.clear()
 
     def top_most(self):
         try:
