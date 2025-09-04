@@ -210,7 +210,7 @@
            </layout>
           </item>
           <item>
-           <widget class="DraggableTableWidget" name="tableWidget_lineChoose"/>
+           <widget class="DraggableProportionalTable" name="tableWidget_lineChoose"/>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -272,7 +272,7 @@
            </layout>
           </item>
           <item>
-           <widget class="QTableWidget" name="tableWidget_Icons"/>
+           <widget class="DraggableProportionalTable" name="tableWidget_Icons"/>
           </item>
          </layout>
         </item>
@@ -469,7 +469,7 @@
              </widget>
             </item>
             <item>
-             <widget class="DraggableTableWidget" name="tableWidget_ProgramSheet"/>
+             <widget class="DraggableProportionalTable" name="tableWidget_ProgramSheet"/>
             </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_25">
@@ -633,7 +633,7 @@
                </widget>
               </item>
               <item>
-               <widget class="DraggableTableWidget" name="tableWidget_Screens"/>
+               <widget class="DraggableProportionalTable" name="tableWidget_Screens"/>
               </item>
              </layout>
             </item>
@@ -983,7 +983,7 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>DraggableTableWidget</class>
+   <class>DraggableProportionalTable</class>
    <extends>QTableWidget</extends>
    <header>ModifiedModule</header>
   </customwidget>

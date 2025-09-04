@@ -545,7 +545,10 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)    #设置选取方式为单个选取
         self.tableWidget.setHorizontalHeaderLabels(["屏幕分区","重复次数","跳转至"])   #设置行表头
         self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
-        self.tableWidget.verticalHeader().setDefaultSectionSize(18)
+        self.tableWidget.verticalHeader().setDefaultSectionSize(36)
+        self.tableWidget.set_column_ratios([1, 1, 1.5])
+        self.tableWidget.set_min_total_width(400)
+
         self.spin_Unit.setMinimum(1)
         self.spin_Unit.setMaximum(1)
         self.spin_Count.setMinimum(1)
@@ -716,7 +719,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
 
             self.ProgScreenSetting = progScreenSetting
             self.backgroundDescribeText = self.ProgScreenSetting["background"]
-            self.triggerList = self.ProgScreenSetting["trigger"]
+            self.triggerList = self.ProgScreenSetting["trigger"][:]
             self.inherit = self.ProgScreenSetting["inherit"]
             if "isorigin" in self.ProgScreenSetting.keys():
                 self.isorigin = self.ProgScreenSetting["isorigin"]
@@ -1266,12 +1269,14 @@ class IconManager():
         # 图标管理表格
         self.Parent.tableWidget_Icons.verticalHeader().setVisible(False)
         self.Parent.tableWidget_Icons.setColumnCount(2)
+        self.Parent.tableWidget_Icons.setHorizontalHeaderLabels(["图标代号","预览"])
         self.Parent.tableWidget_Icons.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.Parent.tableWidget_Icons.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.Parent.tableWidget_Icons.setHorizontalHeaderLabels(["图标代号","预览"])
         self.Parent.tableWidget_Icons.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
         self.Parent.tableWidget_Icons.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.Parent.tableWidget_Icons.verticalHeader().setDefaultSectionSize(64)
+        self.Parent.tableWidget_Icons.set_column_ratios([1, 1])
+        self.Parent.tableWidget_Icons.set_min_total_width(300)
+        # self.Parent.tableWidget_Icons.verticalHeader().setDefaultSectionSize(64)
 
         self.Parent.btn_LoadIcons.clicked.connect(self.add_icon)
         self.Parent.tableWidget_Icons.doubleClicked.connect(self.use_icom)
@@ -1292,8 +1297,10 @@ class IconManager():
             self.Parent.tableWidget_Icons.setItem(row,col,item)
             col = 1
             item = QTableWidgetItem()
-            item.setData(Qt.DecorationRole, QPixmap(str(data[row][col])))
+            pixmap = QPixmap(str(data[row][col]))
+            item.setData(Qt.DecorationRole, pixmap)
             self.Parent.tableWidget_Icons.setItem(row, col, item)
+            self.Parent.tableWidget_Icons.setRowHeight(row, 30 + min(100,pixmap.height()))
 
     def add_icon(self):
         file_dir,ok = QFileDialog.getOpenFileName(self.Parent,'打开','./','图标信息 (*.info)')
@@ -1319,12 +1326,14 @@ class ProgramSheetManager():
     def initUI(self):
         # 节目单管理表格
         self.Parent.tableWidget_ProgramSheet.setColumnCount(2)
+        self.Parent.tableWidget_ProgramSheet.setHorizontalHeaderLabels(["节目名称","持续时间"])
         self.Parent.tableWidget_ProgramSheet.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.Parent.tableWidget_ProgramSheet.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.Parent.tableWidget_ProgramSheet.setHorizontalHeaderLabels(["节目名称","持续时间"])
         self.Parent.tableWidget_ProgramSheet.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
         self.Parent.tableWidget_ProgramSheet.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.Parent.tableWidget_ProgramSheet.verticalHeader().setDefaultSectionSize(18)
+        self.Parent.tableWidget_ProgramSheet.verticalHeader().setDefaultSectionSize(36)
+        self.Parent.tableWidget_ProgramSheet.set_column_ratios([2.5, 1])
+        self.Parent.tableWidget_ProgramSheet.set_min_total_width(300)
 
         self.Parent.spinBox.setMaximum(3600*24)
         self.Parent.spinBox.setMinimum(-1)
@@ -1451,16 +1460,14 @@ class ProgramSettler():
     def initUI(self):
         # 屏幕分区管理表格
         self.Parent.tableWidget_Screens.setColumnCount(4)
+        self.Parent.tableWidget_Screens.setHorizontalHeaderLabels(["分区名称","灯珠规格","分区大小","内容大小"])
         self.Parent.tableWidget_Screens.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.Parent.tableWidget_Screens.setSelectionMode(QAbstractItemView.SingleSelection)
         self.Parent.tableWidget_Screens.verticalHeader().setVisible(False)
-        self.Parent.tableWidget_Screens.setHorizontalHeaderLabels(["屏幕名称","屏幕规格","灯珠规格","内容大小"])
-        self.Parent.tableWidget_Screens.setColumnWidth(0,120)
-        self.Parent.tableWidget_Screens.setColumnWidth(1,100)
-        self.Parent.tableWidget_Screens.setColumnWidth(2,100)
-        self.Parent.tableWidget_Screens.setColumnWidth(3,100)
         self.Parent.tableWidget_Screens.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.Parent.tableWidget_Screens.verticalHeader().setDefaultSectionSize(18)
+        self.Parent.tableWidget_Screens.verticalHeader().setDefaultSectionSize(36)
+        self.Parent.tableWidget_Screens.set_column_ratios([1, 1, 1.2, 1.2])
+        self.Parent.tableWidget_Screens.set_min_total_width(300)
 
         # 启用右键菜单
         self.Parent.tableWidget_Screens.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -1698,7 +1705,12 @@ class ProgramSettler():
                 else:
                     bmp = Creater.create_character(vertical=p["vertical"], roll_asc = _roll_asc, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["fontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset"], style = p["align"])
 
-                data.append([i+1,str(screenUnitList[i]["pointNum"]),str(screenUnitList[i]["pointSize"]),bmp.size])
+                data.append([
+                    i + 1,
+                    f"{screenUnitList[i]['scale'][0]}x{screenUnitList[i]['scale'][1]} Φ{screenUnitList[i]['pointSize']}",
+                    f"{screenUnitList[i]['pointNum']}",
+                    bmp.size,
+                ])
                 self.tmpBmp.append(bmp)
 
             current_row = self.Parent.selected_row(self.Parent.tableWidget_Screens)
@@ -2386,15 +2398,14 @@ class LineController():
         self.Parent = parent
         # 线路管理表格
         self.Parent.tableWidget_lineChoose.setColumnCount(3)
+        self.Parent.tableWidget_lineChoose.setHorizontalHeaderLabels(["线路名称","预设","刷新率"])   #设置行表头
         self.Parent.tableWidget_lineChoose.setSelectionBehavior(QAbstractItemView.SelectRows)    #设置表格的选取方式是行选取
         self.Parent.tableWidget_lineChoose.setSelectionMode(QAbstractItemView.SingleSelection)    #设置选取方式为单个选取
-        self.Parent.tableWidget_lineChoose.setHorizontalHeaderLabels(["线路名称","预设","刷新率"])   #设置行表头
-        self.Parent.tableWidget_lineChoose.setColumnWidth(0,120)
-        self.Parent.tableWidget_lineChoose.setColumnWidth(1,90)
-        self.Parent.tableWidget_lineChoose.setColumnWidth(2,70)
         self.Parent.tableWidget_lineChoose.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
-        self.Parent.tableWidget_lineChoose.verticalHeader().setDefaultSectionSize(18)
+        self.Parent.tableWidget_lineChoose.verticalHeader().setDefaultSectionSize(36)
         self.Parent.tableWidget_lineChoose.rowMoved.connect(self.onRowMoved)
+        self.Parent.tableWidget_lineChoose.set_column_ratios([2.5, 1, 1])
+        self.Parent.tableWidget_lineChoose.set_min_total_width(250)
 
         self.Parent.combo_FlushRate.addItems(flushRateList)
 

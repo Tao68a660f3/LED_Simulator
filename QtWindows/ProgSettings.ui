@@ -199,7 +199,7 @@
           </widget>
          </item>
          <item>
-          <widget class="DraggableTableWidget" name="tableWidget">
+          <widget class="DraggableProportionalTable" name="tableWidget">
            <property name="minimumSize">
             <size>
              <width>300</width>
@@ -388,7 +388,7 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>DraggableTableWidget</class>
+   <class>DraggableProportionalTable</class>
    <extends>QTableWidget</extends>
    <header>ModifiedModule</header>
   </customwidget>
