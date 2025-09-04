@@ -19,7 +19,7 @@ from LedScreenModule import *
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
 version = "1.4.6(内测版)"
-release_date = "20250808"
+release_date = "20250904"
 
 ledTypes = [i for i in pointKindDict.keys()]
 scales = [ast.literal_eval(i) for i in ledTypes]
@@ -1058,6 +1058,9 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         copyLineAction = QAction('复制线路', self)
         copyLineAction.triggered.connect(self.LineController.copy_busLine)
         moreMenu.addAction(copyLineAction)
+        pasteLineAction = QAction('粘贴线路', self)
+        pasteLineAction.triggered.connect(self.LineController.paste_busLine)
+        moreMenu.addAction(pasteLineAction)
         showAboutAction = QAction('关于', self)
         showAboutAction.triggered.connect(self.show_about_window)
         moreMenu.addAction(showAboutAction)
@@ -2581,6 +2584,12 @@ class LineController():
         row = self.Parent.currentLine
         if row is not None:
             self.Parent.LineEditor.copy_data(row)
+            # self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
+            # self.Parent.set_selected_row(self.Parent.tableWidget_lineChoose,len(self.Parent.LineEditor.LineInfoList)-1)
+            # self.Parent.thisFile_saveStat.emit(False)
+
+    def paste_busLine(self):
+        if self.Parent.LineEditor.paste_data():
             self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
             self.Parent.set_selected_row(self.Parent.tableWidget_lineChoose,len(self.Parent.LineEditor.LineInfoList)-1)
             self.Parent.thisFile_saveStat.emit(False)
@@ -2617,6 +2626,7 @@ class LineController():
 
 class LineEditor():
     def __init__(self):
+        self.copyed_line = None
         self.LineInfoList = []
 
     def add_data(self,linedata):
@@ -2637,7 +2647,13 @@ class LineEditor():
         self.LineInfoList.pop(row)
 
     def copy_data(self,row):
-        self.LineInfoList.append(copy.deepcopy(self.LineInfoList[row]))
+        self.copyed_line = copy.deepcopy(self.LineInfoList[row])
+
+    def paste_data(self):
+        if isinstance(self.copyed_line, dict):
+            self.LineInfoList.append(copy.deepcopy(self.copyed_line))
+            return True
+        return False
 
     def move_row(self,drag,drop):
         if drag != drop:
