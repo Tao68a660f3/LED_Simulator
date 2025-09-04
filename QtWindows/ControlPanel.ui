@@ -114,7 +114,7 @@
             <item>
              <widget class="QLabel" name="label">
               <property name="text">
-               <string>线路列表：</string>
+               <string>线路列表</string>
               </property>
              </widget>
             </item>
@@ -294,7 +294,7 @@
             <item>
              <widget class="QLabel" name="label_13">
               <property name="text">
-               <string>线路设置：</string>
+               <string>线路设置（布局管理器）</string>
               </property>
              </widget>
             </item>
@@ -303,7 +303,7 @@
               <item>
                <widget class="QLabel" name="label_12">
                 <property name="text">
-                 <string>路牌：</string>
+                 <string>路牌</string>
                 </property>
                </widget>
               </item>
@@ -313,7 +313,7 @@
               <item>
                <widget class="QLabel" name="label_14">
                 <property name="text">
-                 <string>选择布局：</string>
+                 <string>选择布局</string>
                 </property>
                </widget>
               </item>
@@ -464,7 +464,7 @@
             <item>
              <widget class="QLabel" name="label_19">
               <property name="text">
-               <string>节目单：</string>
+               <string>节目单</string>
               </property>
              </widget>
             </item>
@@ -545,7 +545,7 @@
               <item>
                <widget class="QLabel" name="label_20">
                 <property name="text">
-                 <string>名称：</string>
+                 <string>名称</string>
                 </property>
                </widget>
               </item>
@@ -555,7 +555,7 @@
               <item>
                <widget class="QLabel" name="label_21">
                 <property name="text">
-                 <string>持续：</string>
+                 <string>持续</string>
                 </property>
                </widget>
               </item>
@@ -594,7 +594,7 @@
               <item>
                <widget class="QLabel" name="label_7">
                 <property name="text">
-                 <string>路牌：</string>
+                 <string>路牌</string>
                 </property>
                </widget>
               </item>
@@ -628,7 +628,7 @@
               <item>
                <widget class="QLabel" name="label_2">
                 <property name="text">
-                 <string>屏幕分区：</string>
+                 <string>屏幕分区</string>
                 </property>
                </widget>
               </item>
@@ -898,7 +898,7 @@
               <item row="0" column="0">
                <widget class="QLabel" name="label_9">
                 <property name="text">
-                 <string>单元颜色(单色牌选择)：</string>
+                 <string>单元颜色(单色牌选择)</string>
                 </property>
                </widget>
               </item>
@@ -946,7 +946,7 @@
               <item row="1" column="0">
                <widget class="QLabel" name="label_10">
                 <property name="text">
-                 <string>单元颜色(彩色牌选择)：</string>
+                 <string>单元颜色(彩色牌选择)</string>
                 </property>
                </widget>
               </item>

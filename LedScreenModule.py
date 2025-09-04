@@ -1,4 +1,4 @@
-import sys, time, datetime, os, imageio, random, re
+import sys, time, datetime, os, imageio, random, re, copy
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction
 from PyQt5.QtGui import QPainter, QColor, QImage
@@ -192,7 +192,7 @@ class Thread_BmpUpdater(QThread):
                 break
                 
             # 替换time.sleep为Qt的等待机制
-            if not self._condition.wait(self._mutex, 500):  # 500ms
+            if not self._condition.wait(self._mutex, 200):  # 200ms
                 # 超时后执行任务
                 if self.parent():
                     self.parent().checkTimeStr()
@@ -235,7 +235,7 @@ class ScreenController(QWidget):
         self.performFinish = False
         self.gifRecording = False
         self.progStopGif = False
-        # self.endGifFrame = 0
+        self.fpsCount_EN = 0
         self.fpsChkSecCalcNum = 2
         self.fpsCounter = 0
         self.commonFps = flushRate
@@ -244,6 +244,7 @@ class ScreenController(QWidget):
         self.gifFps = flushRate
         self.flushRate = 1000 // flushRate
         self.units = []
+        self.old_units = []
         self.gifFrames = []
         self.tmpGifNames = []
         self.BackImg = Image.new("RGB", (screenInfo["screenSize"][0],screenInfo["screenSize"][1]))
@@ -277,13 +278,6 @@ class ScreenController(QWidget):
         self.setContextMenuPolicy(Qt.CustomContextMenu) # 右键菜单
         self.customContextMenuRequested.connect(self.showContextMenu)
         self.counterPlusOne.connect(self.triggerProgramTimeout)
-
-    def setInitFps(self):
-        self.commonFps = self.gifFps
-
-    def initFps(self):
-        self.setInitFps()
-        QTimer.singleShot(400, self.setInitFps)
 
     def read_setting(self):
         setting_file = "./resources/settings.info"
@@ -489,17 +483,15 @@ class ScreenController(QWidget):
         try:
             for s in self.units:
                 now = datetime.datetime.now()
-                oldStr = s.progSheet["text"]
+                oldStr = s.originalStr
                 chWeekday = now.strftime("%A")
                 newStr = re.sub(r"(?<!%)(%A)", chinese_week_day[chWeekday], oldStr )
-                # newStr = oldStr.replace("%A",chinese_week_day[chWeekday])
-                # print(newStr)
                 newStr = now.strftime(newStr)
-                if newStr != s.tempStr:
-                    s.progSheet["text"] = newStr
-                    s.tempStr = newStr
+                s.strftimedStr = newStr
+
+                if s.strftimedStr != s.originalStr or s.strftimedStr != s.bmpSaysStr:
                     s.createFontImg()
-                    s.progSheet["text"] = oldStr
+
         except Exception as e:
             print("checkTimeStr:", e)
 
@@ -598,32 +590,127 @@ class ScreenController(QWidget):
 
     def otherscreen_hastrigger(self):
         n_t = 0
-        for s in self.Parent.LedScreens.values():
-            try:
+        try:
+            for s in self.Parent.LedScreens.values():
                 t = s.currentScreenProgSet["trigger"]
                 if isinstance(t,list) and len(t) > 0 and s is not self:
                     n_t += 1
                     # print(s,"+1")
-            except Exception as e:
-                pass
-                # print("everyscreen_hastrigger: ",e)
-        return n_t
+        except Exception as e:
+            print("everyscreen_hastrigger: ",e)
             
+        return n_t
+    
+    def compare_ordered(self, list1, list2):
+        # 比较两个列表是否完全相同（考虑顺序）
+        if len(list1) != len(list2):
+            return False
+        
+        def make_hashable(d):
+            # 将字典转换为可哈希形式
+            return tuple(sorted((k, tuple(v) if isinstance(v, list) else v) 
+                            for k, v in d.items()))
+        
+        for i in range(len(list1)):
+            if make_hashable(list1[i]) != make_hashable(list2[i]):
+                return False
+        
+        return True
+    
+    def compare_dicts_ignore_keys(self, dict1, dict2, ignore_keys):
+        """
+        比较两个字典，忽略指定的键
+        
+        Args:
+            dict1: 第一个字典
+            dict2: 第二个字典
+            ignore_keys: 要忽略的键（字符串或字符串列表）
+        
+        Returns:
+            bool: 忽略指定键后是否相等
+        """
+        if isinstance(ignore_keys, str):
+            ignore_keys = [ignore_keys]
+        
+        # 使用字典推导式过滤键
+        filtered1 = {k: v for k, v in dict1.items() if k not in ignore_keys}
+        filtered2 = {k: v for k, v in dict2.items() if k not in ignore_keys}
+        
+        return filtered1 == filtered2
+    
+    def check_two_programs_if_same_layout(self, selected_prog):    # 比较当前节目和目标节目是否相同布局
+        now_prog_layout_list = []
+        next_prog_layout_list = self.screenProgramSheet[self.currentIndex][2][self.toDisplay][0]
+        
+        for u in self.units:
+            now_prog_layout_list.append(u.get_summary_data()[0])
+
+        return self.compare_ordered(now_prog_layout_list, next_prog_layout_list)
+    
+    def program_inhert_exec(self, inhertLevel, newUnitAndProgram):
+        self.old_units = copy.deepcopy(self.units)
+        self.units = []
+        if inhertLevel == 0:
+            for i in range(min(len(newUnitAndProgram[0]),len(newUnitAndProgram[1]))):
+                self.units.append(ScreenUnit(newUnitAndProgram[0][i],newUnitAndProgram[1][i],self.colorMode,self.offset,self.FontIconMgr))
+        else:
+            old_progsheetList = [u.progSheet for u in self.old_units]
+            new_progsheetList = newUnitAndProgram[1]
+            i_range = range(min(len(old_progsheetList), len(new_progsheetList)))
+            ignore_keys = ["appearance"]
+
+            if inhertLevel == 1:
+                for i in i_range:
+                    if self.compare_dicts_ignore_keys(old_progsheetList[i], new_progsheetList[i], ignore_keys):
+                        a = self.old_units[i]
+                        a.appearance = new_progsheetList[i]["appearance"]
+                        self.units.append(a)
+                    else:
+                        self.units.append(ScreenUnit(newUnitAndProgram[0][i],newUnitAndProgram[1][i],self.colorMode,self.offset,self.FontIconMgr))
+            if inhertLevel == 2:
+                in_is = True
+                for i in i_range:
+                    if not self.compare_dicts_ignore_keys(old_progsheetList[i], new_progsheetList[i], ignore_keys):
+                        in_is = False
+                        break
+                if in_is:
+                    for i in i_range:
+                        a = self.old_units[i]
+                        a.appearance = new_progsheetList[i]["appearance"]
+                        self.units.append(a)
+                else:
+                    for i in i_range:
+                        self.units.append(ScreenUnit(newUnitAndProgram[0][i],newUnitAndProgram[1][i],self.colorMode,self.offset,self.FontIconMgr))
 
     def programTimeout(self):
-        if self.progStopGif:        # 录制GIF直到当前节目结束
+        isSameLayout = False
+        inhertLevel = 0
+
+        self.disable_fpsCount()
+
+#====================================================================================
+#         print("测试：当前节目的上一个节目的相关信息：")
+#         for u in self.units:
+#             print(u.get_summary_data())
+#====================================================================================
+
+        if self.progStopGif:        # 录制GIF直到当前节目结束时，结束录制GIF
             self.progStopGif = False
             if self.gifRecording:
                 self.stop_recording_gif()
+
+        isSameLayout = self.check_two_programs_if_same_layout(self.currentIndex)
+
         self.currentBeginTime = time.time()
         self.runningTime = 0
+
         if self.isVisible() == True:
             if self.currentIndex in range(len(self.screenProgramSheet)):
                 try:
                     self.currentPtime = self.screenProgramSheet[self.currentIndex][1]
-                    unitAndProgram = self.screenProgramSheet[self.currentIndex][2][self.toDisplay]
-                    if len(unitAndProgram) == 3:
-                        ext_dict = unitAndProgram[2]
+                    newUnitAndProgram = self.screenProgramSheet[self.currentIndex][2][self.toDisplay]
+                    if len(newUnitAndProgram) == 3:
+                        ext_dict = newUnitAndProgram[2]
                         if "ProgScreenSetting" in ext_dict.keys():
                             self.currentScreenProgSet = ext_dict["ProgScreenSetting"]
                         else:
@@ -634,16 +721,20 @@ class ScreenController(QWidget):
                     if self.currentScreenProgSet is not None:
                         if "isorigin" in self.currentScreenProgSet.keys():
                             self.cntProgIsOrigin = self.currentScreenProgSet["isorigin"]
+                        if "inherit" in self.currentScreenProgSet.keys():
+                            inhertLevel = self.currentScreenProgSet["inherit"]
+                            if not isSameLayout:
+                                inhertLevel = 0
 
-                    self.units = []
-                    for i in range(min(len(unitAndProgram[0]),len(unitAndProgram[1]))):
-                        self.units.append(ScreenUnit(unitAndProgram[0][i],unitAndProgram[1][i],self.colorMode,self.offset,self.FontIconMgr))
+                    self.program_inhert_exec(inhertLevel, newUnitAndProgram)
+                    
                     self.backgroundPerformer()
+
                 except Exception as e:
                     print("programTimeout:", e)
 
         self.checkTimeStr()
-        self.initFps()
+        self.enable_fpsCount()
 
     def backgroundPerformer(self):
         self.maskMode = False
@@ -780,11 +871,21 @@ class ScreenController(QWidget):
                 self.posTransFunc(u)
                 u.rollCounter += 1
 
+    def enable_fpsCount(self):
+        self.fpsCount_EN = 1
+
+    def disable_fpsCount(self):
+        self.fpsCount_EN = 0
+
     def count_fps(self):
-        self.commonFps = (self.commonFps + self.fpsCounter*self.fpsChkSecCalcNum) // 2
-        self.gifFps = min(int(self.commonFps*0.7+self.gifFps*0.3),50)
+        if self.fpsCount_EN > 2:
+            self.commonFps = (self.commonFps + self.fpsCounter*self.fpsChkSecCalcNum) // 2
+            self.gifFps = min(int(self.commonFps*0.7+self.gifFps*0.3),50)
+            self.setWindowTitle(f'{self.toDisplay} @ {self.commonFps} FPS')
+        elif self.fpsCount_EN >= 1:
+            self.fpsCount_EN += 1
+
         self.fpsCounter = 0
-        self.setWindowTitle(f'{self.toDisplay} @ {self.commonFps} FPS')
 
     def get_fps(self):
         fps = str(self.commonFps)
@@ -1614,8 +1715,10 @@ class ScreenUnit():
         self.pointNum = unitInfo["pointNum"]
         self.pointSize = unitInfo["pointSize"]
         self.scale = unitInfo["scale"]
-        self.progSheet = progSheet
-        self.tempStr = ""
+        self.progSheet = copy.deepcopy(progSheet)
+        self.originalStr = self.progSheet["text"][:]
+        self.strftimedStr = self.originalStr
+        self.bmpSaysStr = ""
         self.appearance = self.progSheet["appearance"]
         self.FontIconMgr = FontIconMgr
         self.rollCounter = 0    # 屏幕每绘制一次就加一，可被procTransFunc重新置为零
@@ -1680,14 +1783,26 @@ class ScreenUnit():
             elif "下"  in self.appearance:
                 self.y = self.Bitmap.size[1]
 
+    def get_summary_data(self):    # 返回单元的布局信息和programsheet
+        return [
+            {
+                "position":self.position,
+                "pointNum":self.pointNum,
+                "pointSize":self.pointSize,
+                "scale":self.scale,
+            },
+            self.progSheet
+        ]
+
     def createFontImg(self):
+        self.bmpSaysStr = self.strftimedStr
         _roll_asc = True
         if "rollAscii" in self.progSheet.keys():
             _roll_asc = self.progSheet["rollAscii"]
         if "multiLine" in self.progSheet.keys() and "lineSpace" in self.progSheet.keys():
-            self.Bitmap = self.BmpCreater.create_character(vertical=self.progSheet["vertical"], roll_asc = _roll_asc, text=self.progSheet["text"], ch_font_size=self.progSheet["fontSize"], asc_font_size=self.progSheet["ascFontSize"], ch_bold_size_x=self.progSheet["bold"][0], ch_bold_size_y=self.progSheet["bold"][1], space=self.progSheet["spacing"], scale=self.progSheet["scale"], auto_scale=self.progSheet["autoScale"], scale_sys_font_only=self.progSheet["scaleSysFontOnly"], new_width = self.pointNum[0], new_height = self.pointNum[1], y_offset = self.progSheet["y_offset"], y_offset_asc = self.progSheet["y_offset_asc"], style = self.progSheet["align"], multi_line={"stat":self.progSheet["multiLine"], "line_space": self.progSheet["lineSpace"] })
+            self.Bitmap = self.BmpCreater.create_character(vertical=self.progSheet["vertical"], roll_asc = _roll_asc, text=self.bmpSaysStr, ch_font_size=self.progSheet["fontSize"], asc_font_size=self.progSheet["ascFontSize"], ch_bold_size_x=self.progSheet["bold"][0], ch_bold_size_y=self.progSheet["bold"][1], space=self.progSheet["spacing"], scale=self.progSheet["scale"], auto_scale=self.progSheet["autoScale"], scale_sys_font_only=self.progSheet["scaleSysFontOnly"], new_width = self.pointNum[0], new_height = self.pointNum[1], y_offset = self.progSheet["y_offset"], y_offset_asc = self.progSheet["y_offset_asc"], style = self.progSheet["align"], multi_line={"stat":self.progSheet["multiLine"], "line_space": self.progSheet["lineSpace"] })
         else:
-            self.Bitmap = self.BmpCreater.create_character(vertical=self.progSheet["vertical"], roll_asc = _roll_asc, text=self.progSheet["text"], ch_font_size=self.progSheet["fontSize"], asc_font_size=self.progSheet["fontSize"], ch_bold_size_x=self.progSheet["bold"][0], ch_bold_size_y=self.progSheet["bold"][1], space=self.progSheet["spacing"], scale=self.progSheet["scale"], auto_scale=self.progSheet["autoScale"], scale_sys_font_only=self.progSheet["scaleSysFontOnly"], new_width = self.pointNum[0], new_height = self.pointNum[1], y_offset = self.progSheet["y_offset"], y_offset_asc = self.progSheet["y_offset"], style = self.progSheet["align"])
+            self.Bitmap = self.BmpCreater.create_character(vertical=self.progSheet["vertical"], roll_asc = _roll_asc, text=self.bmpSaysStr, ch_font_size=self.progSheet["fontSize"], asc_font_size=self.progSheet["fontSize"], ch_bold_size_x=self.progSheet["bold"][0], ch_bold_size_y=self.progSheet["bold"][1], space=self.progSheet["spacing"], scale=self.progSheet["scale"], auto_scale=self.progSheet["autoScale"], scale_sys_font_only=self.progSheet["scaleSysFontOnly"], new_width = self.pointNum[0], new_height = self.pointNum[1], y_offset = self.progSheet["y_offset"], y_offset_asc = self.progSheet["y_offset"], style = self.progSheet["align"])
 
 
 if __name__ == '__main__':

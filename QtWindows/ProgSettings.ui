@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>500</height>
+    <width>500</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -47,8 +47,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>367</width>
-        <height>633</height>
+        <width>467</width>
+        <height>819</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -187,7 +187,7 @@
          <item>
           <widget class="QCheckBox" name="chk_isOrigin">
            <property name="text">
-            <string>此触发器触发后本节目成为源</string>
+            <string>节目切换后标记本节目为源（可用于溯源）</string>
            </property>
           </widget>
          </item>
@@ -303,10 +303,10 @@
          <item>
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>要使节目切换触发器生效，请将节目持续时间置为 -1。若设置了触发器但是节目持续时间不是 -1，打开的屏幕的触发器列表中第一个触发器的跳转仍然生效</string>
+            <string>要使节目切换触发器生效，请将节目持续时间置为 -1。若设置了触发器但是节目持续时间不是 -1，打开的屏幕的触发器列表中第一个触发器的跳转仍然生效。</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignCenter</set>
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
            </property>
            <property name="wordWrap">
             <bool>true</bool>
@@ -333,7 +333,7 @@
             </font>
            </property>
            <property name="text">
-            <string>继承节目（暂不可用）</string>
+            <string>继承节目</string>
            </property>
           </widget>
          </item>
@@ -350,6 +350,23 @@
             <widget class="QComboBox" name="combo_inheritLevel"/>
            </item>
           </layout>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>继承节目说明：
+前提条件：当设置了继承节目时（即继承级别不为“不继承”），要使继承生效，前提条件为本节目和上一个节目（跳转到本节目前正在播放的节目，不一定是列表里的上一个节目）在布局管理器中的布局完全相同。
+当满足前提条件时：
+“弱继承”代表将当前节目的各个分区与上一个节目的对应分区进行比较时，对于每个分区，若除了“显示方式”之外的其他内容都相同，则当前节目的这个分区继承上一个节目对应分区中的显示内容，仅将“显示方式”变更为新节目的“显示方式”；若除了“显示方式”之外的其他内容存在不同，则当前节目的这个分区中的显示内容完全由本节目决定。
+“强继承”代表将当前节目与上一个节目进行比较时，若每一对对应的分区除了“显示方式”之外其他内容都相同，则各个分区继承上一个节目对应分区的显示内容，但是使用本节目中的“显示方式”；若存在有对应的分区除了“显示方式”之外的内容有不同，则当前节目的所有分区中的显示内容完全由本节目决定。</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

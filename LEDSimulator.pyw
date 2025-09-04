@@ -506,7 +506,7 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
 
 class ProgramSettings(QDialog,Ui_ProgSet):
     def __init__(self, parent=None):
-        super().__init__()
+        super().__init__(parent)
         self.setupUi(self)
         self.initUI()
         self.Parent = parent
@@ -530,7 +530,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.setModal(True)
         self.setWindowTitle("路牌节目设置（实验）")
         self.setMinimumSize(400,500)
-        self.resize(500,500)
+        self.resize(560,600)
 
         # tab 0
         self.comboBox_mode.addItems(["纯色背景","图片背景",])#"视频背景"])
@@ -904,7 +904,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.btn_opFile.clicked.connect(self.open_file)
         self.btn_showSelectedScreen.clicked.connect(self.preview_screen)
         self.tableWidget_ProgramSheet.itemSelectionChanged.connect(self.on_prog_changed)
-        self.tableWidget_ProgramSheet.pressed.connect(self.change_program)
+        self.tableWidget_ProgramSheet.pressed.connect(self.on_prog_changed)
         self.tableWidget_lineChoose.itemSelectionChanged.connect(self.on_line_changed)
         self.thisFile_saveStat.connect(self.set_window_title)
 
@@ -1580,7 +1580,7 @@ class ProgramSettler():
                     if "richText" in self.screenProgList[row].keys():
                         richText = self.screenProgList[row]["richText"]
 
-                    ColorMultiLineDialog = ColorMultiLine()
+                    ColorMultiLineDialog = ColorMultiLine(self.Parent)
                     ColorMultiLineDialog.show()
                     ColorMultiLineDialog.set_value(text,multiLine,lineSpace,self.colorMode,richText)
                     if ColorMultiLineDialog.exec_() == QDialog.Accepted:

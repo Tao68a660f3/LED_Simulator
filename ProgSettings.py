@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_ProgSet(object):
     def setupUi(self, ProgSet):
         ProgSet.setObjectName("ProgSet")
-        ProgSet.resize(400, 500)
+        ProgSet.resize(500, 600)
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(ProgSet)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.label_14 = QtWidgets.QLabel(ProgSet)
@@ -31,7 +31,7 @@ class Ui_ProgSet(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 367, 633))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 467, 819))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -163,7 +163,7 @@ class Ui_ProgSet(object):
         self.horizontalLayout_5.addWidget(self.pushButton_Delete)
         self.verticalLayout_2.addLayout(self.horizontalLayout_5)
         self.label_2 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_2.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_2.setWordWrap(True)
         self.label_2.setObjectName("label_2")
         self.verticalLayout_2.addWidget(self.label_2)
@@ -188,6 +188,11 @@ class Ui_ProgSet(object):
         self.combo_inheritLevel.setObjectName("combo_inheritLevel")
         self.horizontalLayout_7.addWidget(self.combo_inheritLevel)
         self.verticalLayout_3.addLayout(self.horizontalLayout_7)
+        self.label_15 = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        self.label_15.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_15.setWordWrap(True)
+        self.label_15.setObjectName("label_15")
+        self.verticalLayout_3.addWidget(self.label_15)
         self.verticalLayout_4.addLayout(self.verticalLayout_3)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.verticalLayout_5.addWidget(self.scrollArea)
@@ -215,7 +220,7 @@ class Ui_ProgSet(object):
         self.checkBox_mask.setText(_translate("ProgSet", "遮罩模式"))
         self.label_bgDescribe.setText(_translate("ProgSet", "TextLabel"))
         self.label_11.setText(_translate("ProgSet", "节目切换触发器"))
-        self.chk_isOrigin.setText(_translate("ProgSet", "此触发器触发后本节目成为源"))
+        self.chk_isOrigin.setText(_translate("ProgSet", "节目切换后标记本节目为源（可用于溯源）"))
         self.label_6.setText(_translate("ProgSet", "触发器列表："))
         self.label_7.setText(_translate("ProgSet", "屏幕分区："))
         self.label_8.setText(_translate("ProgSet", "重复次数："))
@@ -225,7 +230,12 @@ class Ui_ProgSet(object):
         self.chk_from.setText(_translate("ProgSet", "溯源"))
         self.pushButton_Add.setText(_translate("ProgSet", "上传"))
         self.pushButton_Delete.setText(_translate("ProgSet", "删除"))
-        self.label_2.setText(_translate("ProgSet", "要使节目切换触发器生效，请将节目持续时间置为 -1。若设置了触发器但是节目持续时间不是 -1，打开的屏幕的触发器列表中第一个触发器的跳转仍然生效"))
-        self.label_13.setText(_translate("ProgSet", "继承节目（暂不可用）"))
+        self.label_2.setText(_translate("ProgSet", "要使节目切换触发器生效，请将节目持续时间置为 -1。若设置了触发器但是节目持续时间不是 -1，打开的屏幕的触发器列表中第一个触发器的跳转仍然生效。"))
+        self.label_13.setText(_translate("ProgSet", "继承节目"))
         self.label_12.setText(_translate("ProgSet", "继承级别："))
+        self.label_15.setText(_translate("ProgSet", "继承节目说明：\n"
+"前提条件：当设置了继承节目时（即继承级别不为“不继承”），要使继承生效，前提条件为本节目和上一个节目（跳转到本节目前正在播放的节目，不一定是列表里的上一个节目）在布局管理器中的布局完全相同。\n"
+"当满足前提条件时：\n"
+"“弱继承”代表将当前节目的各个分区与上一个节目的对应分区进行比较时，对于每个分区，若除了“显示方式”之外的其他内容都相同，则当前节目的这个分区继承上一个节目对应分区中的显示内容，仅将“显示方式”变更为新节目的“显示方式”；若除了“显示方式”之外的其他内容存在不同，则当前节目的这个分区中的显示内容完全由本节目决定。\n"
+"“强继承”代表将当前节目与上一个节目进行比较时，若每一对对应的分区除了“显示方式”之外其他内容都相同，则各个分区继承上一个节目对应分区的显示内容，但是使用本节目中的“显示方式”；若存在有对应的分区除了“显示方式”之外的内容有不同，则当前节目的所有分区中的显示内容完全由本节目决定。"))
 from ModifiedModule import DraggableTableWidget
