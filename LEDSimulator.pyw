@@ -17,7 +17,7 @@ from ProgSettings import *
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
-version = "1.4.5(内测版)"
+version = "1.4.6(内测版)"
 release_date = "20250808"
 
 ledTypes = [i for i in pointKindDict.keys()]

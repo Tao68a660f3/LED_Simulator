@@ -647,6 +647,15 @@ class ScreenController(QWidget):
 
         return self.compare_ordered(now_prog_layout_list, next_prog_layout_list)
     
+    def use_new_argvs(self, a, new, argvs):
+        a.appearance = new["appearance"]
+        for argv in argvs:
+            try:
+                a.progSheet[argv] = new[argv]
+            except:
+                pass
+        self.units.append(a)
+    
     def program_inhert_exec(self, inhertLevel, newUnitAndProgram):
         self.old_units = copy.deepcopy(self.units)
         self.units = []
@@ -657,14 +666,13 @@ class ScreenController(QWidget):
             old_progsheetList = [u.progSheet for u in self.old_units]
             new_progsheetList = newUnitAndProgram[1]
             i_range = range(min(len(old_progsheetList), len(new_progsheetList)))
-            ignore_keys = ["appearance"]
+            argvs = ["argv_1", "argv_2", "argv_3"]
+            ignore_keys = ["appearance"] + argvs
 
             if inhertLevel == 1:
                 for i in i_range:
                     if self.compare_dicts_ignore_keys(old_progsheetList[i], new_progsheetList[i], ignore_keys):
-                        a = self.old_units[i]
-                        a.appearance = new_progsheetList[i]["appearance"]
-                        self.units.append(a)
+                        self.use_new_argvs(self.old_units[i], new_progsheetList[i], argvs)
                     else:
                         self.units.append(ScreenUnit(newUnitAndProgram[0][i],newUnitAndProgram[1][i],self.colorMode,self.offset,self.FontIconMgr))
             if inhertLevel == 2:
@@ -675,9 +683,7 @@ class ScreenController(QWidget):
                         break
                 if in_is:
                     for i in i_range:
-                        a = self.old_units[i]
-                        a.appearance = new_progsheetList[i]["appearance"]
-                        self.units.append(a)
+                        self.use_new_argvs(self.old_units[i], new_progsheetList[i], argvs)
                 else:
                     for i in i_range:
                         self.units.append(ScreenUnit(newUnitAndProgram[0][i],newUnitAndProgram[1][i],self.colorMode,self.offset,self.FontIconMgr))
