@@ -1131,6 +1131,12 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                 item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)    #设置为只可选择，但可拖动
                 tableWidgetObject.setItem(row,col,item)
 
+    def recovery_lineMgr_widget(self):
+        self.flush_table(self.tableWidget_ProgramSheet,[]) # 清空节目单
+        self.LineSettler.path_to_pixmap = "./resources/welcome.png"
+        self.LineSettler.show_status = "image"
+        self.LineSettler.upgrade_widget()
+
     def selected_row(self,tableWidgetObject):
         row_select = tableWidgetObject.selectedItems()
         if len(row_select) == 0:
@@ -1154,6 +1160,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.currentFileDir = ""
         self.currentFileName = "新建文件"
         self.thisFile_saveStat.emit(False)
+        self.recovery_lineMgr_widget()
     
     def save_another(self):
         filedir,ok = QFileDialog.getSaveFileName(self,'保存','./','路牌文件 (*.bsu)')
@@ -1198,11 +1205,8 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
             # 更新界面
             self.flush_table(self.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.LineEditor.LineInfoList])
-            self.flush_table(self.tableWidget_ProgramSheet,[])
 
-            self.LineSettler.path_to_pixmap = "./resources/welcome.png"
-            self.LineSettler.show_status = "image"
-            self.LineSettler.upgrade_widget()
+            self.recovery_lineMgr_widget()
 
     def get_currentScreen(self):
         screen = self.combo_LineScreens.currentText()  # 获取正在编辑的屏幕
