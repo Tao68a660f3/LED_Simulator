@@ -4,15 +4,16 @@ from PyQt5.QtGui import QPixmap, QIcon, QTextCharFormat, QFont
 from PyQt5.QtCore import pyqtSignal, Qt, QCoreApplication
 
 from BmpCreater import FontManager, BmpCreater
-from ControlPanel import Ui_ControlPanel
-from NewALine import Ui_NewALine
-from SelfDefineScreenDialog import Ui_SelfDefineScreen
+from UI_ControlPanel import Ui_ControlPanel
+from UI_NewALine import Ui_NewALine
+from UI_SelfDefineScreenDialog import Ui_SelfDefineScreen
+from UI_About import *
+from UI_ColorMultiLine import *
+from UI_ProgSettings import *
+from UI_IconInfoManagement import *
 from ScreenInfo import *
 from LineInfo import *
 from LedScreenModule import *
-from About import *
-from ColorMultiLine import *
-from ProgSettings import *
 
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
@@ -29,7 +30,7 @@ showStyles = ["静止","闪烁","向左滚动","向右滚动","向上滚动","�
 
 
 
-class AboutWindow(QWidget,Ui_Form):
+class AboutWindow(QDialog,Ui_About):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -541,9 +542,9 @@ class ProgramSettings(QDialog,Ui_ProgSet):
 
         # tab 1
         self.tableWidget.setColumnCount(3)
+        self.tableWidget.setHorizontalHeaderLabels(["屏幕分区","重复次数","跳转至"])   #设置行表头
         self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)    #设置表格的选取方式是行选取
         self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)    #设置选取方式为单个选取
-        self.tableWidget.setHorizontalHeaderLabels(["屏幕分区","重复次数","跳转至"])   #设置行表头
         self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
         self.tableWidget.verticalHeader().setDefaultSectionSize(36)
         self.tableWidget.set_column_ratios([1, 1, 1.5])
@@ -626,7 +627,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
                     if "prange" in self.triggerList[row].keys():
                         context = f"{context}[{self.triggerList[row]['prange']}]"
                 item = QTableWidgetItem(context)
-                item.setTextAlignment(Qt.AlignLeft | Qt.AlignCenter)
+                item.setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
                 item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)    #设置为只可选择可用拖动
                 self.tableWidget.setItem(row,col,item)
 
@@ -857,7 +858,60 @@ class ProgramSettings(QDialog,Ui_ProgSet):
 
         return self.ProgScreenSetting
 
+class IconInfoManager(QDialog,Ui_IconInfoManage):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.Parent = parent
+        self.icon_infofile_list = []
+        self.setupUi(self)
+        self.initUI()
 
+    def initUI(self):
+        self.setModal(True)
+        self.setWindowTitle("管理图标信息文件")
+        self.resize(1000, 350)
+
+        self.tableWidget.setColumnCount(1)
+        self.tableWidget.setHorizontalHeaderLabels(["文件名称"])   #设置行表头
+        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)    #设置表格的选取方式是行选取
+        self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)    #设置选取方式为单个选取
+        self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)  #自动分配列宽
+        self.tableWidget.verticalHeader().setDefaultSectionSize(36)
+
+        self.add_btn.clicked.connect(self.add_file)
+        self.remove_btn.clicked.connect(self.del_file)
+
+    def get_file_list(self):
+        self.icon_infofile_list = self.Parent.icon_infofile_list
+
+    def flush_table(self):
+        self.tableWidget.setRowCount(0)
+        for row in range(len(self.icon_infofile_list)):
+            self.tableWidget.insertRow(row)
+            item = QTableWidgetItem(str(self.icon_infofile_list[row]))
+            item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)    #设置为只可选择
+            self.tableWidget.setItem(row,0,item)
+
+    def add_file(self):
+        file_dir,ok = QFileDialog.getOpenFileName(self.Parent,'打开','./','图标信息 (*.info)')
+        if ok:
+            self.icon_infofile_list.append(file_dir)
+        self.save_list()
+        self.flush_table()
+
+    def del_file(self):
+        row = self.Parent.selected_row(self.tableWidget)
+        if isinstance(row, int):
+            self.icon_infofile_list.pop(row)
+        self.save_list()
+        self.flush_table()
+
+    def save_list(self):
+        self.Parent.icon_infofile_list = self.icon_infofile_list
+        self.Parent.settings["icon_infofile_list"] = self.Parent.icon_infofile_list
+        self.Parent.save_setting()
 
 class MainWindow(QMainWindow, Ui_ControlPanel):
     thisFile_saveStat = pyqtSignal(bool)
@@ -870,6 +924,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.currentFileName = ""
         self.thisFileSaved = True
         self.keep_speed = False
+        self.icon_infofile_list = []
         self.currentLine = None
         self.currentProg = None
         self.currentDisplayProgIndex = None
@@ -882,15 +937,16 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.width = int(self.height*1648/985)
         # self.setMaximumSize(self.screenRect.width(),self.screenRect.height())
         self.setMinimumSize(self.width,self.height)
-        self.initUI()
 
         self.read_setting()
+        self.initUI()
         self.make_menu()
 
     def initUI(self):
         self.BtnWidget = QWidget(self)
         self.verticalLayout_LayoutBtn.addWidget(self.BtnWidget)
-        self.AboutWindow = AboutWindow()
+        self.AboutWindow = AboutWindow(self)
+        self.IconFileMgr = IconInfoManager(self)
         self.LineEditor = LineEditor()
         self.LineController = LineController(self)
         self.LineSettler = LineSettler(self)
@@ -948,6 +1004,11 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.AboutWindow.show()
         self.AboutWindow.initUI()
 
+    def show_iconMgr_window(self):
+        self.IconFileMgr.show()
+        self.IconFileMgr.get_file_list()
+        self.IconFileMgr.flush_table()
+
     def make_menu(self):
         fileMenu = self.menuBar().addMenu('文件')
         newAction = QAction('新建BSU文件', self)
@@ -991,6 +1052,9 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         setbgfolderAction = QAction('指定背景文件夹', self)
         setbgfolderAction.triggered.connect(self.set_background_folder)
         moreMenu.addAction(setbgfolderAction)
+        manageIconFileAction = QAction('管理图标信息文件', self)
+        manageIconFileAction.triggered.connect(self.show_iconMgr_window)
+        moreMenu.addAction(manageIconFileAction)
         copyLineAction = QAction('复制线路', self)
         copyLineAction.triggered.connect(self.LineController.copy_busLine)
         moreMenu.addAction(copyLineAction)
@@ -1012,10 +1076,17 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         if "keep_speed" in self.settings.keys():
             self.keep_speed = self.settings["keep_speed"]
 
+        if "icon_infofile_list" in self.settings.keys():
+            self.icon_infofile_list = self.settings["icon_infofile_list"]
+
     def save_setting(self):
         setting_file = "./resources/settings.info"
         with open(setting_file,'w',encoding = 'utf-8') as w:
             w.write(str(self.settings))
+
+    def resizeEvent(self, a0):
+        self.LineSettler.upgrade_widget()
+        return super().resizeEvent(a0)
 
     def closeEvent(self,event):
         print(self.thisFileSaved)
@@ -1053,7 +1124,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             tableWidgetObject.insertRow(row)
             for col in range(len(data[0])):
                 item = QTableWidgetItem(str(data[row][col]))
-                item.setTextAlignment(Qt.AlignLeft | Qt.AlignCenter)
+                item.setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
                 item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)    #设置为只可选择，但可拖动
                 tableWidgetObject.setItem(row,col,item)
 
@@ -1121,8 +1192,14 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             with open(file_dir,'r',encoding = 'utf-8') as r:
                 list_str = r.read()
                 self.LineEditor.LineInfoList = ast.literal_eval(list_str)
+
+            # 更新界面
             self.flush_table(self.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.LineEditor.LineInfoList])
             self.flush_table(self.tableWidget_ProgramSheet,[])
+
+            self.LineSettler.path_to_pixmap = "./resources/welcome.png"
+            self.LineSettler.show_status = "image"
+            self.LineSettler.upgrade_widget()
 
     def get_currentScreen(self):
         screen = self.combo_LineScreens.currentText()  # 获取正在编辑的屏幕
@@ -1261,6 +1338,7 @@ class IconManager():
     def __init__(self,parent):
         self.Parent = parent
         self.FontMgr = FontManager()
+        self.add_icon_from_filelist(self.Parent.icon_infofile_list)
         self.IconLib = self.FontMgr.icon_dict
         self.data = []
         self.initUI()
@@ -1279,7 +1357,7 @@ class IconManager():
         # self.Parent.tableWidget_Icons.verticalHeader().setDefaultSectionSize(64)
 
         self.Parent.btn_LoadIcons.clicked.connect(self.add_icon)
-        self.Parent.tableWidget_Icons.doubleClicked.connect(self.use_icom)
+        self.Parent.tableWidget_Icons.doubleClicked.connect(self.use_icon)
 
         self.flush_table()
 
@@ -1292,7 +1370,7 @@ class IconManager():
             self.Parent.tableWidget_Icons.insertRow(row)
             col = 0
             item = QTableWidgetItem(str(data[row][col]))
-            item.setTextAlignment(Qt.AlignLeft | Qt.AlignCenter)
+            item.setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
             item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)    #设置为只可选择
             self.Parent.tableWidget_Icons.setItem(row,col,item)
             col = 1
@@ -1310,7 +1388,17 @@ class IconManager():
             self.IconLib = self.FontMgr.icon_dict
             self.flush_table()
 
-    def use_icom(self):
+    def add_icon_from_filelist(self, filelist):
+        try:
+            for f in filelist:
+                self.FontMgr.icon_info.add(f)
+            self.FontMgr.get_icon_list()
+            self.IconLib = self.FontMgr.icon_dict
+            self.flush_table()
+        except Exception as e:
+            print(f"add_icon_from_filelist:{e}")
+
+    def use_icon(self):
         row = self.Parent.selected_row(self.Parent.tableWidget_Icons)
         if isinstance(row,int):
             ot = self.Parent.lineEdit_Text.text()
@@ -1995,6 +2083,9 @@ class LineSettler():
         self.customLButtons = []
         self.btn_w = 600
         self.btn_h = 220
+        self.path_to_pixmap = "./resources/welcome.png"
+        self.pixmap = QPixmap(self.path_to_pixmap)
+        self.show_status = "null"
         self.initUI()
 
     def initUI(self):
@@ -2011,16 +2102,49 @@ class LineSettler():
         self.Parent.spin_Height_1.setMinimum(4)
         self.Parent.spin_Height_2.setMinimum(4)
 
-        QTimer.singleShot(0, self.set_pixmap)
+        QTimer.singleShot(0, self.show_image)
 
-    def set_pixmap(self):
+    def upgrade_widget(self):
+        if self.show_status in ['null', 'image']:
+            self.show_image()
+        elif self.show_status in ['btn']:
+            self.show_custom_layout_btn()
+        else:
+            self.show_image()
+
+    def show_image(self):
+        self.set_pixmap(self.path_to_pixmap)
+        self.widget_set_image()
+        self.show_status = "image"
+
+    def set_pixmap(self, path_to_image):
+        self.pixmap = QPixmap(path_to_image)
+        if not self.pixmap.isNull():
+            available_width = self.Parent.BtnWidget.size().width()
+            available_height = self.Parent.BtnWidget.size().height()
+            original_width = self.pixmap.width()
+            original_height = self.pixmap.height()
+            
+            if available_width / available_height < original_width / original_height:
+                # 按宽度缩放
+                self.pixmap = self.pixmap.scaledToWidth(
+                    available_width, 
+                    Qt.SmoothTransformation
+                )
+            else:
+                # 按高度缩放
+                self.pixmap = self.pixmap.scaledToHeight(
+                    available_height, 
+                    Qt.SmoothTransformation
+                )
+
+    def widget_set_image(self):
+        self.clear_verticalLayout_LayoutBtn()
         self.Parent.BtnWidget.label = QLabel(parent=self.Parent.BtnWidget)
-        pixmap = QPixmap("./resources/welcome.png")
-        pixmap = pixmap.scaledToWidth(self.Parent.BtnWidget.size().width())
-        self.Parent.BtnWidget.label.setPixmap(pixmap)
+        self.Parent.BtnWidget.label.setPixmap(self.pixmap)
         self.Parent.BtnWidget.label.show()
 
-    def flush_verticalLayout_LayoutBtn(self):
+    def clear_verticalLayout_LayoutBtn(self):
         for widget in self.Parent.BtnWidget.findChildren(QWidget):
             widget.deleteLater()
 
@@ -2061,13 +2185,11 @@ class LineSettler():
         if isinstance(row,int):
             mode = self.Parent.LineEditor.LineInfoList[row]["preset"]
             if mode == "北京公交":
-                pixmap = QPixmap("./resources/preset_BeijingBus.png")
+                self.path_to_pixmap = "./resources/preset_BeijingBus.png"
             elif mode == "普通":
-                pixmap = QPixmap("./resources/preset_CommonBus.png")
-            pixmap = pixmap.scaledToWidth(self.Parent.BtnWidget.size().width())
-            self.Parent.BtnWidget.label = QLabel(parent=self.Parent.BtnWidget)
-            self.Parent.BtnWidget.label.setPixmap(pixmap)
-            self.Parent.BtnWidget.label.show()
+                self.path_to_pixmap = "./resources/preset_CommonBus.png"
+
+            self.show_image()
 
     def init_LineSetting(self):
         row = self.Parent.currentLine
@@ -2077,7 +2199,7 @@ class LineSettler():
             screens_have = [self.Parent.LineEditor.LineInfoList[row]["frontScreen"]["enabled"],self.Parent.LineEditor.LineInfoList[row]["backScreen"]["enabled"],self.Parent.LineEditor.LineInfoList[row]["frontSideScreen"]["enabled"],self.Parent.LineEditor.LineInfoList[row]["backSideScreen"]["enabled"]]
             self.Parent.combo_LineScreensForLayout.clear()
             self.Parent.combo_LayoutChoose.clear()
-            self.flush_verticalLayout_LayoutBtn()
+            self.clear_verticalLayout_LayoutBtn()
 
             for i in range(len(screens_have)):
                 if screens_have[i]:
@@ -2121,7 +2243,7 @@ class LineSettler():
     def show_custom_layout_btn(self):
         row = self.Parent.currentLine
         if isinstance(row,int):
-            self.flush_verticalLayout_LayoutBtn()
+            self.clear_verticalLayout_LayoutBtn()
             screen = self.get_currentScreen()
             widgetSize = [self.Parent.BtnWidget.size().width(),self.Parent.BtnWidget.size().height()]
             screenSize = [self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
@@ -2156,6 +2278,8 @@ class LineSettler():
                     self.customLButtons[-1].setGeometry(x,y,w,h)
                     self.customLButtons[-1].show()
             # self.Parent.ProgramSettler.show_scnUnit()
+
+            self.show_status = "btn"
 
     def init_layout(self):
         row = self.Parent.currentLine
@@ -2404,7 +2528,7 @@ class LineController():
         self.Parent.tableWidget_lineChoose.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
         self.Parent.tableWidget_lineChoose.verticalHeader().setDefaultSectionSize(36)
         self.Parent.tableWidget_lineChoose.rowMoved.connect(self.onRowMoved)
-        self.Parent.tableWidget_lineChoose.set_column_ratios([2.5, 1, 1])
+        self.Parent.tableWidget_lineChoose.set_column_ratios([2.5, 1.2, 1])
         self.Parent.tableWidget_lineChoose.set_min_total_width(250)
 
         self.Parent.combo_FlushRate.addItems(flushRateList)

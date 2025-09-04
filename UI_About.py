@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'About.ui'
+# Form implementation generated from reading ui file 'UI_About.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -11,14 +11,14 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Form(object):
-    def setupUi(self, Form):
-        Form.setObjectName("Form")
-        Form.resize(400, 300)
-        Form.setMinimumSize(QtCore.QSize(400, 300))
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(Form)
+class Ui_About(object):
+    def setupUi(self, About):
+        About.setObjectName("About")
+        About.resize(400, 300)
+        About.setMinimumSize(QtCore.QSize(400, 300))
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(About)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.label_Version = QtWidgets.QLabel(Form)
+        self.label_Version = QtWidgets.QLabel(About)
         font = QtGui.QFont()
         font.setPointSize(20)
         self.label_Version.setFont(font)
@@ -26,7 +26,7 @@ class Ui_Form(object):
         self.label_Version.setAlignment(QtCore.Qt.AlignCenter)
         self.label_Version.setObjectName("label_Version")
         self.verticalLayout_2.addWidget(self.label_Version)
-        self.label_6 = QtWidgets.QLabel(Form)
+        self.label_6 = QtWidgets.QLabel(About)
         self.label_6.setText("")
         self.label_6.setAlignment(QtCore.Qt.AlignCenter)
         self.label_6.setObjectName("label_6")
@@ -35,16 +35,16 @@ class Ui_Form(object):
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.label_4 = QtWidgets.QLabel(Form)
+        self.label_4 = QtWidgets.QLabel(About)
         self.label_4.setOpenExternalLinks(True)
         self.label_4.setObjectName("label_4")
         self.horizontalLayout_2.addWidget(self.label_4)
-        self.label_2 = QtWidgets.QLabel(Form)
+        self.label_2 = QtWidgets.QLabel(About)
         self.label_2.setOpenExternalLinks(True)
         self.label_2.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse)
         self.label_2.setObjectName("label_2")
         self.horizontalLayout_2.addWidget(self.label_2)
-        self.label_3 = QtWidgets.QLabel(Form)
+        self.label_3 = QtWidgets.QLabel(About)
         self.label_3.setOpenExternalLinks(True)
         self.label_3.setObjectName("label_3")
         self.horizontalLayout_2.addWidget(self.label_3)
@@ -52,7 +52,7 @@ class Ui_Form(object):
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.label_Declare = QtWidgets.QLabel(Form)
+        self.label_Declare = QtWidgets.QLabel(About)
         self.label_Declare.setText("")
         self.label_Declare.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_Declare.setWordWrap(True)
@@ -60,7 +60,7 @@ class Ui_Form(object):
         self.horizontalLayout.addWidget(self.label_Declare)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout_2.addLayout(self.verticalLayout)
-        self.label_Date = QtWidgets.QLabel(Form)
+        self.label_Date = QtWidgets.QLabel(About)
         self.label_Date.setText("")
         self.label_Date.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_Date.setObjectName("label_Date")
@@ -70,12 +70,12 @@ class Ui_Form(object):
         self.verticalLayout_2.setStretch(2, 2)
         self.verticalLayout_2.setStretch(3, 1)
 
-        self.retranslateUi(Form)
-        QtCore.QMetaObject.connectSlotsByName(Form)
+        self.retranslateUi(About)
+        QtCore.QMetaObject.connectSlotsByName(About)
 
-    def retranslateUi(self, Form):
+    def retranslateUi(self, About):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
-        self.label_4.setText(_translate("Form", "联系作者:lt738b@163.com"))
-        self.label_2.setText(_translate("Form", "<a href=\"https://github.com/Tao68a660f3/LED_Simulator\">GitHub"))
-        self.label_3.setText(_translate("Form", "<a href=\"https://space.bilibili.com/1051238382\">bilibili"))
+        About.setWindowTitle(_translate("About", "Form"))
+        self.label_4.setText(_translate("About", "联系作者:lt738b@163.com"))
+        self.label_2.setText(_translate("About", "<a href=\"https://github.com/Tao68a660f3/LED_Simulator\">GitHub"))
+        self.label_3.setText(_translate("About", "<a href=\"https://space.bilibili.com/1051238382\">bilibili"))

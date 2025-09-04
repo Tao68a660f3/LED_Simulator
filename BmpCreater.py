@@ -218,7 +218,7 @@ class FontManager():
                 file = f.readlines()
                 folder = ""
                 for i in range(len(file)):
-                    if file[i].startswith("FONT"):
+                    if file[i].startswith("FONT") or file[i].startswith("\ufeffFONT"):    # 带BOM
                         folder = file[i].split(",")[2][4:]
                     else:
                         font_file = file[i].split(",")[0]
@@ -233,7 +233,7 @@ class FontManager():
                 folder = ""
                 pattern = re.compile(r".*?,.*?,")
                 for i in range(len(file)):
-                    if file[i].startswith("ICON") or file[i].startswith("\ufeffICON"):
+                    if file[i].startswith("ICON") or file[i].startswith("\ufeffICON"):    # 带BOM
                         folder = file[i].split(",")[2][4:]
                         # print(folder,icon_info)
                         if folder.lower() == "default":
