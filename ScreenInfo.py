@@ -25,6 +25,12 @@ template_screenInfo = {
         "pointSize":6,
         "scale":(8,8),
     },
+	"biggerSize":{
+        "position":[0,0],
+        "pointNum":[32,16],
+        "pointSize":7,
+        "scale":(9,9),
+    },
     "bigSizeScaled810":{
         "position":[0,0],
         "pointNum":[32,16],
