@@ -489,7 +489,7 @@ class ScreenController(QWidget):
                 newStr = now.strftime(newStr)
                 s.strftimedStr = newStr
 
-                if s.strftimedStr != s.originalStr or s.strftimedStr != s.bmpSaysStr:
+                if s.strftimedStr != s.bmpSaysStr:
                     s.createFontImg()
 
         except Exception as e:

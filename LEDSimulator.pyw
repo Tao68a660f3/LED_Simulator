@@ -546,9 +546,9 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)    #设置表格的选取方式是行选取
         self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)    #设置选取方式为单个选取
         self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
-        self.tableWidget.verticalHeader().setDefaultSectionSize(36)
+        self.tableWidget.verticalHeader().setDefaultSectionSize(24)
         self.tableWidget.set_column_ratios([1, 1, 1.5])
-        self.tableWidget.set_min_total_width(400)
+        self.tableWidget.set_min_total_width(250)
 
         self.spin_Unit.setMinimum(1)
         self.spin_Unit.setMaximum(1)
@@ -869,7 +869,7 @@ class IconInfoManager(QDialog,Ui_IconInfoManage):
     def initUI(self):
         self.setModal(True)
         self.setWindowTitle("管理图标信息文件")
-        self.resize(1000, 350)
+        self.resize(750, 350)
 
         self.tableWidget.setColumnCount(1)
         self.tableWidget.setHorizontalHeaderLabels(["文件名称"])   #设置行表头
@@ -877,7 +877,7 @@ class IconInfoManager(QDialog,Ui_IconInfoManage):
         self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)    #设置选取方式为单个选取
         self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)  #自动分配列宽
-        self.tableWidget.verticalHeader().setDefaultSectionSize(36)
+        self.tableWidget.verticalHeader().setDefaultSectionSize(24)
 
         self.add_btn.clicked.connect(self.add_file)
         self.remove_btn.clicked.connect(self.del_file)
@@ -1360,7 +1360,7 @@ class IconManager():
         self.Parent.tableWidget_Icons.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
         self.Parent.tableWidget_Icons.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.Parent.tableWidget_Icons.set_column_ratios([1, 1])
-        self.Parent.tableWidget_Icons.set_min_total_width(300)
+        self.Parent.tableWidget_Icons.set_min_total_width(250)
         # self.Parent.tableWidget_Icons.verticalHeader().setDefaultSectionSize(64)
 
         self.Parent.btn_LoadIcons.clicked.connect(self.add_icon)
@@ -1426,9 +1426,9 @@ class ProgramSheetManager():
         self.Parent.tableWidget_ProgramSheet.setSelectionMode(QAbstractItemView.SingleSelection)
         self.Parent.tableWidget_ProgramSheet.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
         self.Parent.tableWidget_ProgramSheet.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.Parent.tableWidget_ProgramSheet.verticalHeader().setDefaultSectionSize(36)
+        self.Parent.tableWidget_ProgramSheet.verticalHeader().setDefaultSectionSize(24)
         self.Parent.tableWidget_ProgramSheet.set_column_ratios([2.5, 1])
-        self.Parent.tableWidget_ProgramSheet.set_min_total_width(300)
+        self.Parent.tableWidget_ProgramSheet.set_min_total_width(250)
 
         self.Parent.spinBox.setMaximum(3600*24)
         self.Parent.spinBox.setMinimum(-1)
@@ -1560,9 +1560,9 @@ class ProgramSettler():
         self.Parent.tableWidget_Screens.setSelectionMode(QAbstractItemView.SingleSelection)
         self.Parent.tableWidget_Screens.verticalHeader().setVisible(False)
         self.Parent.tableWidget_Screens.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.Parent.tableWidget_Screens.verticalHeader().setDefaultSectionSize(36)
+        self.Parent.tableWidget_Screens.verticalHeader().setDefaultSectionSize(24)
         self.Parent.tableWidget_Screens.set_column_ratios([1, 1, 1.2, 1.2])
-        self.Parent.tableWidget_Screens.set_min_total_width(300)
+        self.Parent.tableWidget_Screens.set_min_total_width(250)
 
         # 启用右键菜单
         self.Parent.tableWidget_Screens.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -2533,7 +2533,7 @@ class LineController():
         self.Parent.tableWidget_lineChoose.setSelectionBehavior(QAbstractItemView.SelectRows)    #设置表格的选取方式是行选取
         self.Parent.tableWidget_lineChoose.setSelectionMode(QAbstractItemView.SingleSelection)    #设置选取方式为单个选取
         self.Parent.tableWidget_lineChoose.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
-        self.Parent.tableWidget_lineChoose.verticalHeader().setDefaultSectionSize(36)
+        self.Parent.tableWidget_lineChoose.verticalHeader().setDefaultSectionSize(24)
         self.Parent.tableWidget_lineChoose.rowMoved.connect(self.onRowMoved)
         self.Parent.tableWidget_lineChoose.set_column_ratios([2.5, 1.2, 1])
         self.Parent.tableWidget_lineChoose.set_min_total_width(250)
