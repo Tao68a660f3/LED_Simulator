@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageChops
 # import numpy as np
 import binascii, re, os, ast #, freetype
 
@@ -86,47 +86,159 @@ class ASC_Bmp_Reader():
         return ch
 
 class HZK_Font_Reader():
-    def __init__(self,relative_path,fontPath):
-        self.fontPath = fontPath
-        self.fontPath = relative_path + self.fontPath
-        f = open(self.fontPath, "rb")
-        f.close()
-        self.KEYS = [0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01]
+    def __init__(self, relative_path, fontPath, font_size=16):
+        self.fontPath = relative_path + fontPath
+        self.font_size = font_size  # 16或24
+        
+        # 根据字体大小设置不同的参数
+        if self.font_size == 16:
+            self.bytes_per_char = 32
+            self.char_width = 16
+            self.char_height = 16
+            self.KEYS = [0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01]
+        elif self.font_size == 24:
+            self.bytes_per_char = 72
+            self.char_width = 24
+            self.char_height = 24
+            self.KEYS = [0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01]
+        else:
+            raise ValueError("只支持16x16或24x24字体大小")
+        
+        # 验证文件存在
+        with open(self.fontPath, "rb") as f:
+            pass  # 只是验证文件可访问
 
-    def get_char_map(self,text):
-        rect_list = [[] for _ in range(16)]
+    def get_char_map(self, text):
         try:
             gb2312 = text.encode('gb2312')
         except:
+            # 对于无法编码的字符，使用全角空格代替
             gb2312 = "　".encode('gb2312')
+        
         hex_str = binascii.b2a_hex(gb2312)
         result = str(hex_str, encoding='utf-8')
-        area = int('0x' + result[:2],16) - 0xA0
-        index = int('0x' + result[2:],16) - 0xA0
-        offset = (94 * (area-1) + (index-1)) * 32
-        font_rect = None
+        area = int('0x' + result[:2], 16) - 0xA0
+        index = int('0x' + result[2:], 16) - 0xA0
+        
+        # 计算偏移量
+        offset = (94 * (area-1) + (index-1)) * self.bytes_per_char
+        
+        # 初始化字符点阵
+        if self.font_size == 16:
+            rect_list = [[] for _ in range(16)]
+        else:  # 24x24
+            rect_list = [[] for _ in range(24)]
+        
+        # 读取字体数据
         with open(self.fontPath, "rb") as f:
             f.seek(offset)
-            font_rect = f.read(32)
-        for k in range(len(font_rect) // 2):
-            row_list = rect_list[k]
-            for j in range(2):
-                for i in range(8):
-                    asc = font_rect[k * 2 + j]
-                    flag = 1 if asc & self.KEYS[i] else 0
-                    row_list.append(flag)
-                    
+            font_rect = f.read(self.bytes_per_char)
+        
+        # 处理16x16字体
+        if self.font_size == 16:
+            for k in range(len(font_rect) // 2):
+                row_list = rect_list[k]
+                for j in range(2):
+                    for i in range(8):
+                        asc = font_rect[k * 2 + j]
+                        flag = 1 if asc & self.KEYS[i] else 0
+                        row_list.append(flag)
+        
+        # 处理24x24字体
+        else:
+            for k in range(24):  # 24行
+                row_list = rect_list[k]
+                # 每行3字节
+                for j in range(3):
+                    for i in range(8):
+                        asc = font_rect[k * 3 + j]
+                        flag = 1 if asc & self.KEYS[i] else 0
+                        row_list.append(flag)
+                        
         return rect_list
         
-    def make_text_bmp(self,fontData,y_offset):
+    def make_text_bmp(self, fontData, y_offset, xb=1, yb=1, scale=100, scale_y=100):
+        # 创建图像数据
         image_data = [255 if pixel == 1 else 0 for row in fontData for pixel in row]
-        image = Image.new("1", (16, 16))
+        image = Image.new("1", (self.char_width, self.char_height))
         image.putdata(image_data)
-        image = image.crop((0,y_offset,image.width,y_offset+image.height))
+        
+        # 裁剪到指定偏移量
+        if y_offset > 0:
+            image = image.crop((0, y_offset, image.width, y_offset + image.height))
+        
+        # 加粗处理
+        if xb > 1 or yb > 1:
+            image = self.bold_image(image, xb, yb)
+        
+        # 缩放处理
+        if scale != 100 or scale_y != 100:
+            new_width = int(image.width * scale / 100)
+            new_height = int(image.height * scale_y / 100)
+            image = image.resize((new_width, new_height), resample=Image.LANCZOS)
+        
         return image
         
-    def get_text_bmp(self,text,y_offset = 0,*not_used_argv):
-        return self.make_text_bmp(self.get_char_map(text),y_offset)
+    def bold_image(self, image, xb, yb):
+        # 创建加粗后的图像
+        bold_image = image.copy()
+        
+        # 水平加粗
+        for i in range(1, xb):
+            # 创建一个临时图像，将原图像向右平移i像素
+            shifted = Image.new("1", image.size, 0)
+            # 计算平移后的区域
+            if i < image.width:
+                # 从原图像复制区域到平移后的位置
+                box_from = (0, 0, image.width - i, image.height)
+                box_to = (i, 0, image.width, image.height)
+                region = image.crop(box_from)
+                shifted.paste(region, box_to)
+            
+            # 合并图像
+            bold_image = ImageChops.logical_or(bold_image, shifted)
+        
+        # 垂直加粗
+        for i in range(1, yb):
+            # 创建一个临时图像，将原图像向下平移i像素
+            shifted = Image.new("1", image.size, 0)
+            # 计算平移后的区域
+            if i < image.height:
+                # 从原图像复制区域到平移后的位置
+                box_from = (0, 0, image.width, image.height - i)
+                box_to = (0, i, image.width, image.height)
+                region = image.crop(box_from)
+                shifted.paste(region, box_to)
+            
+            # 合并图像
+            bold_image = ImageChops.logical_or(bold_image, shifted)
+        
+        return bold_image
+        
+    def get_text_bmp(self, text, y_offset=0, font_size=16, xb=1, yb=1, scale=100, scale_y=100, *not_used_argv):
+        self.set_font_size(font_size)
+        try:
+            bmp = self.make_text_bmp(self.get_char_map(text), y_offset, xb, yb, scale, scale_y)
+        except Exception as e:
+            print(f"get_text_bmp in HZK_Font_Reader: {e}")
+            bmp = Image.new("1",(16,16))
+        return bmp
+    
+    def set_font_size(self, font_size):
+        """设置字体大小"""
+        if font_size not in [16, 24]:
+            print("只支持16或24字体大小")
+            font_size = 16
+        
+        self.font_size = font_size
+        if self.font_size == 16:
+            self.bytes_per_char = 32
+            self.char_width = 16
+            self.char_height = 16
+        else:
+            self.bytes_per_char = 72
+            self.char_width = 24
+            self.char_height = 24
 
 class Sys_Font_Reader():
     def __init__(self,font_path):
@@ -139,13 +251,14 @@ class Sys_Font_Reader():
                 return True
         return False
 
-    def get_text_bmp(self,text,y_offset=0,font_size=16,xb=1,yb=1,scale=100):
+    def get_text_bmp(self,text,y_offset=0,font_size=16,xb=1,yb=1,scale=100, scale_y=100):
         try:
             self.font = ImageFont.truetype(self.font_path, font_size)
         except:    # 字体打不开时暂时用宋体代替
             self.font = ImageFont.truetype("simsun", font_size)
         scaled_font = {"FZYTK":72,}
         extra_size = int(0.2*font_size) if text.isascii() else 0  # 加高ASCII字体以防止字符不完整
+        extra_size = 0
         s = text
         s = "+ "+s
         ss = "+ "
@@ -183,6 +296,10 @@ class Sys_Font_Reader():
                     continue
                 break
 
+        # 加粗超过2时处理水平宽度
+        if xb >= 2:
+            text_width += (xb - 2)
+
         image = Image.new("1", (text_width-delta_width, font_size+extra_size))
         # 获取新的Draw对象
         draw = ImageDraw.Draw(image)
@@ -196,7 +313,11 @@ class Sys_Font_Reader():
             if fnt in self.font_path and self.is_Chinese(text):
                 image = image.crop((1+int(image.width*(1-scaled_font[fnt]/100)*0.5),0,int(image.width*(1-(1-scaled_font[fnt]/100)*0.5)),image.height))
 
-        image = image.resize((int(image.width*scale/100),image.height),resample=Image.LANCZOS)
+        # 缩放处理
+        if scale != 100 or scale_y != 100:
+            new_width = int(image.width * scale / 100)
+            new_height = int(image.height * scale_y / 100)
+            image = image.resize((new_width, new_height), resample=Image.LANCZOS)
 
         return image
     
@@ -221,9 +342,11 @@ class FontManager():
                     if file[i].startswith("FONT") or file[i].startswith("\ufeffFONT"):    # 带BOM
                         folder = file[i].split(",")[2][4:]
                     else:
-                        font_file = file[i].split(",")[0]
-                        font_name = file[i].split(",")[1]
-                        self.font_dict[font_name] = folder+font_file
+                        sp = file[i].split(",")
+                        if(len(sp) == 3):
+                            font_file = file[i].split(",")[0]
+                            font_name = file[i].split(",")[1]
+                            self.font_dict[font_name] = folder+font_file
         # print(self.font_dict)
 
     def get_icon_list(self):
@@ -524,7 +647,7 @@ class BmpCreater():
             
         return im
 
-    def create_character(self,vertical=False, roll_asc = False, text="", ch_font_size=16, asc_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, y_offset_asc = 0, style = [0, 0], multi_line = {"stat":False, "line_space": 0 }):
+    def create_character(self,vertical=False, roll_asc = False, text="", ch_font_size=16, asc_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, scale_y = 100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, y_offset_asc = 0, style = [0, 0], multi_line = {"stat":False, "line_space": 0 }):
         IMAGES = []
         tasks = []
         foc = (255, 255, 255, 255)
@@ -532,6 +655,13 @@ class BmpCreater():
 
         if text == "":
             text = " "
+
+        if scale_sys_font_only:
+            sscale = scale
+            sscale_y = scale_y
+        else:
+            sscale = 100
+            sscale_y = 100
 
         try:
             coloredstritems = ast.literal_eval(text)
@@ -583,18 +713,15 @@ class BmpCreater():
                         pass     
                 else:
                     font_tasks = list(sub_task)
+
                     for chr in font_tasks:
                         this_chr = chr
                         if chr in self.lineBreakChr:
                             chr = " "
                         if chr.isascii():
-                            ch = self.ASC_Reader.get_text_bmp(chr,y_offset_asc,asc_font_size,ch_bold_size_x,ch_bold_size_y,100)
+                            ch = self.ASC_Reader.get_text_bmp(chr,y_offset_asc,asc_font_size,ch_bold_size_x,ch_bold_size_y,sscale,sscale_y)
                         else:
-                            if scale_sys_font_only:
-                                sscale = scale
-                            else:
-                                sscale = 100
-                            ch = self.Ch_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,sscale)
+                            ch = self.Ch_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,sscale,sscale_y)
 
                         if self.color_type == "RGB":
                             ch = self.fill_image_with_color(task[1], ch, foc, bac)
@@ -604,7 +731,7 @@ class BmpCreater():
 
                         IMAGES.append({"img": ch, "chr": this_chr})
         # 拼接图像
-        if new_width != None and new_height != None and not auto_scale:
+        if new_width is not None and new_height is not None and not auto_scale:
             exp_size = [new_width, new_height]
         else:
             exp_size = []
@@ -615,11 +742,11 @@ class BmpCreater():
         # 缩放图像横向宽度
         if (auto_scale and not scale_sys_font_only) and new_width != None and new_height != None:
             if len(text) <= 2*new_width/new_height and img_width > new_width:
-                new_image = new_image.resize((new_width,img_height),resample=Image.BOX)
+                new_image = new_image.resize((new_width,int(img_height*scale_y/100)),resample=Image.BOX)
             if len(text) > 2*new_width/new_height and img_width > new_width:
-                new_image = new_image.resize((int(img_width*(new_height/2)/ch_font_size),img_height),resample=Image.BOX)
+                new_image = new_image.resize((int(img_width*min(100,(new_height/2)/ch_font_size)),int(img_height*scale_y/100)),resample=Image.BOX)
         if (not auto_scale and not scale_sys_font_only):
-            new_image = new_image.resize((int(img_width*scale/100),img_height),resample=Image.BOX)
+            new_image = new_image.resize((int(img_width*scale/100),int(img_height*scale_y/100)),resample=Image.BOX)
         # 保存图像
         return new_image
     
@@ -632,10 +759,10 @@ if __name__ == "__main__":
 # ＰＱＲＳＴＵＶＷＸＹＺ［＼］＾＿
 # ｀ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏ
 # ｐｑｒｓｔｕｖｗｘｙｚ｛｜｝～　'''
-    ch_font="宋体"
+    ch_font="HZK24黑体"
     asc_font="ASC1608"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,255,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1,relative_path = "")
-    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=16, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, auto_scale=False, scale_sys_font_only=True, new_width = 128, new_height = 32, y_offset = 0, y_offset_asc = 0, style = [-1,0], multi_line = {"stat":True, "line_space": 1.0 })
+    font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=24, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=100, scale_y=100, auto_scale=False, scale_sys_font_only=True, new_width = 128, new_height = 32, y_offset = 0, y_offset_asc = 0, style = [-1,0], multi_line = {"stat":True, "line_space": 1.0 })
     font_img.save("混合字体测试生成.bmp")
 
 # 欢迎使用音乐播放器 真正的“电脑爱好者”都应该用自动播放而不是第三方弹窗。[doge][doge]

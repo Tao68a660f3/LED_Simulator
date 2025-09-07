@@ -832,7 +832,7 @@
               <item row="1" column="4">
                <widget class="QLabel" name="label_Align_x">
                 <property name="text">
-                 <string>x对齐</string>
+                 <string>水平对齐</string>
                 </property>
                </widget>
               </item>
@@ -842,7 +842,7 @@
               <item row="1" column="6">
                <widget class="QLabel" name="label_Align_y">
                 <property name="text">
-                 <string>y对齐</string>
+                 <string>竖直对齐</string>
                 </property>
                </widget>
               </item>
@@ -853,10 +853,24 @@
             </item>
             <item>
              <layout class="QGridLayout" name="gridLayout_5">
+              <item row="0" column="4">
+               <widget class="QCheckBox" name="chk_Argv1">
+                <property name="text">
+                 <string>仅缩放系统字体</string>
+                </property>
+               </widget>
+              </item>
               <item row="0" column="0">
                <widget class="QLabel" name="label_Zoom">
                 <property name="text">
-                 <string>缩放比例(%)</string>
+                 <string>缩放比例(横竖)(%)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <widget class="QCheckBox" name="chk_AutoZoom">
+                <property name="text">
+                 <string>自动缩放</string>
                 </property>
                </widget>
               </item>
@@ -864,18 +878,7 @@
                <widget class="QSpinBox" name="spinBox_Zoom"/>
               </item>
               <item row="0" column="2">
-               <widget class="QCheckBox" name="chk_AutoZoom">
-                <property name="text">
-                 <string>自动缩放</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="3">
-               <widget class="QCheckBox" name="chk_Argv1">
-                <property name="text">
-                 <string>仅缩放系统字体</string>
-                </property>
-               </widget>
+               <widget class="QSpinBox" name="spinBox_ZoomY"/>
               </item>
              </layout>
             </item>

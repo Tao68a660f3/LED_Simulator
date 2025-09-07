@@ -18,8 +18,8 @@ from LedScreenModule import *
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
-version = "1.4.6(内测版)"
-release_date = "20250904"
+version = "1.5 Pre"
+release_date = "20250907"
 
 ledTypes = [i for i in pointKindDict.keys()]
 scales = [ast.literal_eval(i) for i in ledTypes]
@@ -1606,7 +1606,10 @@ class ProgramSettler():
         self.Parent.spinBox_Align_y.setMinimum(-1)
         self.Parent.spinBox_Zoom.setMaximum(200)
         self.Parent.spinBox_Zoom.setMinimum(40)
-        self.Parent.spinBox_Zoom.setValue(100)   
+        self.Parent.spinBox_Zoom.setValue(100)  
+        self.Parent.spinBox_ZoomY.setMaximum(200)
+        self.Parent.spinBox_ZoomY.setMinimum(40)
+        self.Parent.spinBox_ZoomY.setValue(100)   
 
         self.Parent.tableWidget_Screens.itemSelectionChanged.connect(self.show_progArgv)
         self.Parent.tableWidget_Screens.rowMoved.connect(self.move_scnUnitProg)
@@ -1793,12 +1796,16 @@ class ProgramSettler():
                 p = screenProgList[i]
                 Creater = BmpCreater(self.Parent.IconManager.FontMgr,self.colorMode,p["color_RGB"],p["font"],p["ascFont"],p["sysFontOnly"],)
                 _roll_asc = True
+                _scale_y = 100
                 if "rollAscii" in p.keys():
                     _roll_asc = p["rollAscii"]
+                if "scale_y" in p.keys():
+                    _scale_y = p["scale_y"]
+
                 if "multiLine" in p.keys() and "lineSpace" in p.keys():
-                    bmp = Creater.create_character(vertical=p["vertical"], roll_asc = _roll_asc, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["ascFontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset_asc"], style = p["align"], multi_line={"stat":p["multiLine"], "line_space": p["lineSpace"] })
+                    bmp = Creater.create_character(vertical=p["vertical"], roll_asc = _roll_asc, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["ascFontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], scale_y=_scale_y, auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset_asc"], style = p["align"], multi_line={"stat":p["multiLine"], "line_space": p["lineSpace"] })
                 else:
-                    bmp = Creater.create_character(vertical=p["vertical"], roll_asc = _roll_asc, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["fontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset"], style = p["align"])
+                    bmp = Creater.create_character(vertical=p["vertical"], roll_asc = _roll_asc, text=p["text"], ch_font_size=p["fontSize"], asc_font_size=p["fontSize"], ch_bold_size_x=p["bold"][0], ch_bold_size_y=p["bold"][1], space=p["spacing"], scale=p["scale"], scale_y=_scale_y, auto_scale=p["autoScale"], scale_sys_font_only=p["scaleSysFontOnly"], new_width = screenUnitList[i]["pointNum"][0], new_height = screenUnitList[i]["pointNum"][1], y_offset = p["y_offset"], y_offset_asc = p["y_offset"], style = p["align"])
 
                 data.append([
                     i + 1,
@@ -1976,7 +1983,14 @@ class ProgramSettler():
                     try:
                         self.Parent.spinBox_Y_GlobalOffset.setValue(self.screenProgList[row]["y_offset_global"])
                     except:
-                        print("尝试读取2版数据") # 尚未开发完成
+                        print("尝试读取2版数据")
+
+                    try:
+                        self.Parent.spinBox_ZoomY.setValue(self.screenProgList[row]["scale_y"])
+                    except:
+                        self.Parent.spinBox_ZoomY.setValue(100)
+                        print("尝试读取3版数据")
+
 
                     try:
                         if self.screenProgList[row]["richText"][0]:
@@ -2016,6 +2030,7 @@ class ProgramSettler():
                 self.screenProgList[row]["align"][0] = self.Parent.spinBox_Align_x.value()
                 self.screenProgList[row]["align"][1] = self.Parent.spinBox_Align_y.value()
                 self.screenProgList[row]["scale"] = self.Parent.spinBox_Zoom.value()
+                self.screenProgList[row]["scale_y"] = self.Parent.spinBox_ZoomY.value()
                 self.screenProgList[row]["autoScale"] = self.Parent.chk_AutoZoom.isChecked()
                 self.screenProgList[row]["scaleSysFontOnly"] = self.Parent.chk_Argv1.isChecked()
                 # self.screenProgList[row]["text"] = self.Parent.lineEdit_Text.text()  # 见下
