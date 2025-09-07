@@ -1180,23 +1180,33 @@ class ScreenController(QWidget):
                         obj.x = obj.x+arg2
                         obj.rollCounter = 0
                     else:
-                        if obj.rollCounter <= (arg3*self.expectedFps + 1):
-                            obj.counter += obj.rollCounter // (arg3*self.expectedFps + 1)
-                        if obj.rollCounter > (arg3*self.expectedFps + 1):
-                            obj.x = -obj.pointNum[0]+obj.Bitmap.size[0]
-                        if obj.rollCounter > 2*(arg3*self.expectedFps + 1):
+                        if arg3 == 0:
+                            obj.counter += 1
                             obj.rollCounter = 0
+                            obj.x = -obj.pointNum[0]+obj.Bitmap.size[0]
+                        else:
+                            if obj.rollCounter <= arg3*self.expectedFps:
+                                obj.counter += obj.rollCounter // (arg3*self.expectedFps)
+                            if obj.rollCounter > arg3*self.expectedFps:
+                                obj.x = -obj.pointNum[0]+obj.Bitmap.size[0]
+                            if obj.rollCounter > 2*arg3*self.expectedFps:
+                                obj.rollCounter = 0
                 else:
                     if obj.x+arg2 <= -obj.pointNum[0]+obj.Bitmap.size[0] and obj.rollCounter <= arg1:
                         obj.x = obj.x+arg2
                         obj.rollCounter = 0
                     else:
-                        if obj.rollCounter <= (arg3*self.expectedFps + 1):
-                            obj.counter += obj.rollCounter // (arg3*self.expectedFps + 1)
-                        if obj.rollCounter > (arg3*self.expectedFps + 1):
-                            obj.x = 0
-                        if obj.rollCounter > 2*(arg3*self.expectedFps + 1):
+                        if arg3 == 0:
+                            obj.counter += 1
                             obj.rollCounter = 0
+                            obj.x = 0
+                        else:
+                            if obj.rollCounter <= arg3*self.expectedFps:
+                                obj.counter += obj.rollCounter // (arg3*self.expectedFps)
+                            if obj.rollCounter > arg3*self.expectedFps:
+                                obj.x = 0
+                            if obj.rollCounter > 2*arg3*self.expectedFps:
+                                obj.rollCounter = 0
         elif appearance == "跳跃向右移动":
             obj.appear = True
             obj.y = y0
@@ -1208,23 +1218,33 @@ class ScreenController(QWidget):
                         obj.x = obj.x-arg2
                         obj.rollCounter = 0
                     else:
-                        if obj.rollCounter <= (arg3*self.expectedFps + 1):
-                            obj.counter += obj.rollCounter // (arg3*self.expectedFps + 1)
-                        if obj.rollCounter > (arg3*self.expectedFps + 1):
-                            obj.x = 0
-                        if obj.rollCounter > 2*(arg3*self.expectedFps + 1):
+                        if arg3 == 0:
+                            obj.counter += 1
                             obj.rollCounter = 0
+                            obj.x = 0
+                        else:
+                            if obj.rollCounter <= arg3*self.expectedFps:
+                                obj.counter += obj.rollCounter // (arg3*self.expectedFps)
+                            if obj.rollCounter > arg3*self.expectedFps:
+                                obj.x = 0
+                            if obj.rollCounter > 2*arg3*self.expectedFps:
+                                obj.rollCounter = 0
                 else:
                     if obj.x-arg2 >= 0 and obj.rollCounter <= arg1:
                         obj.x = obj.x-arg2
                         obj.rollCounter = 0
                     else:
-                        if obj.rollCounter <= (arg3*self.expectedFps + 1):
-                            obj.counter += obj.rollCounter // (arg3*self.expectedFps + 1)
-                        if obj.rollCounter > (arg3*self.expectedFps + 1):
-                            obj.x = -obj.pointNum[0]+obj.Bitmap.size[0]
-                        if obj.rollCounter > 2*(arg3*self.expectedFps + 1):
+                        if arg3 == 0:
+                            obj.counter += 1
                             obj.rollCounter = 0
+                            obj.x = -obj.pointNum[0]+obj.Bitmap.size[0]
+                        else:
+                            if obj.rollCounter <= arg3*self.expectedFps:
+                                obj.counter += obj.rollCounter // (arg3*self.expectedFps)
+                            if obj.rollCounter > arg3*self.expectedFps:
+                                obj.x = -obj.pointNum[0]+obj.Bitmap.size[0]
+                            if obj.rollCounter > 2*arg3*self.expectedFps:
+                                obj.rollCounter = 0
         elif appearance == "跳跃向上移动":
             obj.appear = True
             obj.x = pos0
@@ -1236,23 +1256,33 @@ class ScreenController(QWidget):
                         obj.y = obj.y+arg2
                         obj.rollCounter = 0
                     else:
-                        if obj.rollCounter <= (arg3*self.expectedFps + 1):
-                            obj.counter += obj.rollCounter // (arg3*self.expectedFps + 1)
-                        if obj.rollCounter > (arg3*self.expectedFps + 1):
-                            obj.y = -obj.pointNum[1]+obj.Bitmap.size[1]
-                        if obj.rollCounter > 2*(arg3*self.expectedFps + 1):
+                        if arg3 == 0:
+                            obj.counter += 1
                             obj.rollCounter = 0
+                            obj.y = -obj.pointNum[1]+obj.Bitmap.size[1]
+                        else:
+                            if obj.rollCounter <= arg3*self.expectedFps:
+                                obj.counter += obj.rollCounter // (arg3*self.expectedFps)
+                            if obj.rollCounter > arg3*self.expectedFps:
+                                obj.y = -obj.pointNum[1]+obj.Bitmap.size[1]
+                            if obj.rollCounter > 2*arg3*self.expectedFps:
+                                obj.rollCounter = 0
                 else:
                     if obj.y+arg2 <= -obj.pointNum[1]+obj.Bitmap.size[1] and obj.rollCounter <= arg1:
                         obj.y = obj.y+arg2
                         obj.rollCounter = 0
                     else:
-                        if obj.rollCounter <= (arg3*self.expectedFps + 1):
-                            obj.counter += obj.rollCounter // (arg3*self.expectedFps + 1)
-                        if obj.rollCounter > (arg3*self.expectedFps + 1):
-                            obj.y = 0
-                        if obj.rollCounter > 2*(arg3*self.expectedFps + 1):
+                        if arg3 == 0:
+                            obj.counter += 1
                             obj.rollCounter = 0
+                            obj.y = 0
+                        else:
+                            if obj.rollCounter <= arg3*self.expectedFps:
+                                obj.counter += obj.rollCounter // (arg3*self.expectedFps)
+                            if obj.rollCounter > arg3*self.expectedFps:
+                                obj.y = 0
+                            if obj.rollCounter > 2*arg3*self.expectedFps:
+                                obj.rollCounter = 0
         elif appearance == "跳跃向下移动":
             obj.appear = True
             obj.x = pos0
@@ -1264,23 +1294,33 @@ class ScreenController(QWidget):
                         obj.y = obj.y-arg2
                         obj.rollCounter = 0
                     else:
-                        if obj.rollCounter <= (arg3*self.expectedFps + 1):
-                            obj.counter += obj.rollCounter // (arg3*self.expectedFps + 1)
-                        if obj.rollCounter > (arg3*self.expectedFps + 1):
-                            obj.y = 0
-                        if obj.rollCounter > 2*(arg3*self.expectedFps + 1):
+                        if arg3 == 0:
+                            obj.counter += 1
                             obj.rollCounter = 0
+                            obj.y = 0
+                        else:
+                            if obj.rollCounter <= arg3*self.expectedFps:
+                                obj.counter += obj.rollCounter // (arg3*self.expectedFps)
+                            if obj.rollCounter > arg3*self.expectedFps:
+                                obj.y = 0
+                            if obj.rollCounter > 2*arg3*self.expectedFps:
+                                obj.rollCounter = 0
                 else:
                     if obj.y-arg2 >= 0 and obj.rollCounter <= arg1:
                         obj.y = obj.y-arg2
                         obj.rollCounter = 0
                     else:
-                        if obj.rollCounter <= (arg3*self.expectedFps + 1):
-                            obj.counter += obj.rollCounter // (arg3*self.expectedFps + 1)
-                        if obj.rollCounter > (arg3*self.expectedFps + 1):
-                            obj.y = -obj.pointNum[1]+obj.Bitmap.size[1]
-                        if obj.rollCounter > 2*(arg3*self.expectedFps + 1):
+                        if arg3 == 0:
+                            obj.counter += 1
                             obj.rollCounter = 0
+                            obj.y = -obj.pointNum[1]+obj.Bitmap.size[1]
+                        else:
+                            if obj.rollCounter <= arg3*self.expectedFps:
+                                obj.counter += obj.rollCounter // (arg3*self.expectedFps)
+                            if obj.rollCounter > arg3*self.expectedFps:
+                                obj.y = -obj.pointNum[1]+obj.Bitmap.size[1]
+                            if obj.rollCounter > 2*arg3*self.expectedFps:
+                                obj.rollCounter = 0
         elif appearance == "向左翻屏":
             obj.appear = True
             obj.y = y0
