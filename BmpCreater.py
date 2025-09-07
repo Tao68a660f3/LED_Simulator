@@ -351,25 +351,28 @@ class FontManager():
 
     def get_icon_list(self):
         for icon_info in self.icon_info:
-            with open(icon_info,"r",encoding="utf-8") as f:
-                file = f.readlines()
-                folder = ""
-                pattern = re.compile(r".*?,.*?,")
-                for i in range(len(file)):
-                    if file[i].startswith("ICON") or file[i].startswith("\ufeffICON"):    # 带BOM
-                        folder = file[i].split(",")[2][4:]
-                        # print(folder,icon_info)
-                        if folder.lower() == "default":
-                            folder = os.path.dirname(icon_info)
-                    else:
-                        try:
-                            match_result = pattern.match(file[i])[0]
-                            icon_name = '`'+match_result.split(",")[0]+'`'
-                            icon_file = match_result.split(",")[1]
-                            self.icon_dict[icon_name] = os.path.join(folder,icon_file)
-                            # print(icon_file,self.icon_dict[icon_name])
-                        except:
-                            pass
+            try:
+                with open(icon_info,"r",encoding="utf-8") as f:
+                    file = f.readlines()
+                    folder = ""
+                    pattern = re.compile(r".*?,.*?,")
+                    for i in range(len(file)):
+                        if file[i].startswith("ICON") or file[i].startswith("\ufeffICON"):    # 带BOM
+                            folder = file[i].split(",")[2][4:]
+                            # print(folder,icon_info)
+                            if folder.lower() == "default":
+                                folder = os.path.dirname(icon_info)
+                        else:
+                            try:
+                                match_result = pattern.match(file[i])[0]
+                                icon_name = '`'+match_result.split(",")[0]+'`'
+                                icon_file = match_result.split(",")[1]
+                                self.icon_dict[icon_name] = os.path.join(folder,icon_file)
+                                # print(icon_file,self.icon_dict[icon_name])
+                            except:
+                                pass
+            except Exception as e:
+                print(e)
         # print(self.icon_dict)
 
 class BmpCreater():
