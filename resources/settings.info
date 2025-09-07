@@ -1,1 +1,1 @@
-{'background_folder': './BackgroundImg', 'keep_speed': False}
+{'background_folder': './BackgroundImg', 'keep_speed': False, 'icon_infofile_list': ['D:/Documents/NewCode/bmpfont/BusLedSimulator_V2.0_developing/icons/icon.info', 'D:/Documents/NewCode/bmpfont/MyFile/icon/icon.info', 'D:/Documents/NewCode/bmpfont/LED_Simulator/icons/icon.info']}
