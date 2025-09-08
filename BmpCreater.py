@@ -164,8 +164,7 @@ class HZK_Font_Reader():
         image.putdata(image_data)
         
         # 裁剪到指定偏移量
-        if y_offset > 0:
-            image = image.crop((0, y_offset, image.width, y_offset + image.height))
+        image = image.crop((0, y_offset, image.width, y_offset + image.height))
         
         # 加粗处理
         if xb > 1 or yb > 1:
@@ -327,6 +326,7 @@ class FontManager():
         self.icon_info = {"./resources/icon.info"}
         self.font_dict = dict()
         self.icon_dict = dict()  # 字体和图标均不可重名
+        print("\n\nFontManagerINIT\n\n")
         self.flush_resources()
 
     def flush_resources(self):
@@ -335,54 +335,78 @@ class FontManager():
 
     def get_font_list(self):
         for font_info in self.font_info:
-            with open(font_info,"r",encoding="utf-8") as f:
-                file = f.readlines()
-                folder = ""
-                for i in range(len(file)):
-                    if file[i].startswith("FONT") or file[i].startswith("\ufeffFONT"):    # 带BOM
-                        folder = file[i].split(",")[2][4:]
-                    else:
-                        sp = file[i].split(",")
-                        if(len(sp) == 3):
-                            font_file = file[i].split(",")[0]
-                            font_name = file[i].split(",")[1]
-                            self.font_dict[font_name] = folder+font_file
+            try:
+                with open(font_info, "r", encoding="utf-8") as f:
+                    folder = None
+                    for line in f:
+                        line = line.strip("\ufeff").strip()
+                        
+                        # 跳过空行和注释
+                        if not line or line.startswith("#"):
+                            continue
+                        
+                        # 处理FONT行
+                        if line.startswith("FONT"):
+                            parts = line.split(",")
+                            if len(parts) >= 3:
+                                folder = parts[2][4:]  # 获取文件夹路径
+                            continue
+                        
+                        # 处理字体定义行
+                        if folder is not None:
+                            parts = line.split(",")
+                            if len(parts) >= 3:
+                                font_file = parts[0].strip()
+                                font_name = parts[1].strip()
+                                self.font_dict[font_name] = folder+font_file
+            except Exception as e:
+                print(f"Error processing {font_info}: {e}")
         # print(self.font_dict)
 
     def get_icon_list(self):
         for icon_info in self.icon_info:
             try:
-                with open(icon_info,"r",encoding="utf-8") as f:
-                    file = f.readlines()
-                    folder = ""
-                    pattern = re.compile(r".*?,.*?,")
-                    for i in range(len(file)):
-                        if file[i].startswith("ICON") or file[i].startswith("\ufeffICON"):    # 带BOM
-                            folder = file[i].split(",")[2][4:]
-                            # print(folder,icon_info)
-                            if folder.lower() == "default":
-                                folder = os.path.dirname(icon_info)
-                        else:
-                            try:
-                                match_result = pattern.match(file[i])[0]
-                                icon_name = '`'+match_result.split(",")[0]+'`'
-                                icon_file = match_result.split(",")[1]
-                                self.icon_dict[icon_name] = os.path.join(folder,icon_file)
-                                # print(icon_file,self.icon_dict[icon_name])
-                            except:
-                                pass
+                with open(icon_info, "r", encoding="utf-8") as f:
+                    folder = None
+                    for line in f:
+                        line = line.strip("\ufeff").strip()
+                        
+                        # 跳过空行和注释
+                        if not line or line.startswith("#"):
+                            continue
+                        
+                        # 处理ICON行
+                        if line.startswith("ICON"):
+                            parts = line.split(",")
+                            if len(parts) >= 3:
+                                folder = parts[2][4:]  # 获取文件夹路径
+                                if folder.lower() == "default":
+                                    folder = os.path.dirname(icon_info)
+                            continue
+                        
+                        # 处理图标定义行
+                        if folder is not None:
+                            parts = line.split(",")
+                            if len(parts) >= 3:
+                                icon_name = f'`{parts[0].strip()}`'
+                                icon_file = parts[1].strip()
+                                self.icon_dict[icon_name] = os.path.join(folder, icon_file)
             except Exception as e:
-                print(e)
+                print(f"Error processing {icon_info}: {e}")
         # print(self.icon_dict)
 
 class BmpCreater():
     # 显示屏组件编写时，让图片默认位置是水平竖直均居中，如果横向滚动，竖直居中，竖直滚动，水平居中！
     # color_type:"RGB"和"1"两种
-    def __init__(self,Manager=FontManager(),color_type="RGB",color=(255,255,255),ch_font="",asc_font="",only_sysfont = False,relative_path = ""):
+    def __init__(self,Manager=None,color_type="RGB",color=(255,255,255),ch_font="",asc_font="",only_sysfont = False,relative_path = ""):
         self.lineBreakChr = ["\n","\u2029"]
-        self.FontManager = Manager
         self.only_sysfont = only_sysfont
         self.relative_path = relative_path
+        if Manager is None:
+            self.FontManager = FontManager()
+        else:
+            self.FontManager = Manager
+
         try:
             self.ch_font = self.FontManager.font_dict[ch_font]
         except:

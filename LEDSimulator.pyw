@@ -19,7 +19,7 @@ from LedScreenModule import *
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
 version = "1.5 Pre"
-release_date = "20250907"
+release_date = "20250908"
 
 ledTypes = [i for i in pointKindDict.keys()]
 scales = [ast.literal_eval(i) for i in ledTypes]
@@ -919,6 +919,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
+        self.FontMgr = FontManager()
         self.settings = dict()
         self.currentFileDir = ""
         self.currentFileName = ""
@@ -1344,7 +1345,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 class IconManager():
     def __init__(self,parent):
         self.Parent = parent
-        self.FontMgr = FontManager()
+        self.FontMgr = self.Parent.FontMgr
         self.add_icon_from_filelist(self.Parent.icon_infofile_list)
         self.IconLib = self.FontMgr.icon_dict
         self.data = []
@@ -1543,7 +1544,7 @@ class ProgramSheetManager():
 class ProgramSettler():
     def __init__(self, parent):
         self.Parent = parent
-        self.FontMgr = FontManager()
+        self.FontMgr = self.Parent.FontMgr
         self.FontLib = self.FontMgr.font_dict.keys()
         self.ChFont = [c for c in self.FontLib if "asc" not in c.lower()]
         self.TtFont = [c for c in self.FontLib if "asc" not in c.lower() and "hzk" not in c.lower()]
