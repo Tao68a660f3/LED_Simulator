@@ -326,7 +326,6 @@ class FontManager():
         self.icon_info = {"./resources/icon.info"}
         self.font_dict = dict()
         self.icon_dict = dict()  # 字体和图标均不可重名
-        print("\n\nFontManagerINIT\n\n")
         self.flush_resources()
 
     def flush_resources(self):

@@ -1,3 +1,6 @@
+# 字体信息文件
+
+# 位图ASCII字体
 FONT,ASCII_FONT,DIR:./resources/bmpFont/,
 ASCII_8-13_COURE.bmp,ASCII_8-13_COURE,
 ASCII_8-16.bmp,ASCII_8-16,
@@ -40,6 +43,8 @@ ASCII_32-32_1.bmp,ASCII_32-32_1,
 ASCII_32-32_2.bmp,ASCII_32-32_2,
 ASCII_32-32_3.bmp,ASCII_32-32_3,
 ASCII_32-32_4.bmp,ASCII_32-32_4,
+
+# 16进制文本ASCII字体
 FONT,ASCII_FONT,DIR:./resources/fontFont/,
 ASC0704.font,ASC0704,
 ASC0705.font,ASC0705,
@@ -61,10 +66,14 @@ ASCEV12.font,ASCEV12,
 ASCEV14.font,ASCEV14,
 ASCV14.font,ASCV14,
 ASCV20.font,ASCV20,
+
+# 携带的ttc、ttf字体
 FONT,SYS_FONT,DIR:./resources/truetypeFont/,
 simsun.ttc,旧宋体,
 SimSun-18030.ttf,宋体18030,
 7segments.ttf,数码管体,
+
+# 安装的系统字体
 FONT,SYS_FONT,DIR:C:/Windows/Fonts/,
 arial.ttf,Arial,
 ARIALN.TTF,ARIALN,
@@ -84,6 +93,8 @@ STZHONGS.TTF,华文中宋,
 FZYTK.TTF,方正姚体,
 msgothic.ttc,MS Gothic,
 mingliu.ttc,Mingliu,
+
+# HZK汉字
 FONT,HZK_FONT,DIR:./resources/binFont/,
 hzk16.bin,HZK16,
 hzk16s.bin,HZK16宋体,
