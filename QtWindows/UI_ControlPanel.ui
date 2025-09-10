@@ -290,7 +290,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_29" stretch="8,0,5">
           <item>
-           <layout class="QVBoxLayout" name="verticalLayout_7" stretch="0,0,1,0">
+           <layout class="QVBoxLayout" name="verticalLayout_7" stretch="0,0,1,0,0">
             <item>
              <widget class="QLabel" name="label_13">
               <property name="text">
@@ -360,16 +360,6 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="btn_SaveChange">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="text">
-                 <string>确认修改</string>
-                </property>
-               </widget>
-              </item>
-              <item>
                <widget class="QPushButton" name="btn_Add">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -394,7 +384,14 @@
              <layout class="QVBoxLayout" name="verticalLayout_LayoutBtn"/>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_22" stretch="1,1,1,1,1,1,1,1,1">
+             <widget class="QLabel" name="label_PNum">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_22" stretch="6,2,2,2,2,3">
               <item>
                <spacer name="horizontalSpacer_2">
                 <property name="orientation">
@@ -419,16 +416,6 @@
                <widget class="QSpinBox" name="spin_Width_1"/>
               </item>
               <item>
-               <widget class="QLabel" name="label_16">
-                <property name="text">
-                 <string>width2=</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="spin_Width_2"/>
-              </item>
-              <item>
                <widget class="QLabel" name="label_18">
                 <property name="text">
                  <string>height1=</string>
@@ -439,14 +426,14 @@
                <widget class="QSpinBox" name="spin_Height_1"/>
               </item>
               <item>
-               <widget class="QLabel" name="label_17">
+               <widget class="QPushButton" name="btn_SaveChange">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
                 <property name="text">
-                 <string>height2=</string>
+                 <string>确认修改</string>
                 </property>
                </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="spin_Height_2"/>
               </item>
              </layout>
             </item>

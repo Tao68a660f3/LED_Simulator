@@ -401,41 +401,45 @@ class BmpCreater():
         self.lineBreakChr = ["\n","\u2029"]
         self.only_sysfont = only_sysfont
         self.relative_path = relative_path
+        self.color_type = color_type
+        self.color = (color[0],color[1],color[2],255)
+
         if Manager is None:
             self.FontManager = FontManager()
         else:
             self.FontManager = Manager
 
         try:
-            self.ch_font = self.FontManager.font_dict[ch_font]
-        except:
-            self.ch_font = self.FontManager.font_dict["宋体"]
-        try:
-            self.asc_font = self.FontManager.font_dict[asc_font]
-        except:
-            self.asc_font = self.FontManager.font_dict["宋体"]
-        self.color_type = color_type
-        self.color = (color[0],color[1],color[2],255)
+            try:
+                self.ch_font = self.FontManager.font_dict[ch_font]
+            except:
+                self.ch_font = self.FontManager.font_dict["宋体"]
+            try:
+                self.asc_font = self.FontManager.font_dict[asc_font]
+            except:
+                self.asc_font = self.FontManager.font_dict["宋体"]
 
-        asc_font_type = self.asc_font.split(".")[-1].lower()
-        ch_font_type = self.ch_font.split(".")[-1].lower()
-        # if not self.only_sysfont:
-        try:
-            if asc_font_type == "font":
-                self.ASC_Reader = ASC_font_Reader(self.relative_path,self.asc_font)
-            elif asc_font_type == "bmp":
-                self.ASC_Reader = ASC_Bmp_Reader(self.relative_path,self.asc_font)
-            else:
+            asc_font_type = self.asc_font.split(".")[-1].lower()
+            ch_font_type = self.ch_font.split(".")[-1].lower()
+            # if not self.only_sysfont:
+            try:
+                if asc_font_type == "font":
+                    self.ASC_Reader = ASC_font_Reader(self.relative_path,self.asc_font)
+                elif asc_font_type == "bmp":
+                    self.ASC_Reader = ASC_Bmp_Reader(self.relative_path,self.asc_font)
+                else:
+                    self.ASC_Reader = Sys_Font_Reader(self.asc_font)
+            except:
                 self.ASC_Reader = Sys_Font_Reader(self.asc_font)
-        except:
-            self.ASC_Reader = Sys_Font_Reader(self.asc_font)
-        try:
-            if ch_font_type == "bin":
-                self.Ch_Reader = HZK_Font_Reader(self.relative_path,self.ch_font)
-            else:
-                self.Ch_Reader = Sys_Font_Reader(self.ch_font)
-        except:
-            self.Ch_Reader = Sys_Font_Reader(self.asc_font)  
+            try:
+                if ch_font_type == "bin":
+                    self.Ch_Reader = HZK_Font_Reader(self.relative_path,self.ch_font)
+                else:
+                    self.Ch_Reader = Sys_Font_Reader(self.ch_font)
+            except:
+                self.Ch_Reader = Sys_Font_Reader(self.asc_font)
+        except Exception as e:
+            print(f"BmpCreater Init: Can not find font, {e}")
 
     def find_backtick_strings(self,s):
         ordered_strings = []
@@ -674,105 +678,109 @@ class BmpCreater():
         return im
 
     def create_character(self,vertical=False, roll_asc = False, text="", ch_font_size=16, asc_font_size=16, ch_bold_size_x=2, ch_bold_size_y=1, space=0, scale=100, scale_y = 100, auto_scale=False, scale_sys_font_only=False, new_width = None, new_height = None, y_offset = 0, y_offset_asc = 0, style = [0, 0], multi_line = {"stat":False, "line_space": 0 }):
-        IMAGES = []
-        tasks = []
-        foc = (255, 255, 255, 255)
-        bac = (0, 0, 0, 0)
-
-        if text == "":
-            text = " "
-
-        if scale_sys_font_only:
-            sscale = scale
-            sscale_y = scale_y
-        else:
-            sscale = 100
-            sscale_y = 100
-
         try:
-            coloredstritems = ast.literal_eval(text)
-            s = ""
-            for coloredstr in coloredstritems:
-                task = [self.find_backtick_strings(coloredstr['char']),coloredstr['foreground'],coloredstr['background']]
-                tasks.append(task)
-                s += coloredstr['char']
-            text = s    # 将有颜色的字符串提取出来给缩放部分使用
-        except:
-            tasks = [[self.find_backtick_strings(text),"0","0"]]  # [任务列表，前景色，背景色]
-        # print(tasks)
-        for task in tasks:
-            # 获取前景色背景色
-            if task[1] != "0":
-                tup = (3, 5, 7, 1)
-                fore_col_hex = task[1]
-                if len(task[1]) == 7 :
-                    fore_col_hex = "#ff" + fore_col_hex[1:]
-                foc = tuple(int(fore_col_hex[i:i+2], 16) for i in tup)
-                if task[2] != "0":
-                    back_col_hex = task[2]
-                    if len(task[2]) == 7 :
-                        back_col_hex = "#ff" + back_col_hex[1:]
-                    bac = tuple(int(back_col_hex[i:i+2], 16) for i in tup)
-                else:
-                    bac = (0, 0, 0, 0)
+            IMAGES = []
+            tasks = []
+            foc = (255, 255, 255, 255)
+            bac = (0, 0, 0, 0)
 
-            # print(task)
-            # print(self.FontManager.icon_dict.keys())
+            if text == "":
+                text = " "
 
-            for sub_task in task[0]:   # sub_task：剪开了的字符串
-                # print(sub_task)
-                if sub_task in self.FontManager.icon_dict.keys():
-                    try:
-                        ico = Image.open(self.relative_path+self.FontManager.icon_dict[sub_task])
-                        if self.color_type == "1":
-                            ico = ico.convert('1')
-                            ico = ico.point(lambda x: not x)  # 直接反转二值图像
-                        elif self.color_type == "RGB":
-                            if ico.mode == "1":
+            if scale_sys_font_only:
+                sscale = scale
+                sscale_y = scale_y
+            else:
+                sscale = 100
+                sscale_y = 100
+
+            try:
+                coloredstritems = ast.literal_eval(text)
+                s = ""
+                for coloredstr in coloredstritems:
+                    task = [self.find_backtick_strings(coloredstr['char']),coloredstr['foreground'],coloredstr['background']]
+                    tasks.append(task)
+                    s += coloredstr['char']
+                text = s    # 将有颜色的字符串提取出来给缩放部分使用
+            except:
+                tasks = [[self.find_backtick_strings(text),"0","0"]]  # [任务列表，前景色，背景色]
+            # print(tasks)
+            for task in tasks:
+                # 获取前景色背景色
+                if task[1] != "0":
+                    tup = (3, 5, 7, 1)
+                    fore_col_hex = task[1]
+                    if len(task[1]) == 7 :
+                        fore_col_hex = "#ff" + fore_col_hex[1:]
+                    foc = tuple(int(fore_col_hex[i:i+2], 16) for i in tup)
+                    if task[2] != "0":
+                        back_col_hex = task[2]
+                        if len(task[2]) == 7 :
+                            back_col_hex = "#ff" + back_col_hex[1:]
+                        bac = tuple(int(back_col_hex[i:i+2], 16) for i in tup)
+                    else:
+                        bac = (0, 0, 0, 0)
+
+                # print(task)
+                # print(self.FontManager.icon_dict.keys())
+
+                for sub_task in task[0]:   # sub_task：剪开了的字符串
+                    # print(sub_task)
+                    if sub_task in self.FontManager.icon_dict.keys():
+                        try:
+                            ico = Image.open(self.relative_path+self.FontManager.icon_dict[sub_task])
+                            if self.color_type == "1":
+                                ico = ico.convert('1')
                                 ico = ico.point(lambda x: not x)  # 直接反转二值图像
-                                ico = self.fill_image_with_color(task[1], ico, foc, bac)
+                            elif self.color_type == "RGB":
+                                if ico.mode == "1":
+                                    ico = ico.point(lambda x: not x)  # 直接反转二值图像
+                                    ico = self.fill_image_with_color(task[1], ico, foc, bac)
+                                else:
+                                    ico = ico.convert("RGBA")
+                            icon = {"img": ico, "chr": None}
+                            IMAGES.append(icon)
+                        except:
+                            pass     
+                    else:
+                        font_tasks = list(sub_task)
+
+                        for chr in font_tasks:
+                            this_chr = chr
+                            if chr in self.lineBreakChr:
+                                chr = " "
+                            if chr.isascii():
+                                ch = self.ASC_Reader.get_text_bmp(chr,y_offset_asc,asc_font_size,ch_bold_size_x,ch_bold_size_y,sscale,sscale_y)
                             else:
-                                ico = ico.convert("RGBA")
-                        icon = {"img": ico, "chr": None}
-                        IMAGES.append(icon)
-                    except:
-                        pass     
-                else:
-                    font_tasks = list(sub_task)
+                                ch = self.Ch_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,sscale,sscale_y)
 
-                    for chr in font_tasks:
-                        this_chr = chr
-                        if chr in self.lineBreakChr:
-                            chr = " "
-                        if chr.isascii():
-                            ch = self.ASC_Reader.get_text_bmp(chr,y_offset_asc,asc_font_size,ch_bold_size_x,ch_bold_size_y,sscale,sscale_y)
-                        else:
-                            ch = self.Ch_Reader.get_text_bmp(chr,y_offset,ch_font_size,ch_bold_size_x,ch_bold_size_y,sscale,sscale_y)
+                            if self.color_type == "RGB":
+                                ch = self.fill_image_with_color(task[1], ch, foc, bac)
 
-                        if self.color_type == "RGB":
-                            ch = self.fill_image_with_color(task[1], ch, foc, bac)
+                            if chr.isascii() and vertical and roll_asc:
+                                ch = ch.transpose(Image.ROTATE_270)
 
-                        if chr.isascii() and vertical and roll_asc:
-                            ch = ch.transpose(Image.ROTATE_270)
-
-                        IMAGES.append({"img": ch, "chr": this_chr})
-        # 拼接图像
-        if new_width is not None and new_height is not None and not auto_scale:
-            exp_size = [new_width, new_height]
-        else:
-            exp_size = []
-        multi_line["exp_size"] = exp_size
-        new_image = self.hconcat_images(IMAGES,vertical,space,style,multi_line)
-        img_width = new_image.width
-        img_height = new_image.height
-        # 缩放图像横向宽度
-        if (auto_scale and not scale_sys_font_only) and new_width != None and new_height != None:
-            if len(text) <= 2*new_width/new_height and img_width > new_width:
-                new_image = new_image.resize((new_width,int(img_height*scale_y/100)),resample=Image.BOX)
-            if len(text) > 2*new_width/new_height and img_width > new_width:
-                new_image = new_image.resize((int(img_width*min(100,(new_height/2)/ch_font_size)),int(img_height*scale_y/100)),resample=Image.BOX)
-        if (not auto_scale and not scale_sys_font_only):
-            new_image = new_image.resize((int(img_width*scale/100),int(img_height*scale_y/100)),resample=Image.BOX)
+                            IMAGES.append({"img": ch, "chr": this_chr})
+            # 拼接图像
+            if new_width is not None and new_height is not None:
+                exp_size = [new_width, new_height]
+            else:
+                exp_size = []
+            multi_line["exp_size"] = exp_size
+            new_image = self.hconcat_images(IMAGES,vertical,space,style,multi_line)
+            img_width = new_image.width
+            img_height = new_image.height
+            # 缩放图像横向宽度
+            if (auto_scale and not scale_sys_font_only) and new_width != None and new_height != None:
+                if len(text) <= 2*new_width/new_height and img_width > new_width:
+                    new_image = new_image.resize((new_width,int(img_height*scale_y/100)),resample=Image.BOX)
+                if len(text) > 2*new_width/new_height and img_width > new_width:
+                    new_image = new_image.resize((int(img_width*min(100,(new_height/2)/ch_font_size)),int(img_height*scale_y/100)),resample=Image.BOX)
+            if (not auto_scale and not scale_sys_font_only):
+                new_image = new_image.resize((int(img_width*scale/100),int(img_height*scale_y/100)),resample=Image.BOX)
+        except Exception as e:
+            print(f"BmpCreater.create_character():{e}")
+            new_image = Image.new(self.color_type, (16,16))
         # 保存图像
         return new_image
     

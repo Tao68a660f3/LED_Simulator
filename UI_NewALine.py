@@ -182,7 +182,7 @@ class Ui_NewALine(object):
     def retranslateUi(self, NewALine):
         _translate = QtCore.QCoreApplication.translate
         NewALine.setWindowTitle(_translate("NewALine", "Dialog"))
-        self.label.setText(_translate("NewALine", "新建线路："))
+        self.label.setText(_translate("NewALine", "线路名称："))
         self.label_2.setText(_translate("NewALine", "预设："))
         self.label_11.setText(_translate("NewALine", "刷新率(Hz)："))
         self.chk_FrontScreen.setText(_translate("NewALine", "前路牌　"))

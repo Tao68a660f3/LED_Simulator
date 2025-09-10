@@ -184,7 +184,7 @@ class NewALine(QDialog,Ui_NewALine):
             spin.setMinimum(16)
             spin.setValue(32)
 
-        self.combo_Preset.currentTextChanged.connect(self.set_preset_argv)
+        self.combo_Preset.activated.connect(self.set_preset_argv)
 
     def set_preset_argv(self):
         colorCombo = [self.combo_FrontColor,self.combo_BackColor,self.combo_FrontSideColor,self.combo_BackSideColor]
@@ -288,8 +288,8 @@ class SelfDefineLayout(QDialog,Ui_SelfDefineScreen):
         self.combo_Layout.addItems(["更改屏幕","水平布局","垂直布局"])
         self.combo_PointKind.addItems(ledTypes)
 
-        self.combo_PointKind.currentTextChanged.connect(self.can_w_h)
-        self.combo_Layout.currentTextChanged.connect(self.can_w_h)
+        self.combo_PointKind.activated.connect(self.can_w_h)
+        self.combo_Layout.activated.connect(self.can_w_h)
 
     def set_value(self, pn=[0,0], ps=[0,0]):
         self.pn = pn
@@ -361,7 +361,7 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
             self.checkBox_bgcolor.stateChanged.disconnect(self.ui_value_changed)
             self.point_spinBox.valueChanged.disconnect(self.ui_value_changed)
         except Exception as e:
-            print("disconnect_signal: ", e)
+            print("ColorMultiLine.disconnect_signal(): ", e)
 
     def set_value(self,text = "", multiLine = False, lineSpace = 1,colorMode = "1", richText = [False,False]):
         self.text = text
@@ -428,7 +428,7 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
                         fmt.setBackground(background)
                         cursor.insertText(char, fmt)
                 except Exception as e:
-                    print("set_textEditor,", e)
+                    print("ColorMultiLine.set_textEditor(),", e)
             else:
                 self.textEdit.clear()
                 cursor.insertText(self.text, fmt)
@@ -506,11 +506,11 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
         return [self.text, self.multiLine, self.lineSpace, self.richText]
 
 class ProgramSettings(QDialog,Ui_ProgSet):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, MainWindow: 'MainWindow'):
+        super().__init__(MainWindow)
         self.setupUi(self)
         self.initUI()
-        self.Parent = parent
+        self.MainWindow = MainWindow 
         self.unitCount = 0
 
         self.backgroundDescribeText = "None"      # noBackground, None, colorBackground((r,g,b)), colorMask((r,g,b))
@@ -529,7 +529,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
 
     def initUI(self):
         self.setModal(True)
-        self.setWindowTitle("路牌节目设置（实验）")
+        self.setWindowTitle("路牌节目设置")
         self.setMinimumSize(400,500)
         self.resize(560,600)
 
@@ -597,7 +597,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
             self.chk_isOrigin.stateChanged.disconnect(self.onIsOriginChanged)
             self.combo_inheritLevel.currentIndexChanged.disconnect(self.onInheritChanged)
         except Exception as e:
-            print("disconnect_signal: ", e)
+            print("ProgramSettings.disconnect_signal(): ", e)
 
     def set_ui_enabled(self,enabled):
         self.comboBox_mode.setEnabled(enabled)
@@ -639,7 +639,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.show_tgTable()
 
     def onSelectionChanged(self):
-        row = self.Parent.selected_row(self.tableWidget)
+        row = self.MainWindow.selected_row(self.tableWidget)
         if isinstance(row, int):
             tg = self.triggerList[row]
             if "abst" in tg.keys():
@@ -809,8 +809,8 @@ class ProgramSettings(QDialog,Ui_ProgSet):
                     self.backgroundDescribeText = f"imgBackground(\"{file_name}\",{fill})"
         else:
             fill = self.comboBox_fill.currentIndex()
-            if "background_folder" in self.Parent.settings:
-                bfo = self.Parent.settings["background_folder"]
+            if "background_folder" in self.MainWindow.settings:
+                bfo = self.MainWindow.settings["background_folder"]
                 if not os.path.exists(bfo):
                     bfo = "./Background"
                 if os.path.exists(bfo):
@@ -844,7 +844,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         self.show_tgTable()
 
     def deleteTrigger(self):
-        row = self.Parent.selected_row(self.tableWidget)
+        row = self.MainWindow.selected_row(self.tableWidget)
         if isinstance(row, int):
             self.triggerList.pop(row)
         self.show_tgTable()
@@ -859,9 +859,9 @@ class ProgramSettings(QDialog,Ui_ProgSet):
         return self.ProgScreenSetting
 
 class IconInfoManager(QDialog,Ui_IconInfoManage):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.Parent = parent
+    def __init__(self, MainWindow: 'MainWindow'):
+        super().__init__(MainWindow)
+        self.MainWindow = MainWindow 
         self.icon_infofile_list = []
         self.setupUi(self)
         self.initUI()
@@ -883,7 +883,7 @@ class IconInfoManager(QDialog,Ui_IconInfoManage):
         self.remove_btn.clicked.connect(self.del_file)
 
     def get_file_list(self):
-        self.icon_infofile_list = self.Parent.icon_infofile_list
+        self.icon_infofile_list = self.MainWindow.icon_infofile_list
 
     def flush_table(self):
         self.tableWidget.setRowCount(0)
@@ -895,23 +895,23 @@ class IconInfoManager(QDialog,Ui_IconInfoManage):
             self.tableWidget.setItem(row,0,item)
 
     def add_file(self):
-        file_dir,ok = QFileDialog.getOpenFileName(self.Parent,'打开','./','图标信息 (*.info)')
+        file_dir,ok = QFileDialog.getOpenFileName(self.MainWindow,'打开','./','图标信息 (*.info)')
         if ok:
             self.icon_infofile_list.append(file_dir)
         self.save_list()
         self.flush_table()
 
     def del_file(self):
-        row = self.Parent.selected_row(self.tableWidget)
+        row = self.MainWindow.selected_row(self.tableWidget)
         if isinstance(row, int):
             self.icon_infofile_list.pop(row)
         self.save_list()
         self.flush_table()
 
     def save_list(self):
-        self.Parent.icon_infofile_list = self.icon_infofile_list
-        self.Parent.settings["icon_infofile_list"] = self.Parent.icon_infofile_list
-        self.Parent.save_setting()
+        self.MainWindow.icon_infofile_list = self.icon_infofile_list
+        self.MainWindow.settings["icon_infofile_list"] = self.MainWindow.icon_infofile_list
+        self.MainWindow.save_setting()
 
 class MainWindow(QMainWindow, Ui_ControlPanel):
     thisFile_saveStat = pyqtSignal(bool)
@@ -964,7 +964,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.btn_opFile.clicked.connect(self.open_file)
         self.btn_showSelectedScreen.clicked.connect(self.preview_screen)
         self.tableWidget_ProgramSheet.itemSelectionChanged.connect(self.on_prog_changed)
-        self.tableWidget_ProgramSheet.pressed.connect(self.on_prog_changed)
+        self.tableWidget_ProgramSheet.pressed.connect(self.on_progsheet_pressed)
         self.tableWidget_lineChoose.itemSelectionChanged.connect(self.on_line_changed)
         self.thisFile_saveStat.connect(self.set_window_title)
 
@@ -975,13 +975,20 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
     def on_line_changed(self):
         row = self.selected_row(self.tableWidget_lineChoose)
         self.currentLine = row
-        # print(f"当前选中线路：{self.currentLine}")
+        print(f"选择的线路改变了，当前选中线路：{self.currentLine}")
         # 事件统一管理
         self.close_all_screen()
         self.ProgramSheetManager.show_program()
         self.ProgramSettler.init_ProgramSetting()
         self.LineSettler.init_LineSetting()
         self.LineController.show_name_time()
+
+    def on_progsheet_pressed(self):
+        row = self.selected_row(self.tableWidget_ProgramSheet)
+        if row == self.currentProg:
+            self.change_program()
+        else:
+            return
 
     def on_prog_changed(self):
         row = self.selected_row(self.tableWidget_ProgramSheet)
@@ -1114,7 +1121,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             try:
                 if s.isVisible():
                     fps.append(s.get_fps())
-            except Exception as e:
+            except:
                 pass
         if len(fps) != 0:
             msg = ""
@@ -1134,9 +1141,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
     def recovery_lineMgr_widget(self):
         self.flush_table(self.tableWidget_ProgramSheet,[]) # 清空节目单
-        self.LineSettler.path_to_pixmap = "./resources/welcome.png"
-        self.LineSettler.show_status = "image"
-        self.LineSettler.upgrade_widget()
+        self.LineSettler.upgrade_widget(clear=True)
 
     def selected_row(self,tableWidgetObject):
         row_select = tableWidgetObject.selectedItems()
@@ -1150,7 +1155,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             item = tableWidgetObject.item(row,0)
             tableWidgetObject.setCurrentItem(item)
         except Exception as e:
-            print("set_selected_row,", e)
+            print("MainWindow.set_selected_row(),", e)
     
     def new_file(self):
         if os.path.exists(self.currentFileDir):
@@ -1229,7 +1234,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                         scn.programTimeout()
                         print(f"{scn.toDisplay}被迫切换节目{self.currentDisplayProgIndex+1}")
                     except Exception as e:
-                        print(e)
+                        print(f"MainWindow.force_changeProg():{e}")
     
     def change_currentDisplayProgIndex(self,who):
         print(f"当前节目：{self.currentDisplayProgIndex}+1，{who.toDisplay}请求更换节目至{who.currentIndex+1}")
@@ -1258,7 +1263,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                         scn.move(50,50+h)
                         h += self.LineEditor.LineInfoList[row][screen]["screenSize"][1]*self.LineEditor.LineInfoList[row][screen]["screenSize"][2][1]+60
                         self.LedScreens[screen] = scn
-                    except Exception as e:
+                    except:
                         pass
 
     def close_all_screen(self):
@@ -1266,7 +1271,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             try:
                 s.close()
                 s.deleteLater()
-            except Exception as e:
+            except:
                 pass
 
     def preview_screen(self):
@@ -1309,7 +1314,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                             self.LedScreens[screen].programTimeout()
                         else:
                             self.LedScreens[screen].close()
-                    except Exception as e:
+                    except:
                         pass
 
     def screenShot(self):
@@ -1318,14 +1323,14 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
             try:
                 try:
                     os.makedirs("./ScreenShots")
-                except Exception as e:
+                except:
                     pass
                 if scn.isVisible():
                     window_handle = scn.winId()
                     screenshot = screen.grabWindow(window_handle)
                     fileName = datetime.datetime.now().strftime(f"{name}_%H%M%S.png")
                     screenshot.save(os.path.join("./ScreenShots",fileName))
-            except Exception as e:
+            except:
                 pass
 
     def topMost(self):
@@ -1339,33 +1344,33 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
                         scn.setWindowFlags(flags | Qt.WindowStaysOnTopHint)
                     scn.show()
                     scn.show()
-            except Exception as e:
+            except:
                 pass
 
 class IconManager():
-    def __init__(self,parent):
-        self.Parent = parent
-        self.FontMgr = self.Parent.FontMgr
-        self.add_icon_from_filelist(self.Parent.icon_infofile_list)
+    def __init__(self, MainWindow: 'MainWindow'):
+        self.MainWindow = MainWindow 
+        self.FontMgr = self.MainWindow.FontMgr
+        self.add_icon_from_filelist(self.MainWindow.icon_infofile_list)
         self.IconLib = self.FontMgr.icon_dict
         self.data = []
         self.initUI()
 
     def initUI(self):
         # 图标管理表格
-        self.Parent.tableWidget_Icons.verticalHeader().setVisible(False)
-        self.Parent.tableWidget_Icons.setColumnCount(2)
-        self.Parent.tableWidget_Icons.setHorizontalHeaderLabels(["图标代号","预览"])
-        self.Parent.tableWidget_Icons.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.Parent.tableWidget_Icons.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.Parent.tableWidget_Icons.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
-        self.Parent.tableWidget_Icons.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.Parent.tableWidget_Icons.set_column_ratios([1, 1])
-        self.Parent.tableWidget_Icons.set_min_total_width(250)
-        # self.Parent.tableWidget_Icons.verticalHeader().setDefaultSectionSize(64)
+        self.MainWindow.tableWidget_Icons.verticalHeader().setVisible(False)
+        self.MainWindow.tableWidget_Icons.setColumnCount(2)
+        self.MainWindow.tableWidget_Icons.setHorizontalHeaderLabels(["图标代号","预览"])
+        self.MainWindow.tableWidget_Icons.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.MainWindow.tableWidget_Icons.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.MainWindow.tableWidget_Icons.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.MainWindow.tableWidget_Icons.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.MainWindow.tableWidget_Icons.set_column_ratios([1, 1])
+        self.MainWindow.tableWidget_Icons.set_min_total_width(250)
+        # self.MainWindow.tableWidget_Icons.verticalHeader().setDefaultSectionSize(64)
 
-        self.Parent.btn_LoadIcons.clicked.connect(self.add_icon)
-        self.Parent.tableWidget_Icons.doubleClicked.connect(self.use_icon)
+        self.MainWindow.btn_LoadIcons.clicked.connect(self.add_icon)
+        self.MainWindow.tableWidget_Icons.doubleClicked.connect(self.use_icon)
 
         self.flush_table()
 
@@ -1373,23 +1378,23 @@ class IconManager():
         data = self.data = []
         for key,value in self.IconLib.items():
             data.append([key.strip("`"),value])
-        self.Parent.tableWidget_Icons.setRowCount(0)
+        self.MainWindow.tableWidget_Icons.setRowCount(0)
         for row in range(len(data)):
-            self.Parent.tableWidget_Icons.insertRow(row)
+            self.MainWindow.tableWidget_Icons.insertRow(row)
             col = 0
             item = QTableWidgetItem(str(data[row][col]))
             item.setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
             item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)    #设置为只可选择
-            self.Parent.tableWidget_Icons.setItem(row,col,item)
+            self.MainWindow.tableWidget_Icons.setItem(row,col,item)
             col = 1
             item = QTableWidgetItem()
             pixmap = QPixmap(str(data[row][col]))
             item.setData(Qt.DecorationRole, pixmap)
-            self.Parent.tableWidget_Icons.setItem(row, col, item)
-            self.Parent.tableWidget_Icons.setRowHeight(row, 30 + min(100,pixmap.height()))
+            self.MainWindow.tableWidget_Icons.setItem(row, col, item)
+            self.MainWindow.tableWidget_Icons.setRowHeight(row, 30 + min(100,pixmap.height()))
 
     def add_icon(self):
-        file_dir,ok = QFileDialog.getOpenFileName(self.Parent,'打开','./','图标信息 (*.info)')
+        file_dir,ok = QFileDialog.getOpenFileName(self.MainWindow,'打开','./','图标信息 (*.info)')
         if ok:
             self.FontMgr.icon_info.add(file_dir)
             self.FontMgr.get_icon_list()
@@ -1404,112 +1409,112 @@ class IconManager():
             self.IconLib = self.FontMgr.icon_dict
             self.flush_table()
         except Exception as e:
-            print(f"add_icon_from_filelist:{e}")
+            print(f"IconManager.add_icon_from_filelist():{e}")
 
     def use_icon(self):
-        row = self.Parent.selected_row(self.Parent.tableWidget_Icons)
+        row = self.MainWindow.selected_row(self.MainWindow.tableWidget_Icons)
         if isinstance(row,int):
-            ot = self.Parent.lineEdit_Text.text()
+            ot = self.MainWindow.lineEdit_Text.text()
             ot = ot + "`" + self.data[row][0] + "`"
-            self.Parent.lineEdit_Text.setText(ot)
+            self.MainWindow.lineEdit_Text.setText(ot)
     
 class ProgramSheetManager():
-    def __init__(self, parent):
-        self.Parent = parent
+    def __init__(self, MainWindow: 'MainWindow'):
+        self.MainWindow = MainWindow 
         self.programSheet = []
         self.initUI()
 
     def initUI(self):
         # 节目单管理表格
-        self.Parent.tableWidget_ProgramSheet.setColumnCount(2)
-        self.Parent.tableWidget_ProgramSheet.setHorizontalHeaderLabels(["节目名称","持续时间"])
-        self.Parent.tableWidget_ProgramSheet.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.Parent.tableWidget_ProgramSheet.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.Parent.tableWidget_ProgramSheet.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
-        self.Parent.tableWidget_ProgramSheet.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.Parent.tableWidget_ProgramSheet.verticalHeader().setDefaultSectionSize(24)
-        self.Parent.tableWidget_ProgramSheet.set_column_ratios([2.5, 1])
-        self.Parent.tableWidget_ProgramSheet.set_min_total_width(250)
+        self.MainWindow.tableWidget_ProgramSheet.setColumnCount(2)
+        self.MainWindow.tableWidget_ProgramSheet.setHorizontalHeaderLabels(["节目名称","持续时间"])
+        self.MainWindow.tableWidget_ProgramSheet.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.MainWindow.tableWidget_ProgramSheet.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.MainWindow.tableWidget_ProgramSheet.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.MainWindow.tableWidget_ProgramSheet.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.MainWindow.tableWidget_ProgramSheet.verticalHeader().setDefaultSectionSize(24)
+        self.MainWindow.tableWidget_ProgramSheet.set_column_ratios([2.5, 1])
+        self.MainWindow.tableWidget_ProgramSheet.set_min_total_width(250)
 
-        self.Parent.spinBox.setMaximum(3600*24)
-        self.Parent.spinBox.setMinimum(-1)
+        self.MainWindow.spinBox.setMaximum(3600*24)
+        self.MainWindow.spinBox.setMinimum(-1)
 
-        self.Parent.tableWidget_ProgramSheet.rowMoved.connect(self.move_program)
-        self.Parent.lineEdit_ProgramName.editingFinished.connect(self.change_name_time)
-        self.Parent.spinBox.editingFinished.connect(self.change_name_time)
-        self.Parent.btn_Add.clicked.connect(self.new_program)
-        self.Parent.btn_MvUp_Program.clicked.connect(self.mv_up_program)
-        self.Parent.btn_MvDn_Program.clicked.connect(self.mv_dn_program)
-        self.Parent.btn_CopyProgram.clicked.connect(self.copy_program)
-        self.Parent.btn_Remove.clicked.connect(self.del_program)
+        self.MainWindow.tableWidget_ProgramSheet.rowMoved.connect(self.move_program)
+        self.MainWindow.lineEdit_ProgramName.editingFinished.connect(self.change_name_time)
+        self.MainWindow.spinBox.editingFinished.connect(self.change_name_time)
+        self.MainWindow.btn_Add.clicked.connect(self.new_program)
+        self.MainWindow.btn_MvUp_Program.clicked.connect(self.mv_up_program)
+        self.MainWindow.btn_MvDn_Program.clicked.connect(self.mv_dn_program)
+        self.MainWindow.btn_CopyProgram.clicked.connect(self.copy_program)
+        self.MainWindow.btn_Remove.clicked.connect(self.del_program)
 
     def show_program(self):
-        row = self.Parent.currentLine
-        # print("show_program:self.Parent.currentLine:",row)
+        row = self.MainWindow.currentLine
+        # print("show_program:self.MainWindow.currentLine:",row)
         if isinstance(row,int):
-            self.programSheet = self.Parent.LineEditor.LineInfoList[row]["programSheet"]
+            self.programSheet = self.MainWindow.LineEditor.LineInfoList[row]["programSheet"]
             data = [[p[0],p[1]] for p in self.programSheet]
-            self.Parent.flush_table(self.Parent.tableWidget_ProgramSheet,data)
+            self.MainWindow.flush_table(self.MainWindow.tableWidget_ProgramSheet,data)
 
     def show_name_time(self):
-        row = self.Parent.currentProg
+        row = self.MainWindow.currentProg
         if isinstance(row,int):
-            self.Parent.lineEdit_ProgramName.setText(self.programSheet[row][0])
-            self.Parent.spinBox.setValue(self.programSheet[row][1])
+            self.MainWindow.lineEdit_ProgramName.setText(self.programSheet[row][0])
+            self.MainWindow.spinBox.setValue(self.programSheet[row][1])
 
     def change_name_time(self):
-        row = self.Parent.currentProg
+        row = self.MainWindow.currentProg
         if isinstance(row,int):
-            name = self.Parent.lineEdit_ProgramName.text()
-            time = self.Parent.spinBox.value()
+            name = self.MainWindow.lineEdit_ProgramName.text()
+            time = self.MainWindow.spinBox.value()
             if self.programSheet[row][0] != name or self.programSheet[row][1] != time:
-                self.programSheet[row][0] = self.Parent.lineEdit_ProgramName.text()
-                self.programSheet[row][1] = self.Parent.spinBox.value()
-                self.Parent.thisFile_saveStat.emit(False)
+                self.programSheet[row][0] = self.MainWindow.lineEdit_ProgramName.text()
+                self.programSheet[row][1] = self.MainWindow.spinBox.value()
+                self.MainWindow.thisFile_saveStat.emit(False)
             self.show_program()
-            self.Parent.set_selected_row(self.Parent.tableWidget_ProgramSheet,row)
+            self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet,row)
 
     def new_program(self,):
-        progName = self.Parent.lineEdit_ProgramName.text()
-        sec = self.Parent.spinBox.value()
+        progName = self.MainWindow.lineEdit_ProgramName.text()
+        sec = self.MainWindow.spinBox.value()
         
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
             sbp = [[],[]]
             sbpdict = dict()
             for screen in screenLink.values():
-                if self.Parent.LineEditor.LineInfoList[row][screen]["enabled"]:
+                if self.MainWindow.LineEditor.LineInfoList[row][screen]["enabled"]:
                     sbp = [[],[]]
-                    for i in range(len(self.Parent.LineEditor.LineInfoList[row][screen]["screenUnit"])):
-                        sbp[0].append(copy.deepcopy(self.Parent.LineEditor.LineInfoList[row][screen]["screenUnit"][i]))
+                    for i in range(len(self.MainWindow.LineEditor.LineInfoList[row][screen]["screenUnit"])):
+                        sbp[0].append(copy.deepcopy(self.MainWindow.LineEditor.LineInfoList[row][screen]["screenUnit"][i]))
                         sbp[1].append(copy.deepcopy(template_program_show))
                     sbpdict[screen] = sbp
             self.programSheet.append([progName,sec,sbpdict])
-            self.Parent.lineEdit_ProgramName.setText("")
-            self.Parent.spinBox.setValue(0)
+            self.MainWindow.lineEdit_ProgramName.setText("")
+            self.MainWindow.spinBox.setValue(0)
             self.show_program()
             # print(self.programSheet)
-            self.Parent.set_selected_row(self.Parent.tableWidget_ProgramSheet, len(self.programSheet)-1)
-            self.Parent.thisFile_saveStat.emit(False)
+            self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet, len(self.programSheet)-1)
+            self.MainWindow.thisFile_saveStat.emit(False)
 
     def del_program(self):
-        row = self.Parent.currentProg
+        row = self.MainWindow.currentProg
         if isinstance(row,int):
             self.programSheet.pop(row)
             self.show_program()
-            self.Parent.thisFile_saveStat.emit(False)
+            self.MainWindow.thisFile_saveStat.emit(False)
         if len(self.programSheet) == 0:
-            self.Parent.currentProg = None
+            self.MainWindow.currentProg = None
         else:
-            self.Parent.set_selected_row(self.Parent.tableWidget_ProgramSheet, max(0,row-1))
+            self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet, max(0,row-1))
 
     def copy_program(self):
-        row = self.Parent.currentProg
+        row = self.MainWindow.currentProg
         if isinstance(row,int):
             self.programSheet.append(copy.deepcopy(self.programSheet[row]))
-            self.Parent.thisFile_saveStat.emit(False)
+            self.MainWindow.thisFile_saveStat.emit(False)
         self.show_program()
-        self.Parent.set_selected_row(self.Parent.tableWidget_ProgramSheet, len(self.programSheet)-1)
+        self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet, len(self.programSheet)-1)
 
     def move_program(self,drag,drop):
         if drag != drop:
@@ -1519,32 +1524,32 @@ class ProgramSheetManager():
             self.programSheet.pop(drag)
             # 在目标位置插入数据
             self.programSheet.insert(drop, moving_data)
-            self.Parent.thisFile_saveStat.emit(False)
+            self.MainWindow.thisFile_saveStat.emit(False)
         self.show_program()
-        self.Parent.set_selected_row(self.Parent.tableWidget_ProgramSheet, drop)
+        self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet, drop)
 
     def mv_up_program(self):
-        row = self.Parent.currentProg
+        row = self.MainWindow.currentProg
         if isinstance(row,int):
             if row > 0:
                 self.programSheet[row],self.programSheet[row-1] = self.programSheet[row-1],self.programSheet[row]
-                self.Parent.thisFile_saveStat.emit(False)
+                self.MainWindow.thisFile_saveStat.emit(False)
         self.show_program()
-        self.Parent.set_selected_row(self.Parent.tableWidget_ProgramSheet, max(0,row-1))
+        self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet, max(0,row-1))
 
     def mv_dn_program(self):
-        row = self.Parent.currentProg
+        row = self.MainWindow.currentProg
         if isinstance(row,int):
             if row < len(self.programSheet)-1:
                 self.programSheet[row],self.programSheet[row+1] = self.programSheet[row+1],self.programSheet[row]
-                self.Parent.thisFile_saveStat.emit(False)
+                self.MainWindow.thisFile_saveStat.emit(False)
         self.show_program()
-        self.Parent.set_selected_row(self.Parent.tableWidget_ProgramSheet, min(len(self.programSheet)-1,row+1))
+        self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet, min(len(self.programSheet)-1,row+1))
 
 class ProgramSettler():
-    def __init__(self, parent):
-        self.Parent = parent
-        self.FontMgr = self.Parent.FontMgr
+    def __init__(self, MainWindow: 'MainWindow'):
+        self.MainWindow = MainWindow 
+        self.FontMgr = self.MainWindow.FontMgr
         self.FontLib = self.FontMgr.font_dict.keys()
         self.ChFont = [c for c in self.FontLib if "asc" not in c.lower()]
         self.TtFont = [c for c in self.FontLib if "asc" not in c.lower() and "hzk" not in c.lower()]
@@ -1555,128 +1560,128 @@ class ProgramSettler():
 
     def initUI(self):
         # 屏幕分区管理表格
-        self.Parent.tableWidget_Screens.setColumnCount(4)
-        self.Parent.tableWidget_Screens.setHorizontalHeaderLabels(["分区名称","灯珠规格","分区大小","内容大小"])
-        self.Parent.tableWidget_Screens.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.Parent.tableWidget_Screens.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.Parent.tableWidget_Screens.verticalHeader().setVisible(False)
-        self.Parent.tableWidget_Screens.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.Parent.tableWidget_Screens.verticalHeader().setDefaultSectionSize(24)
-        self.Parent.tableWidget_Screens.set_column_ratios([1, 1, 1.2, 1.2])
-        self.Parent.tableWidget_Screens.set_min_total_width(250)
+        self.MainWindow.tableWidget_Screens.setColumnCount(4)
+        self.MainWindow.tableWidget_Screens.setHorizontalHeaderLabels(["分区名称","灯珠规格","分区大小","内容大小"])
+        self.MainWindow.tableWidget_Screens.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.MainWindow.tableWidget_Screens.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.MainWindow.tableWidget_Screens.verticalHeader().setVisible(False)
+        self.MainWindow.tableWidget_Screens.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.MainWindow.tableWidget_Screens.verticalHeader().setDefaultSectionSize(24)
+        self.MainWindow.tableWidget_Screens.set_column_ratios([1, 1, 1.2, 1.2])
+        self.MainWindow.tableWidget_Screens.set_min_total_width(250)
 
         # 启用右键菜单
-        self.Parent.tableWidget_Screens.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.Parent.tableWidget_Screens.customContextMenuRequested.connect(self.show_context_menu)
+        self.MainWindow.tableWidget_Screens.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.MainWindow.tableWidget_Screens.customContextMenuRequested.connect(self.show_context_menu)
 
-        self.Parent.combo_Font.addItems(self.ChFont)
-        self.Parent.combo_ASCII_Font.addItems(self.EngFont)
-        self.Parent.combo_Show.addItems(showStyles)
-        self.Parent.combo_TextDirect.addItems(["横向","竖向"])
-        self.Parent.combo_SingleColorChoose.addItems(template_monochromeColors.keys())
+        self.MainWindow.combo_Font.addItems(self.ChFont)
+        self.MainWindow.combo_ASCII_Font.addItems(self.EngFont)
+        self.MainWindow.combo_Show.addItems(showStyles)
+        self.MainWindow.combo_TextDirect.addItems(["横向","竖向"])
+        self.MainWindow.combo_SingleColorChoose.addItems(template_monochromeColors.keys())
 
-        self.Parent.spin_FontSize.setMaximum(64)
-        self.Parent.spin_FontSize.setMinimum(6)
-        self.Parent.spin_FontSize.setValue(16)
-        self.Parent.spin_FontSize_2.setMaximum(64)
-        self.Parent.spin_FontSize_2.setMinimum(6)
-        self.Parent.spin_FontSize_2.setValue(16)
-        self.Parent.spinBox_Argv_1.setMaximum(60)
-        self.Parent.spinBox_Argv_1.setMinimum(1)
-        self.Parent.spinBox_Argv_2.setMaximum(60)
-        self.Parent.spinBox_Argv_2.setMinimum(1)
-        self.Parent.spinBox_Argv_3.setMaximum(60)
-        self.Parent.spinBox_Argv_3.setMinimum(0)
-        self.Parent.spinBox_WordSpace.setMaximum(100)
-        self.Parent.spinBox_WordSpace.setMinimum(-100)
-        self.Parent.spinBox_BoldSizeX.setMaximum(4)
-        self.Parent.spinBox_BoldSizeX.setMinimum(1)
-        self.Parent.spinBox_BoldSizeY.setMaximum(4)
-        self.Parent.spinBox_BoldSizeY.setMinimum(1)
-        self.Parent.spinBox_Y_Offset.setMaximum(64)
-        self.Parent.spinBox_Y_Offset.setMinimum(-64)
-        self.Parent.spinBox_Y_Offset_2.setMaximum(64)
-        self.Parent.spinBox_Y_Offset_2.setMinimum(-64)
-        self.Parent.spinBox_X_Offset.setMaximum(65536)
-        self.Parent.spinBox_X_Offset.setMinimum(-65536)
-        self.Parent.spinBox_Y_GlobalOffset.setMaximum(65536)
-        self.Parent.spinBox_Y_GlobalOffset.setMinimum(-65536)
-        self.Parent.spinBox_Align_x.setMaximum(1)
-        self.Parent.spinBox_Align_x.setMinimum(-1)
-        self.Parent.spinBox_Align_y.setMaximum(1)
-        self.Parent.spinBox_Align_y.setMinimum(-1)
-        self.Parent.spinBox_Zoom.setMaximum(200)
-        self.Parent.spinBox_Zoom.setMinimum(40)
-        self.Parent.spinBox_Zoom.setValue(100)  
-        self.Parent.spinBox_ZoomY.setMaximum(200)
-        self.Parent.spinBox_ZoomY.setMinimum(40)
-        self.Parent.spinBox_ZoomY.setValue(100)   
+        self.MainWindow.spin_FontSize.setMaximum(64)
+        self.MainWindow.spin_FontSize.setMinimum(6)
+        self.MainWindow.spin_FontSize.setValue(16)
+        self.MainWindow.spin_FontSize_2.setMaximum(64)
+        self.MainWindow.spin_FontSize_2.setMinimum(6)
+        self.MainWindow.spin_FontSize_2.setValue(16)
+        self.MainWindow.spinBox_Argv_1.setMaximum(60)
+        self.MainWindow.spinBox_Argv_1.setMinimum(1)
+        self.MainWindow.spinBox_Argv_2.setMaximum(60)
+        self.MainWindow.spinBox_Argv_2.setMinimum(1)
+        self.MainWindow.spinBox_Argv_3.setMaximum(60)
+        self.MainWindow.spinBox_Argv_3.setMinimum(0)
+        self.MainWindow.spinBox_WordSpace.setMaximum(100)
+        self.MainWindow.spinBox_WordSpace.setMinimum(-100)
+        self.MainWindow.spinBox_BoldSizeX.setMaximum(4)
+        self.MainWindow.spinBox_BoldSizeX.setMinimum(1)
+        self.MainWindow.spinBox_BoldSizeY.setMaximum(4)
+        self.MainWindow.spinBox_BoldSizeY.setMinimum(1)
+        self.MainWindow.spinBox_Y_Offset.setMaximum(64)
+        self.MainWindow.spinBox_Y_Offset.setMinimum(-64)
+        self.MainWindow.spinBox_Y_Offset_2.setMaximum(64)
+        self.MainWindow.spinBox_Y_Offset_2.setMinimum(-64)
+        self.MainWindow.spinBox_X_Offset.setMaximum(65536)
+        self.MainWindow.spinBox_X_Offset.setMinimum(-65536)
+        self.MainWindow.spinBox_Y_GlobalOffset.setMaximum(65536)
+        self.MainWindow.spinBox_Y_GlobalOffset.setMinimum(-65536)
+        self.MainWindow.spinBox_Align_x.setMaximum(1)
+        self.MainWindow.spinBox_Align_x.setMinimum(-1)
+        self.MainWindow.spinBox_Align_y.setMaximum(1)
+        self.MainWindow.spinBox_Align_y.setMinimum(-1)
+        self.MainWindow.spinBox_Zoom.setMaximum(200)
+        self.MainWindow.spinBox_Zoom.setMinimum(40)
+        self.MainWindow.spinBox_Zoom.setValue(100)  
+        self.MainWindow.spinBox_ZoomY.setMaximum(200)
+        self.MainWindow.spinBox_ZoomY.setMinimum(40)
+        self.MainWindow.spinBox_ZoomY.setValue(100)   
 
-        self.Parent.tableWidget_Screens.itemSelectionChanged.connect(self.show_progArgv)
-        self.Parent.tableWidget_Screens.rowMoved.connect(self.move_scnUnitProg)
-        self.Parent.combo_LineScreens.currentTextChanged.connect(self.show_scnUnit)
-        self.Parent.btn_ok.clicked.connect(self.save_progArgv)
-        self.Parent.btn_Colorful_ChooseColor.clicked.connect(self.get_color)
-        self.Parent.combo_Show.currentTextChanged.connect(self.update_argv)
-        self.Parent.checkBox_sysFont.stateChanged.connect(self.change_EngFont_set)
-        self.Parent.btn_textSetting.clicked.connect(self.set_colorstr_multiLine)
-        self.Parent.btn_screenSet.clicked.connect(self.set_screenSet)
+        self.MainWindow.tableWidget_Screens.itemSelectionChanged.connect(self.show_progArgv)
+        self.MainWindow.tableWidget_Screens.rowMoved.connect(self.move_scnUnitProg)
+        self.MainWindow.combo_LineScreens.activated.connect(self.show_scnUnit)
+        self.MainWindow.btn_ok.clicked.connect(self.save_progArgv)
+        self.MainWindow.btn_Colorful_ChooseColor.clicked.connect(self.get_color)
+        self.MainWindow.combo_Show.activated.connect(self.update_argv)
+        self.MainWindow.checkBox_sysFont.stateChanged.connect(self.change_EngFont_set)
+        self.MainWindow.btn_textSetting.clicked.connect(self.set_colorstr_multiLine)
+        self.MainWindow.btn_screenSet.clicked.connect(self.set_screenSet)
         
-        self.Parent.lineEdit_Text.editingFinished.connect(self.save_progArgv)
+        self.MainWindow.lineEdit_Text.editingFinished.connect(self.save_progArgv)
 
-        self.Parent.btn_ok.setShortcut(Qt.Key_Return)
+        self.MainWindow.btn_ok.setShortcut(Qt.Key_Return)
 
     def update_self_colorMode(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
             screen = self.get_currentScreen()
-            self.colorMode = self.Parent.LineEditor.LineInfoList[row][screen]["colorMode"]
+            self.colorMode = self.MainWindow.LineEditor.LineInfoList[row][screen]["colorMode"]
 
     def set_screenSet(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
             screen = self.get_currentScreen()
-            row = self.Parent.currentProg
+            row = self.MainWindow.currentProg
             if isinstance(row,int):
-                unitCount = len(self.Parent.ProgramSheetManager.programSheet[row][2][screen][0])
+                unitCount = len(self.MainWindow.ProgramSheetManager.programSheet[row][2][screen][0])
 
-                # print(self.Parent.ProgramSheetManager.programSheet[row])
-                if len(self.Parent.ProgramSheetManager.programSheet[row][2][screen]) == 2:  # (原始版本数据)
+                # print(self.MainWindow.ProgramSheetManager.programSheet[row])
+                if len(self.MainWindow.ProgramSheetManager.programSheet[row][2][screen]) == 2:  # (原始版本数据)
                     ext_dict = dict()
-                    self.Parent.ProgramSheetManager.programSheet[row][2][screen].append(ext_dict)  # 所有扩展功能必须加在这个extdict里，不能再添加列表项了（列表长度3）
-                    # 查找 ext_dict 使用 self.Parent.ProgramSheetManager.programSheet[row][2][screen][2]
+                    self.MainWindow.ProgramSheetManager.programSheet[row][2][screen].append(ext_dict)  # 所有扩展功能必须加在这个extdict里，不能再添加列表项了（列表长度3）
+                    # 查找 ext_dict 使用 self.MainWindow.ProgramSheetManager.programSheet[row][2][screen][2]
 
-                if len(self.Parent.ProgramSheetManager.programSheet[row][2][screen]) == 3:
-                    ext_dict = self.Parent.ProgramSheetManager.programSheet[row][2][screen][2]
+                if len(self.MainWindow.ProgramSheetManager.programSheet[row][2][screen]) == 3:
+                    ext_dict = self.MainWindow.ProgramSheetManager.programSheet[row][2][screen][2]
                     # print(ext_dict)
                     if "ProgScreenSetting" in ext_dict.keys():
                         ProgScreenSetting = ext_dict["ProgScreenSetting"]
                     else:
                         ProgScreenSetting = None
 
-                ProgSettingDialog = ProgramSettings(self.Parent)
+                ProgSettingDialog = ProgramSettings(self.MainWindow)
                 ProgSettingDialog.show()
                 ProgSettingDialog.set_value(progScreenSetting=ProgScreenSetting, unitCount=unitCount)
 
                 if ProgSettingDialog.exec_() == QDialog.Accepted:
                     ProgScreenSetting = ProgSettingDialog.get_setting()
-                    self.Parent.ProgramSheetManager.programSheet[row][2][screen][2]["ProgScreenSetting"] = ProgScreenSetting  # ext_dict["ProgScreenSetting"]
-                    self.Parent.change_program()
-                    self.Parent.thisFile_saveStat.emit(False)
+                    self.MainWindow.ProgramSheetManager.programSheet[row][2][screen][2]["ProgScreenSetting"] = ProgScreenSetting  # ext_dict["ProgScreenSetting"]
+                    self.MainWindow.change_program()
+                    self.MainWindow.thisFile_saveStat.emit(False)
            
     def set_colorstr_multiLine(self):
         multiLine = False
         lineSpace = 1
         richText = [False,False]
         text = ""
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         self.update_self_colorMode()
         if isinstance(row,int):
             screen = self.get_currentScreen()
-            row = self.Parent.currentProg
+            row = self.MainWindow.currentProg
             if isinstance(row,int):
-                self.screenProgList = self.Parent.ProgramSheetManager.programSheet[row][2][screen][1]
-                row = self.Parent.selected_row(self.Parent.tableWidget_Screens)
+                self.screenProgList = self.MainWindow.ProgramSheetManager.programSheet[row][2][screen][1]
+                row = self.MainWindow.selected_row(self.MainWindow.tableWidget_Screens)
                 if isinstance(row,int):
                     text = self.screenProgList[row]["text"]
                     if "multiLine" in self.screenProgList[row].keys():
@@ -1686,7 +1691,7 @@ class ProgramSettler():
                     if "richText" in self.screenProgList[row].keys():
                         richText = self.screenProgList[row]["richText"]
 
-                    ColorMultiLineDialog = ColorMultiLine(self.Parent)
+                    ColorMultiLineDialog = ColorMultiLine(self.MainWindow)
                     ColorMultiLineDialog.show()
                     ColorMultiLineDialog.set_value(text,multiLine,lineSpace,self.colorMode,richText)
                     if ColorMultiLineDialog.exec_() == QDialog.Accepted:
@@ -1696,34 +1701,34 @@ class ProgramSettler():
                         self.screenProgList[row]["multiLine"] = multiLine
                         self.screenProgList[row]["lineSpace"] = lineSpace
                         self.screenProgList[row]["richText"] = richText
-                        self.Parent.change_program()
-            self.Parent.thisFile_saveStat.emit(False)
+                        self.MainWindow.change_program()
+            self.MainWindow.thisFile_saveStat.emit(False)
         
         self.show_progArgv()
 
     def change_EngFont_set(self):
-        if self.Parent.checkBox_sysFont.isChecked():
-            self.Parent.combo_ASCII_Font.clear()
-            self.Parent.combo_ASCII_Font.addItems(self.TtFont)
+        if self.MainWindow.checkBox_sysFont.isChecked():
+            self.MainWindow.combo_ASCII_Font.clear()
+            self.MainWindow.combo_ASCII_Font.addItems(self.TtFont)
         else:
-            self.Parent.combo_ASCII_Font.clear()
-            self.Parent.combo_ASCII_Font.addItems(self.EngFont)
+            self.MainWindow.combo_ASCII_Font.clear()
+            self.MainWindow.combo_ASCII_Font.addItems(self.EngFont)
 
     def init_ProgramSetting(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
             screens = ["前路牌","后路牌","前侧路牌","后侧路牌"]
-            screens_have = [self.Parent.LineEditor.LineInfoList[row]["frontScreen"]["enabled"],self.Parent.LineEditor.LineInfoList[row]["backScreen"]["enabled"],self.Parent.LineEditor.LineInfoList[row]["frontSideScreen"]["enabled"],self.Parent.LineEditor.LineInfoList[row]["backSideScreen"]["enabled"]]
-            self.Parent.combo_LineScreens.clear()
+            screens_have = [self.MainWindow.LineEditor.LineInfoList[row]["frontScreen"]["enabled"],self.MainWindow.LineEditor.LineInfoList[row]["backScreen"]["enabled"],self.MainWindow.LineEditor.LineInfoList[row]["frontSideScreen"]["enabled"],self.MainWindow.LineEditor.LineInfoList[row]["backSideScreen"]["enabled"]]
+            self.MainWindow.combo_LineScreens.clear()
 
             for i in range(len(screens_have)):
                 if screens_have[i]:
-                    self.Parent.combo_LineScreens.addItem(screens[i])
+                    self.MainWindow.combo_LineScreens.addItem(screens[i])
 
             self.show_scnUnit()
 
     def get_currentScreen(self):
-        screen = self.Parent.combo_LineScreens.currentText()
+        screen = self.MainWindow.combo_LineScreens.currentText()
         
         if screen not in screenLink.keys():
             screen = "前路牌"
@@ -1731,11 +1736,11 @@ class ProgramSettler():
         return screen
     
     def move_scnUnitProg(self,drag,drop):
-        row = self.Parent.currentProg
+        row = self.MainWindow.currentProg
         if isinstance(row,int):
             screen = self.get_currentScreen()
-            screenUnitList = self.Parent.ProgramSheetManager.programSheet[row][2][screen][0]
-            screenProgList = self.Parent.ProgramSheetManager.programSheet[row][2][screen][1]
+            screenUnitList = self.MainWindow.ProgramSheetManager.programSheet[row][2][screen][0]
+            screenProgList = self.MainWindow.ProgramSheetManager.programSheet[row][2][screen][1]
 
             if drag != drop:
                 # 保存要移动的数据
@@ -1748,54 +1753,54 @@ class ProgramSettler():
                 screenUnitList.insert(drop,moving_data_1)
                 screenProgList.insert(drop,moving_data_2)
 
-                self.Parent.thisFile_saveStat.emit(False)
+                self.MainWindow.thisFile_saveStat.emit(False)
 
             QTimer.singleShot(0, self.show_scnUnit)
 
     def show_context_menu(self, pos):
         # 获取点击的行
-        row = self.Parent.tableWidget_Screens.rowAt(pos.y())
+        row = self.MainWindow.tableWidget_Screens.rowAt(pos.y())
         if row < 0:
             return
         # 创建菜单
-        menu = QMenu(self.Parent.tableWidget_Screens)
+        menu = QMenu(self.MainWindow.tableWidget_Screens)
         # 添加菜单项
-        action1 = QAction("导出图像", self.Parent.tableWidget_Screens)
+        action1 = QAction("导出图像", self.MainWindow.tableWidget_Screens)
         # 将动作添加到菜单
         menu.addAction(action1)
         # 连接动作信号
         action1.triggered.connect(lambda: self.save_img(row))
         # 显示菜单
         # 将窗口坐标转换为全局坐标
-        global_pos = self.Parent.tableWidget_Screens.mapToGlobal(pos)
+        global_pos = self.MainWindow.tableWidget_Screens.mapToGlobal(pos)
         menu.exec_(global_pos)
 
     def show_scnUnit(self, change_size = False, index = 0):
         data = []
         self.tmpBmp = []
         self.update_self_colorMode()
-        row = self.Parent.currentProg
+        row = self.MainWindow.currentProg
         if isinstance(row,int):
             screen = self.get_currentScreen()
-            screenUnitList = self.Parent.ProgramSheetManager.programSheet[row][2][screen][0]
-            screenProgList = self.Parent.ProgramSheetManager.programSheet[row][2][screen][1]
+            screenUnitList = self.MainWindow.ProgramSheetManager.programSheet[row][2][screen][0]
+            screenProgList = self.MainWindow.ProgramSheetManager.programSheet[row][2][screen][1]
 
             size = min(len(screenProgList),len(screenUnitList))
             all = range(size)
 
             # 更改线路默认屏幕布局
-            progrow = self.Parent.currentLine  # 当前选择的线路 注意变量为 progrow
+            progrow = self.MainWindow.currentLine  # 当前选择的线路 注意变量为 progrow
             if isinstance(progrow,int):
-                self.Parent.LineEditor.LineInfoList[progrow][screen]["screenUnit"] = copy.deepcopy(screenUnitList)
-                self.Parent.combo_LineScreensForLayout.setCurrentText(self.Parent.combo_LineScreens.currentText())  # 当节目内容编辑的屏幕改变时，保持线路设置中的屏幕同步
-                self.Parent.LineSettler.show_custom_layout_btn()
+                self.MainWindow.LineEditor.LineInfoList[progrow][screen]["screenUnit"] = copy.deepcopy(screenUnitList)
+                self.MainWindow.combo_LineScreensForLayout.setCurrentText(self.MainWindow.combo_LineScreens.currentText())  # 当节目内容编辑的屏幕改变时，保持线路设置中的屏幕同步
+                self.MainWindow.LineSettler.show_custom_layout_btn()
             else:
-                self.Parent.flush_table(self.Parent.tableWidget_ProgramSheet,[])
+                self.MainWindow.flush_table(self.MainWindow.tableWidget_ProgramSheet,[])
                 return
 
             for i in all:
                 p = screenProgList[i]
-                Creater = BmpCreater(self.Parent.IconManager.FontMgr,self.colorMode,p["color_RGB"],p["font"],p["ascFont"],p["sysFontOnly"],)
+                Creater = BmpCreater(self.MainWindow.IconManager.FontMgr,self.colorMode,p["color_RGB"],p["font"],p["ascFont"],p["sysFontOnly"],)
                 _roll_asc = True
                 _scale_y = 100
                 if "rollAscii" in p.keys():
@@ -1816,164 +1821,164 @@ class ProgramSettler():
                 ])
                 self.tmpBmp.append(bmp)
 
-            current_row = self.Parent.selected_row(self.Parent.tableWidget_Screens)
+            current_row = self.MainWindow.selected_row(self.MainWindow.tableWidget_Screens)
             if current_row is None:
                 current_row = 0
             # print(data)
-            self.Parent.flush_table(self.Parent.tableWidget_Screens,data)
-            self.Parent.set_selected_row(self.Parent.tableWidget_Screens,current_row)
+            self.MainWindow.flush_table(self.MainWindow.tableWidget_Screens,data)
+            self.MainWindow.set_selected_row(self.MainWindow.tableWidget_Screens,current_row)
         else:
-            self.Parent.flush_table(self.Parent.tableWidget_Screens,[])
+            self.MainWindow.flush_table(self.MainWindow.tableWidget_Screens,[])
 
         ## 添加节目的地方和更改布局的地方
             
     def update_argv(self):
-        mode = self.Parent.combo_Show.currentText()
-        self.Parent.spinBox_Argv_1.setEnabled(True)
-        self.Parent.spinBox_Argv_2.setEnabled(True)
-        self.Parent.spinBox_Argv_3.setEnabled(True)
+        mode = self.MainWindow.combo_Show.currentText()
+        self.MainWindow.spinBox_Argv_1.setEnabled(True)
+        self.MainWindow.spinBox_Argv_2.setEnabled(True)
+        self.MainWindow.spinBox_Argv_3.setEnabled(True)
         if "滚动" in mode:
-            self.Parent.label_Argv_1.setText("移动速度")
-            self.Parent.label_Argv_2.setText("滚动对象间距")
-            self.Parent.label_Argv_3.setText("步长")
-            self.Parent.spinBox_Argv_1.setMaximum(60)
-            self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(65535)
-            self.Parent.spinBox_Argv_2.setMinimum(-1)
-            self.Parent.spinBox_Argv_2.setValue(-1)
-            self.Parent.spinBox_Argv_3.setMaximum(65535)
-            self.Parent.spinBox_Argv_3.setMinimum(1)
+            self.MainWindow.label_Argv_1.setText("移动速度")
+            self.MainWindow.label_Argv_2.setText("滚动对象间距")
+            self.MainWindow.label_Argv_3.setText("步长")
+            self.MainWindow.spinBox_Argv_1.setMaximum(60)
+            self.MainWindow.spinBox_Argv_1.setMinimum(1)
+            self.MainWindow.spinBox_Argv_2.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_2.setMinimum(-1)
+            self.MainWindow.spinBox_Argv_2.setValue(-1)
+            self.MainWindow.spinBox_Argv_3.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_3.setMinimum(1)
         elif "移到" in mode:
-            self.Parent.label_Argv_1.setText("移动速度")
-            self.Parent.label_Argv_2.setText("时间")
-            self.Parent.label_Argv_3.setText("步长")
-            self.Parent.spinBox_Argv_1.setMaximum(60)
-            self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(65535)
-            self.Parent.spinBox_Argv_2.setMinimum(1)
-            self.Parent.spinBox_Argv_3.setMaximum(65535)
-            self.Parent.spinBox_Argv_3.setMinimum(1)
+            self.MainWindow.label_Argv_1.setText("移动速度")
+            self.MainWindow.label_Argv_2.setText("时间")
+            self.MainWindow.label_Argv_3.setText("步长")
+            self.MainWindow.spinBox_Argv_1.setMaximum(60)
+            self.MainWindow.spinBox_Argv_1.setMinimum(1)
+            self.MainWindow.spinBox_Argv_2.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_2.setMinimum(1)
+            self.MainWindow.spinBox_Argv_3.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_3.setMinimum(1)
         elif "移开" in mode:
-            self.Parent.label_Argv_1.setText("移动速度")
-            self.Parent.label_Argv_2.setText("时间")
-            self.Parent.label_Argv_3.setText("步长")
-            self.Parent.spinBox_Argv_1.setMaximum(60)
-            self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(65535)
-            self.Parent.spinBox_Argv_2.setMinimum(1)
-            self.Parent.spinBox_Argv_3.setMaximum(65535)
-            self.Parent.spinBox_Argv_3.setMinimum(1)
+            self.MainWindow.label_Argv_1.setText("移动速度")
+            self.MainWindow.label_Argv_2.setText("时间")
+            self.MainWindow.label_Argv_3.setText("步长")
+            self.MainWindow.spinBox_Argv_1.setMaximum(60)
+            self.MainWindow.spinBox_Argv_1.setMinimum(1)
+            self.MainWindow.spinBox_Argv_2.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_2.setMinimum(1)
+            self.MainWindow.spinBox_Argv_3.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_3.setMinimum(1)
         elif "跳跃" in mode:
-            self.Parent.label_Argv_1.setText("移动速度")
-            self.Parent.label_Argv_2.setText("移动步长")
-            self.Parent.label_Argv_3.setText("停靠时间")
-            self.Parent.spinBox_Argv_1.setMaximum(60)
-            self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(65535)
-            self.Parent.spinBox_Argv_2.setMinimum(1)
-            self.Parent.spinBox_Argv_3.setMaximum(65535)
-            self.Parent.spinBox_Argv_3.setMinimum(0)
+            self.MainWindow.label_Argv_1.setText("移动速度")
+            self.MainWindow.label_Argv_2.setText("移动步长")
+            self.MainWindow.label_Argv_3.setText("停靠时间")
+            self.MainWindow.spinBox_Argv_1.setMaximum(60)
+            self.MainWindow.spinBox_Argv_1.setMinimum(1)
+            self.MainWindow.spinBox_Argv_2.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_2.setMinimum(1)
+            self.MainWindow.spinBox_Argv_3.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_3.setMinimum(0)
         elif "翻屏" in mode:
-            self.Parent.label_Argv_1.setText("移动速度")
-            self.Parent.label_Argv_2.setText("移动步长")
-            self.Parent.label_Argv_3.setText("停靠时间")
-            self.Parent.spinBox_Argv_1.setMaximum(60)
-            self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(65535)
-            self.Parent.spinBox_Argv_2.setMinimum(1)
-            self.Parent.spinBox_Argv_3.setMaximum(65535)
-            self.Parent.spinBox_Argv_3.setMinimum(0)
+            self.MainWindow.label_Argv_1.setText("移动速度")
+            self.MainWindow.label_Argv_2.setText("移动步长")
+            self.MainWindow.label_Argv_3.setText("停靠时间")
+            self.MainWindow.spinBox_Argv_1.setMaximum(60)
+            self.MainWindow.spinBox_Argv_1.setMinimum(1)
+            self.MainWindow.spinBox_Argv_2.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_2.setMinimum(1)
+            self.MainWindow.spinBox_Argv_3.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_3.setMinimum(0)
         elif "扇形圆形" in mode:
-            self.Parent.label_Argv_1.setText("综合速度")
-            self.Parent.label_Argv_2.setText("移动步长")
-            self.Parent.label_Argv_3.setText("连续移动？")
-            self.Parent.spinBox_Argv_1.setMaximum(120)
-            self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(65535)
-            self.Parent.spinBox_Argv_2.setMinimum(2)
-            self.Parent.spinBox_Argv_3.setMaximum(1)
-            self.Parent.spinBox_Argv_3.setMinimum(0)
+            self.MainWindow.label_Argv_1.setText("综合速度")
+            self.MainWindow.label_Argv_2.setText("移动步长")
+            self.MainWindow.label_Argv_3.setText("连续移动？")
+            self.MainWindow.spinBox_Argv_1.setMaximum(120)
+            self.MainWindow.spinBox_Argv_1.setMinimum(1)
+            self.MainWindow.spinBox_Argv_2.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_2.setMinimum(2)
+            self.MainWindow.spinBox_Argv_3.setMaximum(1)
+            self.MainWindow.spinBox_Argv_3.setMinimum(0)
         elif "百叶窗" in mode:
-            self.Parent.label_Argv_1.setText("综合速度")
-            self.Parent.label_Argv_2.setText("窗户大小")
-            self.Parent.label_Argv_3.setText("显示窗户？")
-            self.Parent.spinBox_Argv_1.setMaximum(60)
-            self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(65535)
-            self.Parent.spinBox_Argv_2.setMinimum(2)
-            self.Parent.spinBox_Argv_3.setMaximum(1)
-            self.Parent.spinBox_Argv_3.setMinimum(0)
+            self.MainWindow.label_Argv_1.setText("综合速度")
+            self.MainWindow.label_Argv_2.setText("窗户大小")
+            self.MainWindow.label_Argv_3.setText("显示窗户？")
+            self.MainWindow.spinBox_Argv_1.setMaximum(60)
+            self.MainWindow.spinBox_Argv_1.setMinimum(1)
+            self.MainWindow.spinBox_Argv_2.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_2.setMinimum(2)
+            self.MainWindow.spinBox_Argv_3.setMaximum(1)
+            self.MainWindow.spinBox_Argv_3.setMinimum(0)
         elif "窗户" in mode:
-            self.Parent.label_Argv_1.setText("综合速度")
-            self.Parent.label_Argv_2.setText("显示窗户？")
-            self.Parent.label_Argv_3.setText("")
-            self.Parent.spinBox_Argv_1.setMaximum(60)
-            self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(1)
-            self.Parent.spinBox_Argv_2.setMinimum(0)
-            self.Parent.spinBox_Argv_3.setEnabled(False)
+            self.MainWindow.label_Argv_1.setText("综合速度")
+            self.MainWindow.label_Argv_2.setText("显示窗户？")
+            self.MainWindow.label_Argv_3.setText("")
+            self.MainWindow.spinBox_Argv_1.setMaximum(60)
+            self.MainWindow.spinBox_Argv_1.setMinimum(1)
+            self.MainWindow.spinBox_Argv_2.setMaximum(1)
+            self.MainWindow.spinBox_Argv_2.setMinimum(0)
+            self.MainWindow.spinBox_Argv_3.setEnabled(False)
         elif mode == "闪烁":
-            self.Parent.label_Argv_1.setText("亮时长")
-            self.Parent.label_Argv_2.setText("灭时长")
-            self.Parent.label_Argv_3.setText("")
-            self.Parent.spinBox_Argv_1.setMaximum(65535)
-            self.Parent.spinBox_Argv_1.setMinimum(1)
-            self.Parent.spinBox_Argv_2.setMaximum(65535)
-            self.Parent.spinBox_Argv_2.setMinimum(1)
-            self.Parent.spinBox_Argv_3.setEnabled(False)
+            self.MainWindow.label_Argv_1.setText("亮时长")
+            self.MainWindow.label_Argv_2.setText("灭时长")
+            self.MainWindow.label_Argv_3.setText("")
+            self.MainWindow.spinBox_Argv_1.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_1.setMinimum(1)
+            self.MainWindow.spinBox_Argv_2.setMaximum(65535)
+            self.MainWindow.spinBox_Argv_2.setMinimum(1)
+            self.MainWindow.spinBox_Argv_3.setEnabled(False)
         elif mode == "静止":
-            self.Parent.label_Argv_1.setText("")
-            self.Parent.label_Argv_2.setText("")
-            self.Parent.label_Argv_3.setText("")
-            self.Parent.spinBox_Argv_1.setEnabled(False)
-            self.Parent.spinBox_Argv_2.setEnabled(False)
-            self.Parent.spinBox_Argv_3.setEnabled(False)
+            self.MainWindow.label_Argv_1.setText("")
+            self.MainWindow.label_Argv_2.setText("")
+            self.MainWindow.label_Argv_3.setText("")
+            self.MainWindow.spinBox_Argv_1.setEnabled(False)
+            self.MainWindow.spinBox_Argv_2.setEnabled(False)
+            self.MainWindow.spinBox_Argv_3.setEnabled(False)
 
     def show_progArgv(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         self.update_self_colorMode()
         if isinstance(row,int):
             screen = self.get_currentScreen()
             if self.colorMode == "1":
-                self.Parent.combo_SingleColorChoose.setEnabled(True)
-                self.Parent.btn_Colorful_ChooseColor.setEnabled(False)
+                self.MainWindow.combo_SingleColorChoose.setEnabled(True)
+                self.MainWindow.btn_Colorful_ChooseColor.setEnabled(False)
             elif self.colorMode == "RGB":
-                self.Parent.combo_SingleColorChoose.setEnabled(False)
-                self.Parent.btn_Colorful_ChooseColor.setEnabled(True)
-            row = self.Parent.currentProg
+                self.MainWindow.combo_SingleColorChoose.setEnabled(False)
+                self.MainWindow.btn_Colorful_ChooseColor.setEnabled(True)
+            row = self.MainWindow.currentProg
             if isinstance(row,int):
-                self.screenProgList = self.Parent.ProgramSheetManager.programSheet[row][2][screen][1]
-                row = self.Parent.selected_row(self.Parent.tableWidget_Screens)
+                self.screenProgList = self.MainWindow.ProgramSheetManager.programSheet[row][2][screen][1]
+                row = self.MainWindow.selected_row(self.MainWindow.tableWidget_Screens)
                 if isinstance(row,int):
                     self.update_argv()
-                    self.Parent.combo_Font.setCurrentText(self.screenProgList[row]["font"])
-                    self.Parent.spin_FontSize.setValue(self.screenProgList[row]["fontSize"])
-                    self.Parent.checkBox_sysFont.setChecked(self.screenProgList[row]["sysFontOnly"])
-                    self.Parent.combo_ASCII_Font.setCurrentText(self.screenProgList[row]["ascFont"])
-                    self.Parent.combo_Show.setCurrentText(self.screenProgList[row]["appearance"])
-                    self.Parent.combo_TextDirect.setCurrentText("竖向" if self.screenProgList[row]["vertical"] else "横向")
-                    self.Parent.spinBox_Argv_1.setValue(self.screenProgList[row]["argv_1"])
-                    self.Parent.spinBox_Argv_2.setValue(self.screenProgList[row]["argv_2"])
-                    self.Parent.spinBox_WordSpace.setValue(self.screenProgList[row]["spacing"])
-                    self.Parent.spinBox_BoldSizeX.setValue(self.screenProgList[row]["bold"][0])
-                    self.Parent.spinBox_BoldSizeY.setValue(self.screenProgList[row]["bold"][1])
-                    self.Parent.spinBox_Y_Offset.setValue(self.screenProgList[row]["y_offset"])
-                    self.Parent.spinBox_Align_x.setValue(self.screenProgList[row]["align"][0])
-                    self.Parent.spinBox_Align_y.setValue(self.screenProgList[row]["align"][1])
-                    self.Parent.spinBox_Zoom.setValue(self.screenProgList[row]["scale"])
-                    self.Parent.chk_AutoZoom.setChecked(self.screenProgList[row]["autoScale"])
-                    self.Parent.chk_Argv1.setChecked(self.screenProgList[row]["scaleSysFontOnly"])
-                    self.Parent.lineEdit_Text.setText(self.screenProgList[row]["text"])
-                    self.Parent.combo_SingleColorChoose.setCurrentText(self.screenProgList[row]["color_1"])
+                    self.MainWindow.combo_Font.setCurrentText(self.screenProgList[row]["font"])
+                    self.MainWindow.spin_FontSize.setValue(self.screenProgList[row]["fontSize"])
+                    self.MainWindow.checkBox_sysFont.setChecked(self.screenProgList[row]["sysFontOnly"])
+                    self.MainWindow.combo_ASCII_Font.setCurrentText(self.screenProgList[row]["ascFont"])
+                    self.MainWindow.combo_Show.setCurrentText(self.screenProgList[row]["appearance"])
+                    self.MainWindow.combo_TextDirect.setCurrentText("竖向" if self.screenProgList[row]["vertical"] else "横向")
+                    self.MainWindow.spinBox_Argv_1.setValue(self.screenProgList[row]["argv_1"])
+                    self.MainWindow.spinBox_Argv_2.setValue(self.screenProgList[row]["argv_2"])
+                    self.MainWindow.spinBox_WordSpace.setValue(self.screenProgList[row]["spacing"])
+                    self.MainWindow.spinBox_BoldSizeX.setValue(self.screenProgList[row]["bold"][0])
+                    self.MainWindow.spinBox_BoldSizeY.setValue(self.screenProgList[row]["bold"][1])
+                    self.MainWindow.spinBox_Y_Offset.setValue(self.screenProgList[row]["y_offset"])
+                    self.MainWindow.spinBox_Align_x.setValue(self.screenProgList[row]["align"][0])
+                    self.MainWindow.spinBox_Align_y.setValue(self.screenProgList[row]["align"][1])
+                    self.MainWindow.spinBox_Zoom.setValue(self.screenProgList[row]["scale"])
+                    self.MainWindow.chk_AutoZoom.setChecked(self.screenProgList[row]["autoScale"])
+                    self.MainWindow.chk_Argv1.setChecked(self.screenProgList[row]["scaleSysFontOnly"])
+                    self.MainWindow.lineEdit_Text.setText(self.screenProgList[row]["text"])
+                    self.MainWindow.combo_SingleColorChoose.setCurrentText(self.screenProgList[row]["color_1"])
                     color = (self.screenProgList[row]["color_RGB"][0], self.screenProgList[row]["color_RGB"][1], self.screenProgList[row]["color_RGB"][2])
-                    self.Parent.btn_Colorful_ChooseColor.setStyleSheet(f"background-color: rgb{color}")
+                    self.MainWindow.btn_Colorful_ChooseColor.setStyleSheet(f"background-color: rgb{color}")
 
                     try:
-                        self.Parent.spin_FontSize_2.setValue(self.screenProgList[row]["ascFontSize"])
-                        self.Parent.checkBox_rollAscii.setChecked(self.screenProgList[row]["rollAscii"])
-                        self.Parent.spinBox_Argv_3.setValue(self.screenProgList[row]["argv_3"])
-                        self.Parent.spinBox_Y_Offset_2.setValue(self.screenProgList[row]["y_offset_asc"])
-                        self.Parent.spinBox_X_Offset.setValue(self.screenProgList[row]["x_offset"])
+                        self.MainWindow.spin_FontSize_2.setValue(self.screenProgList[row]["ascFontSize"])
+                        self.MainWindow.checkBox_rollAscii.setChecked(self.screenProgList[row]["rollAscii"])
+                        self.MainWindow.spinBox_Argv_3.setValue(self.screenProgList[row]["argv_3"])
+                        self.MainWindow.spinBox_Y_Offset_2.setValue(self.screenProgList[row]["y_offset_asc"])
+                        self.MainWindow.spinBox_X_Offset.setValue(self.screenProgList[row]["x_offset"])
                     except:
                         print("尝试读取1版数据")
                         self.screenProgList[row]["ascFontSize"] = 16
@@ -1982,14 +1987,14 @@ class ProgramSettler():
                         self.screenProgList[row]["x_offset"] = 0
 
                     try:
-                        self.Parent.spinBox_Y_GlobalOffset.setValue(self.screenProgList[row]["y_offset_global"])
+                        self.MainWindow.spinBox_Y_GlobalOffset.setValue(self.screenProgList[row]["y_offset_global"])
                     except:
                         print("尝试读取2版数据")
 
                     try:
-                        self.Parent.spinBox_ZoomY.setValue(self.screenProgList[row]["scale_y"])
+                        self.MainWindow.spinBox_ZoomY.setValue(self.screenProgList[row]["scale_y"])
                     except:
-                        self.Parent.spinBox_ZoomY.setValue(100)
+                        self.MainWindow.spinBox_ZoomY.setValue(100)
                         print("尝试读取3版数据")
 
 
@@ -2000,46 +2005,46 @@ class ProgramSettler():
                             n_str = ""
                             for c in items:
                                 n_str += c['char']
-                            self.Parent.lineEdit_Text.setText(n_str)
+                            self.MainWindow.lineEdit_Text.setText(n_str)
                     except:
                         print("未找到富文本选项")
 
     def save_progArgv(self):
-        r = self.Parent.currentProg
+        r = self.MainWindow.currentProg
         row = None
         if isinstance(r,int):
-            row = self.Parent.selected_row(self.Parent.tableWidget_Screens)
+            row = self.MainWindow.selected_row(self.MainWindow.tableWidget_Screens)
             if isinstance(row,int):
-                self.screenProgList[row]["font"] = self.Parent.combo_Font.currentText()
-                self.screenProgList[row]["fontSize"] = self.Parent.spin_FontSize.value()
-                self.screenProgList[row]["ascFont"] = self.Parent.combo_ASCII_Font.currentText()
-                self.screenProgList[row]["ascFontSize"] = self.Parent.spin_FontSize_2.value()
-                self.screenProgList[row]["sysFontOnly"] = self.Parent.checkBox_sysFont.isChecked()
-                self.screenProgList[row]["rollAscii"] = self.Parent.checkBox_rollAscii.isChecked()
-                self.screenProgList[row]["appearance"] = self.Parent.combo_Show.currentText()
-                self.screenProgList[row]["vertical"] = False if self.Parent.combo_TextDirect.currentText() == "横向" else True 
-                self.screenProgList[row]["argv_1"] = self.Parent.spinBox_Argv_1.value()
-                self.screenProgList[row]["argv_2"] = self.Parent.spinBox_Argv_2.value()
-                self.screenProgList[row]["argv_3"] = self.Parent.spinBox_Argv_3.value()
-                self.screenProgList[row]["spacing"] = self.Parent.spinBox_WordSpace.value()
-                self.screenProgList[row]["bold"][0] = self.Parent.spinBox_BoldSizeX.value()
-                self.screenProgList[row]["bold"][1] = self.Parent.spinBox_BoldSizeY.value()
-                self.screenProgList[row]["y_offset"] = self.Parent.spinBox_Y_Offset.value()
-                self.screenProgList[row]["y_offset_asc"] = self.Parent.spinBox_Y_Offset_2.value()
-                self.screenProgList[row]["x_offset"] = self.Parent.spinBox_X_Offset.value()
-                self.screenProgList[row]["y_offset_global"] = self.Parent.spinBox_Y_GlobalOffset.value()
-                self.screenProgList[row]["align"][0] = self.Parent.spinBox_Align_x.value()
-                self.screenProgList[row]["align"][1] = self.Parent.spinBox_Align_y.value()
-                self.screenProgList[row]["scale"] = self.Parent.spinBox_Zoom.value()
-                self.screenProgList[row]["scale_y"] = self.Parent.spinBox_ZoomY.value()
-                self.screenProgList[row]["autoScale"] = self.Parent.chk_AutoZoom.isChecked()
-                self.screenProgList[row]["scaleSysFontOnly"] = self.Parent.chk_Argv1.isChecked()
-                # self.screenProgList[row]["text"] = self.Parent.lineEdit_Text.text()  # 见下
-                self.screenProgList[row]["color_1"] = self.Parent.combo_SingleColorChoose.currentText()
+                self.screenProgList[row]["font"] = self.MainWindow.combo_Font.currentText()
+                self.screenProgList[row]["fontSize"] = self.MainWindow.spin_FontSize.value()
+                self.screenProgList[row]["ascFont"] = self.MainWindow.combo_ASCII_Font.currentText()
+                self.screenProgList[row]["ascFontSize"] = self.MainWindow.spin_FontSize_2.value()
+                self.screenProgList[row]["sysFontOnly"] = self.MainWindow.checkBox_sysFont.isChecked()
+                self.screenProgList[row]["rollAscii"] = self.MainWindow.checkBox_rollAscii.isChecked()
+                self.screenProgList[row]["appearance"] = self.MainWindow.combo_Show.currentText()
+                self.screenProgList[row]["vertical"] = False if self.MainWindow.combo_TextDirect.currentText() == "横向" else True 
+                self.screenProgList[row]["argv_1"] = self.MainWindow.spinBox_Argv_1.value()
+                self.screenProgList[row]["argv_2"] = self.MainWindow.spinBox_Argv_2.value()
+                self.screenProgList[row]["argv_3"] = self.MainWindow.spinBox_Argv_3.value()
+                self.screenProgList[row]["spacing"] = self.MainWindow.spinBox_WordSpace.value()
+                self.screenProgList[row]["bold"][0] = self.MainWindow.spinBox_BoldSizeX.value()
+                self.screenProgList[row]["bold"][1] = self.MainWindow.spinBox_BoldSizeY.value()
+                self.screenProgList[row]["y_offset"] = self.MainWindow.spinBox_Y_Offset.value()
+                self.screenProgList[row]["y_offset_asc"] = self.MainWindow.spinBox_Y_Offset_2.value()
+                self.screenProgList[row]["x_offset"] = self.MainWindow.spinBox_X_Offset.value()
+                self.screenProgList[row]["y_offset_global"] = self.MainWindow.spinBox_Y_GlobalOffset.value()
+                self.screenProgList[row]["align"][0] = self.MainWindow.spinBox_Align_x.value()
+                self.screenProgList[row]["align"][1] = self.MainWindow.spinBox_Align_y.value()
+                self.screenProgList[row]["scale"] = self.MainWindow.spinBox_Zoom.value()
+                self.screenProgList[row]["scale_y"] = self.MainWindow.spinBox_ZoomY.value()
+                self.screenProgList[row]["autoScale"] = self.MainWindow.chk_AutoZoom.isChecked()
+                self.screenProgList[row]["scaleSysFontOnly"] = self.MainWindow.chk_Argv1.isChecked()
+                # self.screenProgList[row]["text"] = self.MainWindow.lineEdit_Text.text()  # 见下
+                self.screenProgList[row]["color_1"] = self.MainWindow.combo_SingleColorChoose.currentText()
 
                 r, g, b = self.screenProgList[row]["color_RGB"]
                 #为适应彩色字符串修改
-                simple_origin_text = self.Parent.lineEdit_Text.text()
+                simple_origin_text = self.MainWindow.lineEdit_Text.text()
                 text_list_str = ""
 
                 if "richText" in self.screenProgList[row].keys():
@@ -2060,19 +2065,19 @@ class ProgramSettler():
                                 text_list.append(char_data)
                                 self.screenProgList[row]["text"] = str(text_list)
                         except Exception as e:
-                            print(e)
+                            print(f"ProgramSettler.save_progArgv():{e}")
                     else:
-                        self.screenProgList[row]["text"] = self.Parent.lineEdit_Text.text()
+                        self.screenProgList[row]["text"] = self.MainWindow.lineEdit_Text.text()
                 else:
-                    self.screenProgList[row]["text"] = self.Parent.lineEdit_Text.text()
+                    self.screenProgList[row]["text"] = self.MainWindow.lineEdit_Text.text()
 
-            self.Parent.thisFile_saveStat.emit(False)
+            self.MainWindow.thisFile_saveStat.emit(False)
 
-        self.Parent.change_program()     # 不可改变顺序
+        self.MainWindow.change_program()     # 不可改变顺序
         self.show_scnUnit()
 
     def get_color(self):
-        row = self.Parent.selected_row(self.Parent.tableWidget_Screens)
+        row = self.MainWindow.selected_row(self.MainWindow.tableWidget_Screens)
         if isinstance(row,int):
             col = QColorDialog.getColor()
             if col.isValid():
@@ -2082,14 +2087,14 @@ class ProgramSettler():
                 self.show_progArgv()
 
     def save_img(self, index):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         self.update_self_colorMode()
         if isinstance(row,int):
             if self.colorMode == "1":
                 extension = ["单色位图","bmp"]
             elif self.colorMode == "RGB":
                 extension = ["便携式网络图形","png"]
-            filedir,ok = QFileDialog.getSaveFileName(self.Parent,'导出图像','./',f'{extension[0]} (*.{extension[1]})')
+            filedir,ok = QFileDialog.getSaveFileName(self.MainWindow,'导出图像','./',f'{extension[0]} (*.{extension[1]})')
             if ok:
                 im = self.tmpBmp[index]
                 if self.colorMode == "1":
@@ -2098,12 +2103,13 @@ class ProgramSettler():
 
 
 class LineSettler():
-    def __init__(self, parent):
-        self.Parent = parent
+    def __init__(self, MainWindow: 'MainWindow'):
+        self.MainWindow = MainWindow 
         self.layoutHistoryCount = 0
         self.layoutHistory = []
         self.customLayouts = []
         self.customLButtons = []
+        self.scnsize_display = None
         self.btn_w = 600
         self.btn_h = 220
         self.path_to_pixmap = "./resources/welcome.png"
@@ -2112,28 +2118,39 @@ class LineSettler():
         self.initUI()
 
     def initUI(self):
-        self.Parent.statusBar().showMessage("请先添加线路，然后为各个路牌设置布局，再添加节目，选择节目后，再为屏幕的每个分区设置显示的内容！")
-        self.Parent.btn_SaveChange.clicked.connect(self.ok_layout)
-        self.Parent.combo_LayoutChoose.highlighted.connect(self.set_linemode_pixmap)
-        self.Parent.combo_LayoutChoose.currentTextChanged.connect(self.flush_width_height_spinbox)
-        self.Parent.combo_LineScreensForLayout.currentTextChanged.connect(self.flush_width_height_spinbox)
-        self.Parent.btn_LineSet.clicked.connect(lambda:self.reset_layout(True))
-        self.Parent.btn_LineReSet.clicked.connect(lambda:self.reset_layout(False))
+        self.MainWindow.statusBar().showMessage("请先添加线路，然后为各个路牌设置布局，再添加节目，选择节目后，再为屏幕的每个分区设置显示的内容！")
+        self.MainWindow.btn_SaveChange.clicked.connect(self.ok_layout)
+        self.MainWindow.combo_LayoutChoose.highlighted.connect(self.set_linemode_pixmap)
+        self.MainWindow.combo_LayoutChoose.activated.connect(self.flush_width_height_spinbox)
+        self.MainWindow.combo_LineScreensForLayout.activated.connect(self.flush_width_height_spinbox)
+        self.MainWindow.btn_LineSet.clicked.connect(lambda:self.reset_layout(True))
+        self.MainWindow.btn_LineReSet.clicked.connect(lambda:self.reset_layout(False))
 
-        self.Parent.spin_Width_1.setMinimum(4)
-        self.Parent.spin_Width_2.setMinimum(4)
-        self.Parent.spin_Height_1.setMinimum(4)
-        self.Parent.spin_Height_2.setMinimum(4)
+        self.MainWindow.spin_Width_1.setMinimum(4)
+        self.MainWindow.spin_Height_1.setMinimum(4)
 
         QTimer.singleShot(0, self.show_image)
 
-    def upgrade_widget(self):
+    def upgrade_widget(self, clear = False):
+        if clear:
+            self.path_to_pixmap = "./resources/welcome.png"
+            self.show_status = "image"
+            self.scnsize_display = None
+
         if self.show_status in ['null', 'image']:
             self.show_image()
         elif self.show_status in ['btn']:
             self.show_custom_layout_btn()
         else:
             self.show_image()
+
+        self.show_scnSize()
+
+    def show_scnSize(self):
+        self.MainWindow.label_PNum.setText("")
+        if self.show_status in ['image','btn']:
+            if self.scnsize_display is not None:
+                self.MainWindow.label_PNum.setText(f"屏幕尺寸：{self.scnsize_display[0]}x{self.scnsize_display[1]}")
 
     def show_image(self):
         self.set_pixmap(self.path_to_pixmap)
@@ -2143,8 +2160,8 @@ class LineSettler():
     def set_pixmap(self, path_to_image):
         self.pixmap = QPixmap(path_to_image)
         if not self.pixmap.isNull():
-            available_width = self.Parent.BtnWidget.size().width()
-            available_height = self.Parent.BtnWidget.size().height()
+            available_width = self.MainWindow.BtnWidget.size().width()
+            available_height = self.MainWindow.BtnWidget.size().height()
             original_width = self.pixmap.width()
             original_height = self.pixmap.height()
             
@@ -2163,16 +2180,16 @@ class LineSettler():
 
     def widget_set_image(self):
         self.clear_verticalLayout_LayoutBtn()
-        self.Parent.BtnWidget.label = QLabel(parent=self.Parent.BtnWidget)
-        self.Parent.BtnWidget.label.setPixmap(self.pixmap)
-        self.Parent.BtnWidget.label.show()
+        self.MainWindow.BtnWidget.label = QLabel(parent=self.MainWindow.BtnWidget)
+        self.MainWindow.BtnWidget.label.setPixmap(self.pixmap)
+        self.MainWindow.BtnWidget.label.show()
 
     def clear_verticalLayout_LayoutBtn(self):
-        for widget in self.Parent.BtnWidget.findChildren(QWidget):
+        for widget in self.MainWindow.BtnWidget.findChildren(QWidget):
             widget.deleteLater()
 
     def get_currentScreen(self):
-        screen = self.Parent.combo_LineScreensForLayout.currentText()
+        screen = self.MainWindow.combo_LineScreensForLayout.currentText()
         
         if screen not in screenLink.keys():
             screen = "前路牌"
@@ -2181,22 +2198,25 @@ class LineSettler():
 
     def flush_width_height_spinbox(self):
         # 还要改进，设置可设置的值的范围
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
-            self.Parent.spin_Width_2.setEnabled(False)
-            if self.Parent.combo_LayoutChoose.currentText() in ["布局2","布局3","布局4","布局6"]:
-                self.Parent.spin_Height_1.setEnabled(True)
-            elif self.Parent.combo_LayoutChoose.currentText() in ["布局1","布局5"]:
-                self.Parent.spin_Height_1.setEnabled(False)
-            self.Parent.spin_Height_2.setEnabled(False)
             screen = self.get_currentScreen()
-            screenSize = [self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
-            self.Parent.spin_Width_1.setValue(int(80*screenSize[0]/224))
-            self.Parent.spin_Width_1.setMaximum(screenSize[0])
-            self.Parent.spin_Height_1.setValue(int(screenSize[1]))
-            self.Parent.spin_Height_1.setMaximum(screenSize[1])
+            screenSize = [self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
 
-            if self.Parent.LineEditor.LineInfoList[row]["preset"] == "自定义":
+            self.scnsize_display = screenSize
+            self.show_scnSize()
+
+            self.MainWindow.spin_Width_1.setMaximum(screenSize[0])
+            self.MainWindow.spin_Width_1.setValue(int(80*screenSize[0]/224))
+            self.MainWindow.spin_Height_1.setMaximum(screenSize[1])
+            self.MainWindow.spin_Height_1.setValue(int(screenSize[1]))
+
+            if self.MainWindow.combo_LayoutChoose.currentText() in ["布局2","布局3","布局4","布局6"]:
+                self.MainWindow.spin_Height_1.setEnabled(True)
+            elif self.MainWindow.combo_LayoutChoose.currentText() in ["布局1","布局5"]:
+                self.MainWindow.spin_Height_1.setEnabled(False)
+
+            if self.MainWindow.LineEditor.LineInfoList[row]["preset"] == "自定义":
                 self.layoutHistory = []
                 layout = self.init_layout()
                 self.layoutHistory.append(layout)
@@ -2204,9 +2224,9 @@ class LineSettler():
                 self.layoutHistory.append(copy.deepcopy(self.customLayouts))
 
     def set_linemode_pixmap(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
-            mode = self.Parent.LineEditor.LineInfoList[row]["preset"]
+            mode = self.MainWindow.LineEditor.LineInfoList[row]["preset"]
             if mode == "北京公交":
                 self.path_to_pixmap = "./resources/preset_BeijingBus.png"
             elif mode == "普通":
@@ -2215,37 +2235,35 @@ class LineSettler():
             self.show_image()
 
     def init_LineSetting(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
-            mode = self.Parent.LineEditor.LineInfoList[row]["preset"]
+            mode = self.MainWindow.LineEditor.LineInfoList[row]["preset"]
             screens = ["前路牌","后路牌","前侧路牌","后侧路牌"]
-            screens_have = [self.Parent.LineEditor.LineInfoList[row]["frontScreen"]["enabled"],self.Parent.LineEditor.LineInfoList[row]["backScreen"]["enabled"],self.Parent.LineEditor.LineInfoList[row]["frontSideScreen"]["enabled"],self.Parent.LineEditor.LineInfoList[row]["backSideScreen"]["enabled"]]
-            self.Parent.combo_LineScreensForLayout.clear()
-            self.Parent.combo_LayoutChoose.clear()
+            screens_have = [self.MainWindow.LineEditor.LineInfoList[row]["frontScreen"]["enabled"],self.MainWindow.LineEditor.LineInfoList[row]["backScreen"]["enabled"],self.MainWindow.LineEditor.LineInfoList[row]["frontSideScreen"]["enabled"],self.MainWindow.LineEditor.LineInfoList[row]["backSideScreen"]["enabled"]]
+            self.MainWindow.combo_LineScreensForLayout.clear()
+            self.MainWindow.combo_LayoutChoose.clear()
             self.clear_verticalLayout_LayoutBtn()
 
             for i in range(len(screens_have)):
                 if screens_have[i]:
-                    self.Parent.combo_LineScreensForLayout.addItem(screens[i])
+                    self.MainWindow.combo_LineScreensForLayout.addItem(screens[i])
 
             if mode in ["北京公交","普通"]:
-                self.Parent.spin_Width_1.setEnabled(True)
-                self.Parent.spin_Height_1.setEnabled(True)
-                self.Parent.btn_LineSet.setEnabled(False)
-                self.Parent.btn_LineReSet.setEnabled(False)
+                self.MainWindow.spin_Width_1.setEnabled(True)
+                self.MainWindow.spin_Height_1.setEnabled(True)
+                self.MainWindow.btn_LineSet.setEnabled(False)
+                self.MainWindow.btn_LineReSet.setEnabled(False)
                 self.set_linemode_pixmap()
-                self.Parent.combo_LayoutChoose.setEnabled(True)
-                self.Parent.combo_LayoutChoose.addItems(["布局1","布局2","布局3","布局4","布局5","布局6"])    # screen["layout"]
-                self.Parent.btn_SaveChange.setEnabled(True)
+                self.MainWindow.combo_LayoutChoose.setEnabled(True)
+                self.MainWindow.combo_LayoutChoose.addItems(["布局1","布局2","布局3","布局4","布局5","布局6"])    # screen["layout"]
+                self.MainWindow.btn_SaveChange.setEnabled(True)
             else:
-                self.Parent.spin_Width_1.setEnabled(False)
-                self.Parent.spin_Height_1.setEnabled(False)
-                self.Parent.spin_Width_2.setEnabled(False)
-                self.Parent.spin_Height_2.setEnabled(False)
-                self.Parent.combo_LayoutChoose.setEnabled(False)
-                self.Parent.btn_LineSet.setEnabled(True)
-                self.Parent.btn_LineReSet.setEnabled(True)
-                self.Parent.btn_SaveChange.setEnabled(False)
+                self.MainWindow.spin_Width_1.setEnabled(False)
+                self.MainWindow.spin_Height_1.setEnabled(False)
+                self.MainWindow.combo_LayoutChoose.setEnabled(False)
+                self.MainWindow.btn_LineSet.setEnabled(True)
+                self.MainWindow.btn_LineReSet.setEnabled(True)
+                self.MainWindow.btn_SaveChange.setEnabled(False)
                 self.layoutHistoryCount = 0
                 self.layoutHistory = []
                 
@@ -2256,37 +2274,41 @@ class LineSettler():
         
         if isinstance(row,int):            
             for scn in screenLink.values():
-                scnSize = self.Parent.LineEditor.LineInfoList[row][scn]["screenSize"]
-                pointKind = str(self.Parent.LineEditor.LineInfoList[row][scn]["screenSize"][2]).replace(" ","")
+                scnSize = self.MainWindow.LineEditor.LineInfoList[row][scn]["screenSize"]
+                pointKind = str(self.MainWindow.LineEditor.LineInfoList[row][scn]["screenSize"][2]).replace(" ","")
                 pointKind = pointKindDict[pointKind]
                 newScn = copy.deepcopy(template_screenInfo[pointKind])
                 newScn["pointNum"] = [scnSize[0],scnSize[1]]
-                self.Parent.LineEditor.LineInfoList[row][scn]["screenUnit"] = [newScn]
+                self.MainWindow.LineEditor.LineInfoList[row][scn]["screenUnit"] = [newScn]
 
     def show_custom_layout_btn(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
             self.clear_verticalLayout_LayoutBtn()
             screen = self.get_currentScreen()
-            widgetSize = [self.Parent.BtnWidget.size().width(),self.Parent.BtnWidget.size().height()]
-            screenSize = [self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
-            screenScale = self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][2]
-            colorMode = self.Parent.LineEditor.LineInfoList[row][screen]["colorMode"]
+            widgetSize = [self.MainWindow.BtnWidget.size().width(),self.MainWindow.BtnWidget.size().height()]
+            screenSize = [self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
+
+            self.scnsize_display = screenSize
+            self.show_scnSize()
+
+            screenScale = self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][2]
+            #colorMode = self.MainWindow.LineEditor.LineInfoList[row][screen]["colorMode"]
             self.btn_w = widgetSize[0]
             self.btn_h = int((self.btn_w * screenSize[1] * screenScale[1]) / (screenSize[0] * screenScale[0]))
             if self.btn_h > widgetSize[1]:
                 self.btn_w = int(self.btn_w * widgetSize[1] / self.btn_h)
                 self.btn_h = widgetSize[1]
-            if len(self.Parent.LineEditor.LineInfoList[row][screen]["screenUnit"]) != 0:
-                self.customLayouts = self.Parent.LineEditor.LineInfoList[row][screen]["screenUnit"]   # 该线路的默认屏幕布局
+            if len(self.MainWindow.LineEditor.LineInfoList[row][screen]["screenUnit"]) != 0:
+                self.customLayouts = self.MainWindow.LineEditor.LineInfoList[row][screen]["screenUnit"]   # 该线路的默认屏幕布局
 
             if len(self.customLayouts) == 0:
                 self.customLButtons = []
-                self.customLButtons.append(QPushButton("1",self.Parent.BtnWidget))
+                self.customLButtons.append(QPushButton("1",self.MainWindow.BtnWidget))
                 self.customLButtons[0].setGeometry(0,0,self.btn_w,self.btn_h)
-                self.customLButtons[0].clicked.connect(lambda: self.onButtonClick(colorMode))
+                self.customLButtons[0].clicked.connect(self.onButtonClick)
                 self.customLButtons[0].show()
-                self.customLayouts.append(copy.deepcopy(template_screenInfo["midSize_"+colorMode]))
+                self.customLayouts.append(copy.deepcopy(template_screenInfo["midSize"]))
                 self.customLayouts[-1]["position"] = [0,0]
                 self.customLayouts[-1]["pointNum"] = [int(screenSize[0]*screenScale[0]/self.customLayouts[-1]["scale"][0]),int(screenSize[1]*screenScale[1]/self.customLayouts[-1]["scale"][1])]
             else:
@@ -2296,20 +2318,20 @@ class LineSettler():
                     y = int(self.customLayouts[i]["position"][1]*self.btn_h/(screenSize[1]*screenScale[1]))
                     w = int(self.customLayouts[i]["pointNum"][0]*self.customLayouts[i]["scale"][0]*self.btn_w/(screenSize[0]*screenScale[0]))
                     h = int(self.customLayouts[i]["pointNum"][1]*self.customLayouts[i]["scale"][1]*self.btn_h/(screenSize[1]*screenScale[1]))
-                    self.customLButtons.append(QPushButton(f"{i+1}",self.Parent.BtnWidget))
-                    self.customLButtons[-1].clicked.connect(lambda: self.onButtonClick(colorMode))
+                    self.customLButtons.append(QPushButton(f"{i+1}",self.MainWindow.BtnWidget))
+                    self.customLButtons[-1].clicked.connect(self.onButtonClick)
                     self.customLButtons[-1].setGeometry(x,y,w,h)
                     self.customLButtons[-1].show()
-            # self.Parent.ProgramSettler.show_scnUnit()
+            # self.MainWindow.ProgramSettler.show_scnUnit()
 
             self.show_status = "btn"
 
     def init_layout(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
             screen = self.get_currentScreen()
-            screenSize = [self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
-            screenScale = self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][2]
+            screenSize = [self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
+            screenScale = self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][2]
             pointKind = str(screenScale).replace(" ","")
             pointKind = pointKindDict[pointKind]
             layout = []
@@ -2320,7 +2342,7 @@ class LineSettler():
             return layout
 
     def reset_layout(self,p):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
             if p and self.layoutHistoryCount > 0:
                 self.layoutHistoryCount-=1
@@ -2331,13 +2353,13 @@ class LineSettler():
             screen = self.get_currentScreen()
             if len(self.layoutHistory) > 0:
                 try:
-                    self.Parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = copy.deepcopy(self.layoutHistory[self.layoutHistoryCount])
-                    self.customLayouts = self.Parent.LineEditor.LineInfoList[row][screen]["screenUnit"]
+                    self.MainWindow.LineEditor.LineInfoList[row][screen]["screenUnit"] = copy.deepcopy(self.layoutHistory[self.layoutHistoryCount])
+                    self.customLayouts = self.MainWindow.LineEditor.LineInfoList[row][screen]["screenUnit"]
                 except:
-                    print("撤回出错")
+                    print("LineSettler.reset_layout():撤回出错")
 
             self.show_custom_layout_btn()
-            self.Parent.thisFile_saveStat.emit(False)
+            self.MainWindow.thisFile_saveStat.emit(False)
 
     def add_custom_layout_pre(self,index):
         old_pointNum = self.customLayouts[index]["pointNum"]
@@ -2345,9 +2367,9 @@ class LineSettler():
         return old_pointNum,old_scale
 
     def add_custom_layout(self,index,pointKind,wh = "w",w = 0,h = 0):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
-            self.Parent.ProgramSheetManager.show_program()
+            self.MainWindow.ProgramSheetManager.show_program()
             old_pointNum = self.customLayouts[index]["pointNum"]
             old_scale = self.customLayouts[index]["scale"]
             to_add = copy.deepcopy(template_screenInfo[pointKind])
@@ -2393,18 +2415,18 @@ class LineSettler():
         else:
             print("无效尺寸！")
 
-    def onButtonClick(self,colormode):
-        row = self.Parent.currentLine
+    def onButtonClick(self):
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
-            mode = self.Parent.LineEditor.LineInfoList[row]["preset"]
+            mode = self.MainWindow.LineEditor.LineInfoList[row]["preset"]
             if mode != "自定义":
                 return
         # 识别哪个按钮被点击
-        sender = self.Parent.sender()
+        sender = self.MainWindow.sender()
         if sender in self.customLButtons:
             index = self.customLButtons.index(sender)
             opn,ops = self.add_custom_layout_pre(index)
-            SelfDefineLayoutDialog = SelfDefineLayout(self.Parent)
+            SelfDefineLayoutDialog = SelfDefineLayout(self.MainWindow)
             SelfDefineLayoutDialog.set_value(opn,ops)
             SelfDefineLayoutDialog.can_w_h()
             if SelfDefineLayoutDialog.exec_() == QDialog.Accepted:
@@ -2423,13 +2445,13 @@ class LineSettler():
                 self.layoutHistory.append(copy.deepcopy(self.customLayouts))
                 self.layoutHistoryCount = len(self.layoutHistory)-1
                 self.show_custom_layout_btn()
-                self.Parent.thisFile_saveStat.emit(False)
+                self.MainWindow.thisFile_saveStat.emit(False)
 
     def get_scn_pos_size(self,row,screen,w1,h1,enable_mode = True):
-        mode = self.Parent.LineEditor.LineInfoList[row]["preset"]
-        self.Parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = []
-        screenSize = [self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
-        screenScale = self.Parent.LineEditor.LineInfoList[row][screen]["screenSize"][2]
+        mode = self.MainWindow.LineEditor.LineInfoList[row]["preset"]
+        self.MainWindow.LineEditor.LineInfoList[row][screen]["screenUnit"] = []
+        screenSize = [self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
+        screenScale = self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][2]
         width = screenSize[0]*screenScale[0]
         height = screenSize[1]*screenScale[1]
         if enable_mode:
@@ -2464,27 +2486,26 @@ class LineSettler():
 
         return p,si
 
-    def get_toadd_screenunit(self,xy,npxnpy,sizeName,ColorMode,singColor):
+    def get_toadd_screenunit(self,xy,npxnpy,sizeName):
         scname = sizeName   # 这个function需要colorMode
         scn = copy.deepcopy(template_screenInfo[scname])
         scn["position"] = xy
         scn["pointNum"] = npxnpy
-        if ColorMode == "1":
-            scn["color0"],scn["color1"] = template_monochromeColors[singColor]
+
         return scn
 
     def ok_layout(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
-            mode = self.Parent.LineEditor.LineInfoList[row]["preset"]
-            self.Parent.ProgramSheetManager.show_program()
-            layout = self.Parent.combo_LayoutChoose.currentText()
+            mode = self.MainWindow.LineEditor.LineInfoList[row]["preset"]
+            self.MainWindow.ProgramSheetManager.show_program()
+            layout = self.MainWindow.combo_LayoutChoose.currentText()
             screen = self.get_currentScreen()
-            colorMode = self.Parent.LineEditor.LineInfoList[row][screen]["colorMode"]
-            self.Parent.LineEditor.LineInfoList[row][screen]["layout"] = layout
+            screenSize = [self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][0],self.MainWindow.LineEditor.LineInfoList[row][screen]["screenSize"][1]]
+            self.MainWindow.LineEditor.LineInfoList[row][screen]["layout"] = layout
 
-            w1 = self.Parent.spin_Width_1.value()
-            h1 = self.Parent.spin_Height_1.value()
+            w1 = self.MainWindow.spin_Width_1.value()
+            h1 = self.MainWindow.spin_Height_1.value()
             if screen in ["frontSideScreen","backSideScreen"]:
                 scn_argv = self.get_scn_pos_size(row,screen,w1,h1,False)
             else:
@@ -2494,34 +2515,34 @@ class LineSettler():
             scn_size = "bigSize" if screen in ["frontSideScreen","backSideScreen"]  else "midSize"
             m_size = scn_size if screen in ["frontSideScreen","backSideScreen"]  else m_size
             if layout == "布局1":
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],scn_size,colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][2],scn_argv[1][2],m_size,colorMode,"red"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],scn_argv[1][3],scn_size,colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],scn_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][2],scn_argv[1][2],m_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],scn_argv[1][3],scn_size))
             elif layout == "布局2":
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],scn_size,colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][1],scn_argv[1][1],scn_size,colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][2],scn_argv[1][2],m_size,colorMode,"red"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],[scn_argv[1][3][0],scn_argv[1][3][1]+scn_argv[1][4][1]],scn_size,colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],scn_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][1],scn_argv[1][1],scn_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][2],scn_argv[1][2],m_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],[scn_argv[1][3][0],scn_argv[1][3][1]+scn_argv[1][4][1]],scn_size))
             elif layout == "布局3":
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],[scn_argv[1][0][0],scn_argv[1][0][1]+scn_argv[1][1][1]],scn_size,colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][2],scn_argv[1][2],m_size,colorMode,"red"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],scn_argv[1][3],scn_size,colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][4],scn_argv[1][4],scn_size,colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],[scn_argv[1][0][0],scn_argv[1][0][1]+scn_argv[1][1][1]],scn_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][2],scn_argv[1][2],m_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],scn_argv[1][3],scn_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][4],scn_argv[1][4],scn_size))
             elif layout == "布局4":
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],scn_size,colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][1],scn_argv[1][1],scn_size,colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][2],scn_argv[1][2],m_size,colorMode,"red"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],scn_argv[1][3],scn_size,colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][4],scn_argv[1][4],scn_size,colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],scn_argv[1][0],scn_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][1],scn_argv[1][1],scn_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][2],scn_argv[1][2],m_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][3],scn_argv[1][3],scn_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][4],scn_argv[1][4],scn_size))
             elif layout == "布局5":
                 scn_argv = self.get_scn_pos_size(row,screen,w1,h1,False)
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],[scn_argv[1][0][0],scn_argv[1][0][1]+scn_argv[1][1][1]],scn_size,colorMode,"red"))
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][2],[scn_argv[1][2][0]+scn_argv[1][3][0],scn_argv[1][2][1]],scn_size,colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],[scn_argv[1][0][0],scn_argv[1][0][1]+scn_argv[1][1][1]],scn_size))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][2],[scn_argv[1][2][0]+scn_argv[1][3][0],scn_argv[1][2][1]],scn_size))
             elif layout == "布局6":
                 scn_argv = self.get_scn_pos_size(row,screen,w1,h1,False)
-                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],[scn_argv[1][0][0],scn_argv[1][0][1]+scn_argv[1][1][1]],scn_size,colorMode,"red"))
-                to_add.append(self.get_toadd_screenunit([scn_argv[0][2][0],scn_argv[0][3][1]],[scn_argv[1][2][0]+scn_argv[1][3][0],scn_argv[1][3][1]],scn_size,colorMode,"yellow"))
-                to_add.append(self.get_toadd_screenunit([scn_argv[0][2][0],scn_argv[0][4][1]],[scn_argv[1][2][0]+scn_argv[1][3][0],scn_argv[1][4][1]],scn_size,colorMode,"yellow"))
+                to_add.append(self.get_toadd_screenunit(scn_argv[0][0],[scn_argv[1][0][0],scn_argv[1][0][1]+scn_argv[1][1][1]],scn_size))
+                to_add.append(self.get_toadd_screenunit([scn_argv[0][2][0],scn_argv[0][3][1]],[scn_argv[1][2][0]+scn_argv[1][3][0],scn_argv[1][3][1]],scn_size))
+                to_add.append(self.get_toadd_screenunit([scn_argv[0][2][0],scn_argv[0][4][1]],[scn_argv[1][2][0]+scn_argv[1][3][0],scn_argv[1][4][1]],scn_size))
             aim_add = []
             add_to = True
             for i in range(len(to_add)):
@@ -2532,117 +2553,119 @@ class LineSettler():
                     if v <= 0:
                         add_to = False
             if add_to:
-                self.Parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = aim_add
+                self.MainWindow.LineEditor.LineInfoList[row][screen]["screenUnit"] = aim_add
             else:
-                self.Parent.LineEditor.LineInfoList[row][screen]["screenUnit"] = [copy.deepcopy(template_screenInfo["midSize_1"])]
-            self.Parent.ProgramSettler.show_scnUnit()
+                print("ok_layout: 错误")
+                add = self.get_toadd_screenunit([0,0],screenSize,scn_size)
+                self.MainWindow.LineEditor.LineInfoList[row][screen]["screenUnit"] = [add]
+            self.MainWindow.ProgramSettler.show_scnUnit()
 
-            self.Parent.thisFile_saveStat.emit(False)
+            self.MainWindow.thisFile_saveStat.emit(False)
         self.set_linemode_pixmap()
 
 class LineController():
-    def __init__(self, parent):
-        self.Parent = parent
+    def __init__(self, MainWindow: 'MainWindow'):
+        self.MainWindow = MainWindow 
         # 线路管理表格
-        self.Parent.tableWidget_lineChoose.setColumnCount(3)
-        self.Parent.tableWidget_lineChoose.setHorizontalHeaderLabels(["线路名称","预设","刷新率"])   #设置行表头
-        self.Parent.tableWidget_lineChoose.setSelectionBehavior(QAbstractItemView.SelectRows)    #设置表格的选取方式是行选取
-        self.Parent.tableWidget_lineChoose.setSelectionMode(QAbstractItemView.SingleSelection)    #设置选取方式为单个选取
-        self.Parent.tableWidget_lineChoose.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
-        self.Parent.tableWidget_lineChoose.verticalHeader().setDefaultSectionSize(24)
-        self.Parent.tableWidget_lineChoose.rowMoved.connect(self.onRowMoved)
-        self.Parent.tableWidget_lineChoose.set_column_ratios([2.5, 1.2, 1])
-        self.Parent.tableWidget_lineChoose.set_min_total_width(250)
+        self.MainWindow.tableWidget_lineChoose.setColumnCount(3)
+        self.MainWindow.tableWidget_lineChoose.setHorizontalHeaderLabels(["线路名称","预设","刷新率"])   #设置行表头
+        self.MainWindow.tableWidget_lineChoose.setSelectionBehavior(QAbstractItemView.SelectRows)    #设置表格的选取方式是行选取
+        self.MainWindow.tableWidget_lineChoose.setSelectionMode(QAbstractItemView.SingleSelection)    #设置选取方式为单个选取
+        self.MainWindow.tableWidget_lineChoose.setEditTriggers(QAbstractItemView.NoEditTriggers)  #始终禁止编辑
+        self.MainWindow.tableWidget_lineChoose.verticalHeader().setDefaultSectionSize(24)
+        self.MainWindow.tableWidget_lineChoose.rowMoved.connect(self.onRowMoved)
+        self.MainWindow.tableWidget_lineChoose.set_column_ratios([2.5, 1.2, 1])
+        self.MainWindow.tableWidget_lineChoose.set_min_total_width(250)
 
-        self.Parent.combo_FlushRate.addItems(flushRateList)
+        self.MainWindow.combo_FlushRate.addItems(flushRateList)
 
-        self.Parent.LineNameEdit.editingFinished.connect(self.change_name_time)
-        self.Parent.combo_FlushRate.currentTextChanged.connect(self.change_name_time)
-        self.Parent.btn_newLine.clicked.connect(self.new_busLine_openDialog)
-        self.Parent.btn_delLine.clicked.connect(self.del_busLine)
-        self.Parent.btn_MvUp_BusLine.clicked.connect(self.mv_up_busLine)
-        self.Parent.btn_MvDn_BusLine.clicked.connect(self.mv_dn_busLine)
+        self.MainWindow.LineNameEdit.editingFinished.connect(self.change_name_time)
+        self.MainWindow.combo_FlushRate.activated.connect(self.change_name_time)
+        self.MainWindow.btn_newLine.clicked.connect(self.new_busLine_openDialog)
+        self.MainWindow.btn_delLine.clicked.connect(self.del_busLine)
+        self.MainWindow.btn_MvUp_BusLine.clicked.connect(self.mv_up_busLine)
+        self.MainWindow.btn_MvDn_BusLine.clicked.connect(self.mv_dn_busLine)
 
     def show_name_time(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
-            dt = self.Parent.LineEditor.LineInfoList[row]
-            self.Parent.LineNameEdit.setText(dt["lineName"])
-            self.Parent.combo_FlushRate.setCurrentText(str(dt["flushRate"]))
+            dt = self.MainWindow.LineEditor.LineInfoList[row]
+            self.MainWindow.LineNameEdit.setText(dt["lineName"])
+            self.MainWindow.combo_FlushRate.setCurrentText(str(dt["flushRate"]))
 
     def change_name_time(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if isinstance(row,int):
-            n = self.Parent.LineNameEdit.text()
-            f = int(self.Parent.combo_FlushRate.currentText())
-            if self.Parent.LineEditor.LineInfoList[row]["lineName"] != n or self.Parent.LineEditor.LineInfoList[row]["flushRate"] != f:
-                self.Parent.LineEditor.LineInfoList[row]["lineName"] = n
-                self.Parent.LineEditor.LineInfoList[row]["flushRate"] = f
-                self.Parent.thisFile_saveStat.emit(False)
-            self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
-            self.Parent.set_selected_row(self.Parent.tableWidget_lineChoose,row)
+            n = self.MainWindow.LineNameEdit.text()
+            f = int(self.MainWindow.combo_FlushRate.currentText())
+            if self.MainWindow.LineEditor.LineInfoList[row]["lineName"] != n or self.MainWindow.LineEditor.LineInfoList[row]["flushRate"] != f:
+                self.MainWindow.LineEditor.LineInfoList[row]["lineName"] = n
+                self.MainWindow.LineEditor.LineInfoList[row]["flushRate"] = f
+                self.MainWindow.thisFile_saveStat.emit(False)
+            self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
+            self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,row)
 
     def new_line(self):
-        self.Parent.LineEditor.LineInfoList = []
-        self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
+        self.MainWindow.LineEditor.LineInfoList = []
+        self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
 
-        self.Parent.thisFile_saveStat.emit(False)
+        self.MainWindow.thisFile_saveStat.emit(False)
 
     def new_busLine_openDialog(self):
-        dialog = NewALine(self.Parent)
+        dialog = NewALine(self.MainWindow)
         dialog.dataEntered.connect(self.new_busLine_EnterData)
         dialog.exec_()
         
     def new_busLine_EnterData(self,data):
-        self.Parent.LineEditor.add_data(data)
-        self.Parent.LineSettler.retranslate_screenUnit_size()
-        self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
-        self.Parent.set_selected_row(self.Parent.tableWidget_lineChoose,len(self.Parent.LineEditor.LineInfoList)-1)
-        self.Parent.thisFile_saveStat.emit(False)
+        self.MainWindow.LineEditor.add_data(data)
+        self.MainWindow.LineSettler.retranslate_screenUnit_size()
+        self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
+        self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,len(self.MainWindow.LineEditor.LineInfoList)-1)
+        self.MainWindow.thisFile_saveStat.emit(False)
 
     def copy_busLine(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if row is not None:
-            self.Parent.LineEditor.copy_data(row)
-            # self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
-            # self.Parent.set_selected_row(self.Parent.tableWidget_lineChoose,len(self.Parent.LineEditor.LineInfoList)-1)
-            # self.Parent.thisFile_saveStat.emit(False)
+            self.MainWindow.LineEditor.copy_data(row)
+            # self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
+            # self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,len(self.MainWindow.LineEditor.LineInfoList)-1)
+            # self.MainWindow.thisFile_saveStat.emit(False)
 
     def paste_busLine(self):
-        if self.Parent.LineEditor.paste_data():
-            self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
-            self.Parent.set_selected_row(self.Parent.tableWidget_lineChoose,len(self.Parent.LineEditor.LineInfoList)-1)
-            self.Parent.thisFile_saveStat.emit(False)
+        if self.MainWindow.LineEditor.paste_data():
+            self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
+            self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,len(self.MainWindow.LineEditor.LineInfoList)-1)
+            self.MainWindow.thisFile_saveStat.emit(False)
 
     def del_busLine(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if row is not None:
-            self.Parent.LineEditor.remove_data(row)
-            self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
-            self.Parent.set_selected_row(self.Parent.tableWidget_lineChoose,max(0,row-1))
-            self.Parent.thisFile_saveStat.emit(False)
+            self.MainWindow.LineEditor.remove_data(row)
+            self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
+            self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,max(0,row-1))
+            self.MainWindow.thisFile_saveStat.emit(False)
 
     def onRowMoved(self,drag,drop):
-        self.Parent.LineEditor.move_row(drag,drop)
-        self.Parent.thisFile_saveStat.emit(False)
-        self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
-        self.Parent.set_selected_row(self.Parent.tableWidget_lineChoose,drop)
+        self.MainWindow.LineEditor.move_row(drag,drop)
+        self.MainWindow.thisFile_saveStat.emit(False)
+        self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
+        self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,drop)
 
     def mv_up_busLine(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if row is not None:
-            self.Parent.LineEditor.mv_up(row)
-            self.Parent.thisFile_saveStat.emit(False)
-        self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
-        self.Parent.set_selected_row(self.Parent.tableWidget_lineChoose,max(0,row-1))
+            self.MainWindow.LineEditor.mv_up(row)
+            self.MainWindow.thisFile_saveStat.emit(False)
+        self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
+        self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,max(0,row-1))
 
     def mv_dn_busLine(self):
-        row = self.Parent.currentLine
+        row = self.MainWindow.currentLine
         if row is not None:
-            self.Parent.LineEditor.mv_dn(row)
-            self.Parent.thisFile_saveStat.emit(False)
-        self.Parent.flush_table(self.Parent.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.Parent.LineEditor.LineInfoList])
-        self.Parent.set_selected_row(self.Parent.tableWidget_lineChoose,min(len(self.Parent.LineEditor.LineInfoList)-1,row+1))
+            self.MainWindow.LineEditor.mv_dn(row)
+            self.MainWindow.thisFile_saveStat.emit(False)
+        self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
+        self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,min(len(self.MainWindow.LineEditor.LineInfoList)-1,row+1))
 
 class LineEditor():
     def __init__(self):

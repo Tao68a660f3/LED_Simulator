@@ -25,7 +25,7 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>新建线路：</string>
+        <string>线路名称：</string>
        </property>
       </widget>
      </item>

@@ -402,7 +402,7 @@ class ScreenController(QWidget):
                 self.setWindowFlags(flags | Qt.WindowStaysOnTopHint)
             self.show()
             self.show()
-        except Exception as e:
+        except:
             pass
 
     def capture_screen(self):
@@ -440,7 +440,7 @@ class ScreenController(QWidget):
         try:
             os.makedirs("./ScreenShots")
         except Exception as e:
-            pass
+            print("开始录制GIF：无法新建文件夹{e}")
         self.tmpGifNames = []
         self.gifFrames = []
         self.gifRecording = True
@@ -545,24 +545,27 @@ class ScreenController(QWidget):
             self.programTimeout()
 
     def get_jumpto_index(self,tg):
-        abst = True
-        prange = 0
-        gfrom = 0
-        if "prange" in tg.keys():
-            rg = tg["prange"]
-            prange = random.randint(min(0,rg),max(0,rg))
-        if "gfrom" in tg.keys():
-            if tg["gfrom"]:
-                gfrom = 1
-        if "abst" in tg.keys():
-            abst = tg["abst"]
-        print("self.currentIndex =", self.currentIndex, "tg['to'] =", tg["to"], "prange =", prange, "self.jumpFrom =", self.jumpFrom, "gfrom =", gfrom)
-        if abst:
-            b = (self.currentIndex + tg["to"] + prange + (self.jumpFrom-self.currentIndex) * gfrom) % len(self.screenProgramSheet)
-        else:
-            b = (tg["to"] - 1 + prange) % len(self.screenProgramSheet)
+        try:
+            abst = True
+            prange = 0
+            gfrom = 0
+            if "prange" in tg.keys():
+                rg = tg["prange"]
+                prange = random.randint(min(0,rg),max(0,rg))
+            if "gfrom" in tg.keys():
+                if tg["gfrom"]:
+                    gfrom = 1
+            if "abst" in tg.keys():
+                abst = tg["abst"]
+            print("self.currentIndex =", self.currentIndex, "tg['to'] =", tg["to"], "prange =", prange, "self.jumpFrom =", self.jumpFrom, "gfrom =", gfrom)
+            if abst:
+                b = (self.currentIndex + tg["to"] + prange + (self.jumpFrom-self.currentIndex) * gfrom) % len(self.screenProgramSheet)
+            else:
+                b = (tg["to"] - 1 + prange) % len(self.screenProgramSheet)
 
-        self.change_cntIndex(cntindex=b)
+            self.change_cntIndex(cntindex=b)
+        except Exception as e:
+            print(f"get_jumpto_index: {e}")
 
     def triggerProgramTimeout(self):
         if self.currentPtime < 0:
@@ -639,13 +642,17 @@ class ScreenController(QWidget):
         return filtered1 == filtered2
     
     def check_two_programs_if_same_layout(self, selected_prog):    # 比较当前节目和目标节目是否相同布局
-        now_prog_layout_list = []
-        next_prog_layout_list = self.screenProgramSheet[self.currentIndex][2][self.toDisplay][0]
-        
-        for u in self.units:
-            now_prog_layout_list.append(u.get_summary_data()[0])
+        rt = False
+        if len(self.screenProgramSheet) > 0:
+            now_prog_layout_list = []
+            next_prog_layout_list = self.screenProgramSheet[selected_prog][2][self.toDisplay][0]
+            
+            for u in self.units:
+                now_prog_layout_list.append(u.get_summary_data()[0])
 
-        return self.compare_ordered(now_prog_layout_list, next_prog_layout_list)
+            rt = self.compare_ordered(now_prog_layout_list, next_prog_layout_list)
+        
+        return rt
     
     def use_new_argvs(self, a, new, argvs):
         a.appearance = new["appearance"]
