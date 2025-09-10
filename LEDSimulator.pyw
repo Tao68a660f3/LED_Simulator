@@ -1506,7 +1506,10 @@ class ProgramSheetManager():
         if len(self.programSheet) == 0:
             self.MainWindow.currentProg = None
         else:
-            self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet, max(0,row-1))
+            try:
+                self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet, max(0,row-1))
+            except:
+                pass
 
     def copy_program(self):
         row = self.MainWindow.currentProg
@@ -1534,8 +1537,8 @@ class ProgramSheetManager():
             if row > 0:
                 self.programSheet[row],self.programSheet[row-1] = self.programSheet[row-1],self.programSheet[row]
                 self.MainWindow.thisFile_saveStat.emit(False)
-        self.show_program()
-        self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet, max(0,row-1))
+            self.show_program()
+            self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet, max(0,row-1))
 
     def mv_dn_program(self):
         row = self.MainWindow.currentProg
@@ -1543,8 +1546,8 @@ class ProgramSheetManager():
             if row < len(self.programSheet)-1:
                 self.programSheet[row],self.programSheet[row+1] = self.programSheet[row+1],self.programSheet[row]
                 self.MainWindow.thisFile_saveStat.emit(False)
-        self.show_program()
-        self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet, min(len(self.programSheet)-1,row+1))
+            self.show_program()
+            self.MainWindow.set_selected_row(self.MainWindow.tableWidget_ProgramSheet, min(len(self.programSheet)-1,row+1))
 
 class ProgramSettler():
     def __init__(self, MainWindow: 'MainWindow'):
@@ -2656,16 +2659,16 @@ class LineController():
         if row is not None:
             self.MainWindow.LineEditor.mv_up(row)
             self.MainWindow.thisFile_saveStat.emit(False)
-        self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
-        self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,max(0,row-1))
+            self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
+            self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,max(0,row-1))
 
     def mv_dn_busLine(self):
         row = self.MainWindow.currentLine
         if row is not None:
             self.MainWindow.LineEditor.mv_dn(row)
             self.MainWindow.thisFile_saveStat.emit(False)
-        self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
-        self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,min(len(self.MainWindow.LineEditor.LineInfoList)-1,row+1))
+            self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
+            self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,min(len(self.MainWindow.LineEditor.LineInfoList)-1,row+1))
 
 class LineEditor():
     def __init__(self):
