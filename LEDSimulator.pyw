@@ -345,7 +345,7 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
         self.point_spinBox.setMinimum(-5)
         self.point_spinBox.setValue(1)
 
-    def connect_signal(self):
+    # def connect_signal(self):
         self.foreground_btn.clicked.connect(self.setTextColor)
         self.background_btn.clicked.connect(self.setBackgroundColor)
         self.checkBox_multiLine.stateChanged.connect(self.ui_value_changed)
@@ -353,15 +353,15 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
         self.point_spinBox.valueChanged.connect(self.ui_value_changed)
         # print("reconnected")
 
-    def disconnect_signal(self):
-        try:
-            self.foreground_btn.clicked.disconnect(self.setTextColor)
-            self.background_btn.clicked.disconnect(self.setBackgroundColor)
-            self.checkBox_multiLine.stateChanged.disconnect(self.ui_value_changed)
-            self.checkBox_bgcolor.stateChanged.disconnect(self.ui_value_changed)
-            self.point_spinBox.valueChanged.disconnect(self.ui_value_changed)
-        except Exception as e:
-            print("ColorMultiLine.disconnect_signal(): ", e)
+    # def disconnect_signal(self):
+        # try:
+        #     self.foreground_btn.clicked.disconnect(self.setTextColor)
+        #     self.background_btn.clicked.disconnect(self.setBackgroundColor)
+        #     self.checkBox_multiLine.stateChanged.disconnect(self.ui_value_changed)
+        #     self.checkBox_bgcolor.stateChanged.disconnect(self.ui_value_changed)
+        #     self.point_spinBox.valueChanged.disconnect(self.ui_value_changed)
+        # except Exception as e:
+        #     print("ColorMultiLine.disconnect_signal(): ", e)
 
     def set_value(self,text = "", multiLine = False, lineSpace = 1,colorMode = "1", richText = [False,False]):
         self.text = text
@@ -374,21 +374,27 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
         self.set_textEditor()
 
     def set_ui_value(self):
-        self.disconnect_signal()
-        # print("set_ui_value: ", self.multiLine,self.richText,self.lineSpace)
+        # 使用阻塞信号的方式避免在UI更新过程中触发事件
+        self.checkBox_multiLine.blockSignals(True)
+        self.checkBox_bgcolor.blockSignals(True)
+        self.point_spinBox.blockSignals(True)
+        
+        try:
+            self.checkBox_multiLine.setChecked(self.multiLine)
+            self.checkBox_bgcolor.setChecked(self.richText[1])
+            self.point_spinBox.setEnabled(self.multiLine)
+            self.background_btn.setEnabled(self.richText[1])
+            self.point_spinBox.setValue(self.lineSpace)
 
-        self.checkBox_multiLine.setChecked(self.multiLine)
-        self.checkBox_bgcolor.setChecked(self.richText[1])
-        self.point_spinBox.setEnabled(self.multiLine)
-        self.background_btn.setEnabled(self.richText[1])
-        self.point_spinBox.setValue(self.lineSpace)
-
-        if self.colorMode == "1":
-            self.checkBox_bgcolor.setEnabled(False)
-            self.foreground_btn.setEnabled(False)
-            self.background_btn.setEnabled(False)
-
-        QTimer.singleShot(0, self.connect_signal)
+            if self.colorMode == "1":
+                self.checkBox_bgcolor.setEnabled(False)
+                self.foreground_btn.setEnabled(False)
+                self.background_btn.setEnabled(False)
+        finally:
+            # 恢复信号处理
+            self.checkBox_multiLine.blockSignals(False)
+            self.checkBox_bgcolor.blockSignals(False)
+            self.point_spinBox.blockSignals(False)
         
     def ui_value_changed(self):
         self.multiLine = self.checkBox_multiLine.isChecked()
@@ -435,29 +441,38 @@ class ColorMultiLine(QDialog,Ui_ColorMultiLine):
 
     def setTextColor(self):
         self.richText[0] = True
-        color = QColorDialog.getColor(
-            initial=Qt.white,
-            options=QColorDialog.ShowAlphaChannel
-        )
-        if color.isValid():
-            cursor = self.textEdit.textCursor()
-            fmt = QTextCharFormat()
-            # 使用QBrush来保持透明度信息
-            brush = color.toRgb()  # 确保颜色是RGB格式
-            fmt.setForeground(brush)
-            cursor.mergeCharFormat(fmt)
+        
+        # 使用实例方法而非静态方法
+        dialog = QColorDialog(self)
+        dialog.setOption(QColorDialog.ShowAlphaChannel)
+        
+        result = dialog.exec_()  # 使用exec_()确保模态对话框
+        
+        if result == QDialog.Accepted:
+            color = dialog.selectedColor()
+            if color.isValid():
+                cursor = self.textEdit.textCursor()
+                fmt = QTextCharFormat()
+                brush = color.toRgb()
+                fmt.setForeground(brush)
+                cursor.mergeCharFormat(fmt)
 
     def setBackgroundColor(self):
-        color = QColorDialog.getColor(
-            initial=Qt.white,
-            options=QColorDialog.ShowAlphaChannel
-        )
-        if color.isValid():
-            cursor = self.textEdit.textCursor()
-            fmt = QTextCharFormat()
-            brush = color.toRgb()
-            fmt.setBackground(brush)
-            cursor.mergeCharFormat(fmt)
+        # 同样的修改应用于背景色设置
+        dialog = QColorDialog(self)
+        dialog.setOption(QColorDialog.ShowAlphaChannel)
+        
+        result = dialog.exec_()
+        
+        if result == QDialog.Accepted:
+            color = dialog.selectedColor()
+            if color.isValid():
+                cursor = self.textEdit.textCursor()
+                fmt = QTextCharFormat()
+                brush = color.toRgb()
+                fmt.setBackground(brush)
+                cursor.mergeCharFormat(fmt)
+
 
     def translate_to_str(self):
         txt = self.textEdit.toPlainText()
@@ -785,7 +800,7 @@ class ProgramSettings(QDialog,Ui_ProgSet):
 
     def set_background_color(self):
         mask = self.checkBox_mask.isChecked()
-        col = QColorDialog.getColor()
+        col = QColorDialog.getColor(parent=self)
         if col.isValid():
             color = (col.red(), col.green(), col.blue())
             if mask:
@@ -1092,8 +1107,11 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
     def save_setting(self):
         setting_file = "./resources/settings.info"
-        with open(setting_file,'w',encoding = 'utf-8') as w:
-            w.write(str(self.settings))
+        try:
+            with open(setting_file,'w',encoding = 'utf-8') as w:
+                w.write(str(self.settings))
+        except Exception as e:
+            print(f"save settings: {e}")
 
     def resizeEvent(self, a0):
         self.LineSettler.upgrade_widget()
@@ -2082,7 +2100,7 @@ class ProgramSettler():
     def get_color(self):
         row = self.MainWindow.selected_row(self.MainWindow.tableWidget_Screens)
         if isinstance(row,int):
-            col = QColorDialog.getColor()
+            col = QColorDialog.getColor(parent=self.MainWindow)
             if col.isValid():
                 color = [col.red(), col.green(), col.blue()]
                 self.screenProgList[row]["color_RGB"] = color
