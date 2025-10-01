@@ -1122,7 +1122,7 @@ class ScreenController(QWidget):
             obj.appear = True
             obj.x = pos0
             obj.y = y0
-            if obj.showat <= obj.pointNum[0]:
+            if obj.showat <= obj.pointNum[1]:
                 if arg3 >= 1 and obj.rollCounter >= sped:
                     obj.showat += step
                     obj.rollCounter = 0
@@ -1504,17 +1504,17 @@ class ScreenController(QWidget):
                 angle = 45
 
         if appearance in ["向右扇形圆形","向左扇形圆形"]:
-            d = pointNum[1]
+            d = (pointNum[1]-1)//2*2+1
             if "左" in appearance:
                 x = pointNum[0] - x - 1
             ellipsepoint = [showat,0]
             linepoint = [showat + d // 2, (d // 2)+1]
 
-            if y >= pointNum[1] // 2:
-                y = pointNum[1] - y - 1
+            if y >= d // 2:
+                y = d - y - 1
 
         elif appearance in ["向下扇形圆形","向上扇形圆形"]:
-            d = pointNum[0]
+            d = (pointNum[0]-1)//2*2+1
             if "上" in appearance:
                 y = pointNum[1] - y - 1
 
@@ -1522,10 +1522,10 @@ class ScreenController(QWidget):
             linepoint = [(d // 2)+1, showat + d // 2]
             angle = 90 - angle
 
-            if x >= pointNum[0] // 2:
-                x = pointNum[0] - x - 1
+            if x >= d // 2:
+                x = d - x - 1
 
-        ispoint = self.is_point_in_ellipse(x+0.5,y+0.5,ellipsepoint[0],ellipsepoint[1],d,d) and self.is_point_above_line(x+1,y+1,linepoint[0],linepoint[1],angle)
+        ispoint = self.is_point_in_ellipse(x+0.5,y+0.5,ellipsepoint[0],ellipsepoint[1],d,d) and self.is_point_above_line(x+0.5,y+0.5,linepoint[0],linepoint[1],angle)
 
         return ispoint
     

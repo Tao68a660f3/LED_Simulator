@@ -1953,7 +1953,6 @@ class ProgramSettler():
                 self.screenProgList = self.MainWindow.ProgramSheetManager.programSheet[row][2][screen][1]
                 row = self.MainWindow.selected_row(self.MainWindow.tableWidget_Screens)
                 if isinstance(row,int):
-                    self.update_argv()
                     self.MainWindow.combo_Font.setCurrentText(self.screenProgList[row]["font"])
                     self.MainWindow.spin_FontSize.setValue(self.screenProgList[row]["fontSize"])
                     self.MainWindow.checkBox_sysFont.setChecked(self.screenProgList[row]["sysFontOnly"])
@@ -1975,6 +1974,7 @@ class ProgramSettler():
                     self.MainWindow.combo_SingleColorChoose.setCurrentText(self.screenProgList[row]["color_1"])
                     color = (self.screenProgList[row]["color_RGB"][0], self.screenProgList[row]["color_RGB"][1], self.screenProgList[row]["color_RGB"][2])
                     self.MainWindow.btn_Colorful_ChooseColor.setStyleSheet(f"background-color: rgb{color}")
+                    self.update_argv()
 
                     try:
                         self.MainWindow.spin_FontSize_2.setValue(self.screenProgList[row]["ascFontSize"])
