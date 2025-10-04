@@ -23,7 +23,7 @@ release_date = "20250908"
 
 ledTypes = [i for i in pointKindDict.keys()]
 scales = [ast.literal_eval(i) for i in ledTypes]
-flushRateList = ["60","54","50","48","30","24","18","15","5"]
+flushRateList = ["60","54","50","48","32","30","24","18","15","10","5"]
 
 screenLink = {"前路牌":"frontScreen","后路牌":"backScreen","前侧路牌":"frontSideScreen","后侧路牌":"backSideScreen"}
 showStyles = ["静止","闪烁","向左滚动","向右滚动","向上滚动","向下滚动","跳跃向左移动","跳跃向右移动","跳跃向上移动","跳跃向下移动","向左移到中间","向右移到中间","向上移到中间","向下移到中间","中间向左移开","中间向右移开","中间向上移开","中间向下移开","向左扇形圆形","向右扇形圆形","向上扇形圆形","向下扇形圆形","向左开百叶窗","向右开百叶窗","向上开百叶窗","向下开百叶窗","开水平窗户","关水平窗户","开竖直窗户","关竖直窗户","向左翻屏","向右翻屏","向上翻屏","向下翻屏","上下反复跳跃移动",]
@@ -1976,6 +1976,7 @@ class ProgramSettler():
                     self.MainWindow.checkBox_sysFont.setChecked(self.screenProgList[row]["sysFontOnly"])
                     self.MainWindow.combo_ASCII_Font.setCurrentText(self.screenProgList[row]["ascFont"])
                     self.MainWindow.combo_Show.setCurrentText(self.screenProgList[row]["appearance"])
+                    self.update_argv()
                     self.MainWindow.combo_TextDirect.setCurrentText("竖向" if self.screenProgList[row]["vertical"] else "横向")
                     self.MainWindow.spinBox_Argv_1.setValue(self.screenProgList[row]["argv_1"])
                     self.MainWindow.spinBox_Argv_2.setValue(self.screenProgList[row]["argv_2"])
@@ -1992,7 +1993,6 @@ class ProgramSettler():
                     self.MainWindow.combo_SingleColorChoose.setCurrentText(self.screenProgList[row]["color_1"])
                     color = (self.screenProgList[row]["color_RGB"][0], self.screenProgList[row]["color_RGB"][1], self.screenProgList[row]["color_RGB"][2])
                     self.MainWindow.btn_Colorful_ChooseColor.setStyleSheet(f"background-color: rgb{color}")
-                    self.update_argv()
 
                     try:
                         self.MainWindow.spin_FontSize_2.setValue(self.screenProgList[row]["ascFontSize"])
