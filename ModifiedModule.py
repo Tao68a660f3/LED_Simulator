@@ -144,10 +144,6 @@ class SmartWindowBase(QWidget):
         # 拖动相关
         self.dragging = False
         self.drag_start_position = QPoint()
-
-        # 添加拖动状态管理
-        self.drag_release_timer = None  # 拖动释放后的防抖定时器
-        self.drag_release_delay = 300   # 防抖延迟(毫秒)
         
         # 动画相关
         self.animation = QPropertyAnimation(self, b"pos")
