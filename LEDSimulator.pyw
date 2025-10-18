@@ -940,6 +940,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.currentFileName = ""
         self.thisFileSaved = True
         self.keep_speed = False
+        self.allow_auto_hide = False
         self.icon_infofile_list = []
         self.currentLine = None
         self.currentProg = None
@@ -1070,6 +1071,11 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         kepSpeedAction.setChecked(self.keep_speed)
         kepSpeedAction.triggered.connect(self.set_keep_speed)
         scnMenu.addAction(kepSpeedAction)
+        hideAction = QAction('显示屏吸附隐藏', self)
+        hideAction.setCheckable(True)
+        hideAction.setChecked(self.allow_auto_hide)
+        hideAction.triggered.connect(self.set_absorb_hide_scn)
+        scnMenu.addAction(hideAction)
 
         moreMenu = self.menuBar().addMenu('更多功能')
         setbgfolderAction = QAction('指定背景文件夹', self)
@@ -1101,6 +1107,9 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
         if "keep_speed" in self.settings.keys():
             self.keep_speed = self.settings["keep_speed"]
+
+        if "scn_allow_auto_hide" in self.settings.keys():
+            self.allow_auto_hide = self.settings["scn_allow_auto_hide"]
 
         if "icon_infofile_list" in self.settings.keys():
             self.icon_infofile_list = self.settings["icon_infofile_list"]
@@ -1316,6 +1325,16 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.settings["keep_speed"] = self.keep_speed
 
         self.save_setting()
+
+    def set_absorb_hide_scn(self):
+        self.allow_auto_hide = not self.allow_auto_hide
+        self.settings["scn_allow_auto_hide"] = self.allow_auto_hide
+
+        self.save_setting()
+
+    def set_hide_time(self):
+        pass
+
 
     def change_program(self):   # 切换正在显示的节目
         line_row = self.currentLine

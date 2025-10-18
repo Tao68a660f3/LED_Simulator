@@ -116,10 +116,10 @@ class SmartWindowBase(QWidget):
         super().__init__()
         
         # 配置参数
-        self.adsorb_distance = 20  # 吸附距离
-        self.peek_width = 3        # 隐藏露出宽度
+        self.adsorb_distance = 25  # 吸附距离
+        self.peek_width = 5        # 隐藏露出宽度
         self.hide_delay = 2000     # 隐藏延迟(毫秒)
-        self.allow_auto_hide = True  # 是否允许自动隐藏
+        self.allow_auto_hide = False  # 是否允许自动隐藏
         
         # 状态变量
         self.is_adsorbed = False
@@ -144,6 +144,10 @@ class SmartWindowBase(QWidget):
         # 拖动相关
         self.dragging = False
         self.drag_start_position = QPoint()
+
+        # 添加拖动状态管理
+        self.drag_release_timer = None  # 拖动释放后的防抖定时器
+        self.drag_release_delay = 300   # 防抖延迟(毫秒)
         
         # 动画相关
         self.animation = QPropertyAnimation(self, b"pos")
@@ -368,7 +372,7 @@ class SmartWindowBase(QWidget):
             
         screen_geom = QApplication.primaryScreen().availableGeometry()
         self.hide_to_edge(self.adsorb_direction, screen_geom)
-            
+
     def hide_to_edge(self, direction, screen_geom):
         """隐藏到边缘"""
         if self.is_adjusting:
@@ -376,9 +380,12 @@ class SmartWindowBase(QWidget):
             
         self.is_adjusting = True
         
-        window_geom = self.geometry()
+        # 记录隐藏前的置顶状态
+        self.was_on_top_before_hide = self.windowFlags() & Qt.WindowStaysOnTopHint
         
         # 计算隐藏位置
+        window_geom = self.geometry()
+        
         if direction == 'left':
             new_x = screen_geom.left() - window_geom.width() + self.peek_width
             new_y = window_geom.y()
@@ -393,6 +400,10 @@ class SmartWindowBase(QWidget):
             new_y = screen_geom.bottom() - self.peek_width
             
         new_pos = QPoint(new_x, new_y)
+
+        # 隐藏时强制置顶
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.show()
         
         # 使用动画隐藏
         self.start_animation(new_pos, "hide")
@@ -425,6 +436,7 @@ class SmartWindowBase(QWidget):
                 
         elif animation_type == "hide":
             self.is_hidden = True
+            self.on_window_hiden()
             # self.update_status(f"已隐藏到{self.adsorb_direction}边")
             
             # 性能优化：隐藏时停止绘制
@@ -432,12 +444,13 @@ class SmartWindowBase(QWidget):
             
         elif animation_type == "show":
             self.is_hidden = False
+            self.on_window_shown()
             # self.update_status(f"从{self.adsorb_direction}边显示")
             
             # 恢复绘制
             self.setAttribute(Qt.WA_UpdatesDisabled, False)
             
-            # 确保窗口置顶
+            # 激活窗口
             self.raise_()
             self.activateWindow()
             
@@ -446,6 +459,14 @@ class SmartWindowBase(QWidget):
                 self.hide_timer.start(self.hide_delay)
         
         self.is_adjusting = False
+
+    def on_window_shown(self):
+        # 当窗口显示时调用的函数，在子类中重写。
+        pass
+
+    def on_window_hiden(self):
+        # 当窗口隐藏时调用的函数，在子类中重写。
+        pass
         
     def check_mouse_proximity(self):
         """检查鼠标是否靠近隐藏的窗口"""
@@ -509,7 +530,8 @@ class SmartWindowBase(QWidget):
         self.mouse_check_timer.stop()
         event.accept()
 
-def main():
+
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     
     # 使用基类窗口
@@ -517,8 +539,4 @@ def main():
     base_window.show()
     
     sys.exit(app.exec_())
-
-if __name__ == '__main__':
-    main()
-
             

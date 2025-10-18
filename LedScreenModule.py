@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction
 from PyQt5.QtGui import QPainter, QColor, QImage
 from PyQt5.QtCore import QTimer, Qt, QThread, QRunnable, QThreadPool, pyqtSignal, QMutex, QWaitCondition, QObject
 from PIL import Image
+
+from ModifiedModule import SmartWindowBase
 from ScreenInfo import *
 from LineInfo import *
 from BmpCreater import *
@@ -205,7 +207,7 @@ class Thread_BmpUpdater(QThread):
         self._mutex.unlock()
         self.wait(1000)  # 等待最多1秒
 
-class ScreenController(QWidget):
+class ScreenController(SmartWindowBase):
     counterPlusOne = pyqtSignal()
 
     def __init__(self,flushRate,screenInfo,screenProgramSheet,toDisplay,FontIconMgr,parent = None):
@@ -259,7 +261,7 @@ class ScreenController(QWidget):
         self.BmpUpdater.start()
 
         self.timer1 = QTimer(self)
-        self.timer1.timeout.connect(self.update)
+        self.timer1.timeout.connect(self.safe_update)
         self.timer1.start(self.flushRate)
         self.timer2 = QTimer(self)
         self.timer2.timeout.connect(self.checkProgramTimeout)
@@ -270,7 +272,7 @@ class ScreenController(QWidget):
 
         self.read_setting()
         self.setWindowTitle(self.toDisplay)
-        self.setWindowFlags(Qt.FramelessWindowHint) # 隐藏边框
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)    # 无边框，置顶
         self.show()
         self.programTimeout()
         self.checkProgramTimeout()
@@ -278,6 +280,9 @@ class ScreenController(QWidget):
         self.setContextMenuPolicy(Qt.CustomContextMenu) # 右键菜单
         self.customContextMenuRequested.connect(self.showContextMenu)
         self.counterPlusOne.connect(self.triggerProgramTimeout)
+
+    def init_ui(self):
+        pass
 
     def read_setting(self):
         setting_file = "./resources/settings.info"
@@ -288,6 +293,14 @@ class ScreenController(QWidget):
 
         if "keep_speed" in self.settings.keys():
             self.keep_speed = self.settings["keep_speed"]
+
+        if "scn_allow_auto_hide" in self.settings.keys():
+            self.allow_auto_hide = self.settings["scn_allow_auto_hide"]
+        else:
+            self.allow_auto_hide = False
+
+        if "scn_hide_delay" in self.settings.keys():
+            self.hide_delay = self.settings["scn_hide_delay"]
 
     def stopThread_BmpUpdater(self):
         try:
@@ -328,24 +341,6 @@ class ScreenController(QWidget):
             contextMenu.addAction(waitAction)
 
         contextMenu.exec_(self.mapToGlobal(pos))
-
-    def mousePressEvent(self, e):
-        # if self.gifRecording:
-        #     self.endGifFrame = len(self.gifFrames)
-        if e.buttons() == Qt.LeftButton:
-            try:
-                print(e.pos())
-                self.mos = e.pos()
-            except:
-                pass
-                
-    def mouseMoveEvent(self, e):
-        try:
-            if e.buttons() == Qt.LeftButton and self.mos:
-                self.move(self.mapToGlobal(e.pos() - self.mos))
-            e.accept()
-        except:
-            pass
 
     def closeEvent(self, event):
         # 1. 停止定时器
@@ -432,6 +427,12 @@ class ScreenController(QWidget):
             self.save_gif(True)
 
     def screen_shot(self):
+        try:
+            os.makedirs("./ScreenShots")
+        except Exception as e:
+            print("开始录制GIF：无法新建文件夹{e}")
+            return
+    
         self.capture_screen()
         fileName = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S.png")
         self.gifFrames[0].save(os.path.join("./ScreenShots",fileName))
@@ -850,6 +851,10 @@ class ScreenController(QWidget):
             im = im.resize((upn[0],upn[1]),resample=Image.BILINEAR)
             u.backBitmap = im
 
+    def safe_update(self):
+        """安全更新，隐藏时不调用update"""
+        if not self.is_hidden:
+            self.update()
 
     def paintEvent(self, event):
         qp = QPainter()
@@ -883,6 +888,16 @@ class ScreenController(QWidget):
             for _ in range(f):
                 self.posTransFunc(u)
                 u.rollCounter += 1
+
+    def on_window_shown(self):
+        # 当窗口显示时调用的函数，在子类中重写。
+        self.enable_fpsCount()
+        print("窗口显示")
+
+    def on_window_hiden(self):
+        # 当窗口隐藏时调用的函数，在子类中重写。
+        self.disable_fpsCount()
+        print("窗口隐藏")
 
     def enable_fpsCount(self):
         self.fpsCount_EN = 1
