@@ -290,7 +290,7 @@ class SmartWindowBase(QWidget):
         
         # 判断大窗口
         is_large_window = (window_geom.width() >= screen_geom.width() - 2 * self.adsorb_distance or
-                          window_geom.height() >= screen_geom.height() - 2 * self.adsorb_distance)
+                        window_geom.height() >= screen_geom.height() - 2 * self.adsorb_distance)
         
         adsorb_directions = []
         
@@ -303,7 +303,7 @@ class SmartWindowBase(QWidget):
             adsorb_directions.append('top')
         if bottom_dist <= self.adsorb_distance:
             adsorb_directions.append('bottom')
-            
+        
         # 大窗口特殊处理
         if is_large_window:
             if len(adsorb_directions) == 1:
@@ -312,7 +312,31 @@ class SmartWindowBase(QWidget):
                 self.is_adsorbed = False
                 self.adsorb_direction = None
             return
+        
+        # 角落吸附处理 - 检测是否同时靠近两个边缘
+        corner_directions = []
+        if 'left' in adsorb_directions and 'top' in adsorb_directions:
+            corner_directions.append(('left', 'top'))
+        if 'left' in adsorb_directions and 'bottom' in adsorb_directions:
+            corner_directions.append(('left', 'bottom'))
+        if 'right' in adsorb_directions and 'top' in adsorb_directions:
+            corner_directions.append(('right', 'top'))
+        if 'right' in adsorb_directions and 'bottom' in adsorb_directions:
+            corner_directions.append(('right', 'bottom'))
+        
+        # 优先处理角落吸附
+        if corner_directions:
+            # 选择距离最近的角落
+            corner_distances = {}
+            for h_dir, v_dir in corner_directions:
+                h_dist = left_dist if h_dir == 'left' else right_dist
+                v_dist = top_dist if v_dir == 'top' else bottom_dist
+                corner_distances[(h_dir, v_dir)] = h_dist + v_dist
             
+            closest_corner = min(corner_distances.keys(), key=lambda x: corner_distances[x])
+            self.perform_corner_adsorption(closest_corner, screen_geom, window_geom)
+            return
+        
         # 普通窗口处理 - 选择距离最小的方向
         if adsorb_directions:
             distances = {
@@ -329,6 +353,35 @@ class SmartWindowBase(QWidget):
             if self.hide_timer.isActive():
                 self.hide_timer.stop()
             # self.update_status("正常显示")
+
+    def perform_corner_adsorption(self, corner_directions, screen_geom, window_geom):
+        """执行角落吸附操作"""
+        if self.is_adjusting:
+            return
+            
+        self.is_adjusting = True
+        
+        h_dir, v_dir = corner_directions
+        
+        # 计算吸附位置
+        if h_dir == 'left':
+            new_x = screen_geom.left()
+        else:  # right
+            new_x = screen_geom.right() - window_geom.width() + 1
+            
+        if v_dir == 'top':
+            new_y = screen_geom.top()
+        else:  # bottom
+            new_y = screen_geom.bottom() - window_geom.height() + 1
+            
+        new_pos = QPoint(new_x, new_y)
+        
+        # 记录吸附信息 - 使用复合方向标识
+        self.adsorb_direction = f"{h_dir}-{v_dir}"
+        self.adsorbed_position = new_pos
+        
+        # 使用动画使吸附更平滑
+        self.start_animation(new_pos, "adsorb")
                 
     def perform_adsorption(self, direction, screen_geom, window_geom):
         """执行吸附操作"""
@@ -382,20 +435,38 @@ class SmartWindowBase(QWidget):
         # 计算隐藏位置
         window_geom = self.geometry()
         
-        if direction == 'left':
-            new_x = screen_geom.left() - window_geom.width() + self.peek_width
-            new_y = window_geom.y()
-        elif direction == 'right':
-            new_x = screen_geom.right() - self.peek_width
-            new_y = window_geom.y()
-        elif direction == 'top':
-            new_x = window_geom.x()
-            new_y = screen_geom.top() - window_geom.height() + self.peek_width
-        elif direction == 'bottom':
-            new_x = window_geom.x()
-            new_y = screen_geom.bottom() - self.peek_width
-            
+        # 处理角落吸附的隐藏 - 优先隐藏上下方向
+        if '-' in direction:  # 角落吸附
+            h_dir, v_dir = direction.split('-')
+            # 优先隐藏垂直方向
+            if v_dir == 'top':
+                new_x = window_geom.x()
+                new_y = screen_geom.top() - window_geom.height() + self.peek_width
+            else:  # bottom
+                new_x = window_geom.x()
+                new_y = screen_geom.bottom() - self.peek_width
+        else:  # 单边吸附
+            if direction == 'left':
+                new_x = screen_geom.left() - window_geom.width() + self.peek_width
+                new_y = window_geom.y()
+            elif direction == 'right':
+                new_x = screen_geom.right() - self.peek_width
+                new_y = window_geom.y()
+            elif direction == 'top':
+                new_x = window_geom.x()
+                new_y = screen_geom.top() - window_geom.height() + self.peek_width
+            elif direction == 'bottom':
+                new_x = window_geom.x()
+                new_y = screen_geom.bottom() - self.peek_width
+                
         new_pos = QPoint(new_x, new_y)
+
+        print(f"=== 隐藏操作 ===")
+        print(f"方向: {direction}")
+        print(f"原位置: {self.pos().x()}, {self.pos().y()}")
+        print(f"新位置: {new_x}, {new_y}")
+        print(f"屏幕区域: {screen_geom}")
+        print(f"===================")
 
         # 隐藏时强制置顶
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
@@ -476,35 +547,81 @@ class SmartWindowBase(QWidget):
         wake_zone = self.get_wake_zone(screen_geom)
         if wake_zone.contains(mouse_pos):
             self.show_window()
+
+        # 详细调试信息
+        print(f"=== 鼠标接近检查 ===")
+        print(f"吸附方向: {self.adsorb_direction}")
+        print(f"窗口位置: {self.pos().x()}, {self.pos().y()}")
+        print(f"窗口大小: {self.width()}x{self.height()}")
+        print(f"鼠标位置: {mouse_pos.x()}, {mouse_pos.y()}")
+        print(f"屏幕区域: {screen_geom}")
+        print(f"唤醒区域: {wake_zone}")
+        print(f"鼠标在唤醒区域: {wake_zone.contains(mouse_pos)}")
+        print(f"隐藏状态: {self.is_hidden}")
+        print(f"===================")
             
     def get_wake_zone(self, screen_geom):
         """获取鼠标唤醒区域"""
         wake_width = self.peek_width + 10  # 稍微扩大唤醒区域
-        
-        if self.adsorb_direction == 'left':
-            return QRect(screen_geom.left(), screen_geom.top(), 
-                        wake_width, screen_geom.height())
-        elif self.adsorb_direction == 'right':
-            return QRect(screen_geom.right() - wake_width, screen_geom.top(),
-                        wake_width, screen_geom.height())
-        elif self.adsorb_direction == 'top':
-            return QRect(screen_geom.left(), screen_geom.top(),
-                        screen_geom.width(), wake_width)
-        elif self.adsorb_direction == 'bottom':
-            return QRect(screen_geom.left(), screen_geom.bottom() - wake_width,
-                        screen_geom.width(), wake_width)
-        else:
-            return QRect()
+
+        if '-' in self.adsorb_direction:  # 角落吸附
+            h_dir, v_dir = self.adsorb_direction.split('-')
+            
+            # 对于顶部角落，唤醒区域应该在屏幕顶部之外
+            if v_dir == 'top':
+                # 顶部唤醒区域：从屏幕顶部向上延伸wake_width
+                return QRect(screen_geom.left(), 
+                            screen_geom.top(),# + wake_width,  # 向上延伸
+                            screen_geom.width(), 
+                            wake_width)
+            else:  # bottom
+                # 底部唤醒区域：从屏幕底部向下延伸wake_width
+                return QRect(screen_geom.left(), 
+                            screen_geom.bottom(),  # 从底部开始
+                            screen_geom.width(), 
+                            wake_width)
+
+        else:  # 单边吸附
+            if self.adsorb_direction == 'left':
+                return QRect(screen_geom.left(), screen_geom.top(), 
+                            wake_width, screen_geom.height())
+            elif self.adsorb_direction == 'right':
+                return QRect(screen_geom.right() - wake_width, screen_geom.top(),
+                            wake_width, screen_geom.height())
+            elif self.adsorb_direction == 'top':
+                return QRect(screen_geom.left(), screen_geom.top(),
+                            screen_geom.width(), wake_width)
+            elif self.adsorb_direction == 'bottom':
+                return QRect(screen_geom.left(), screen_geom.bottom() - wake_width,
+                            screen_geom.width(), wake_width)
+            else:
+                return QRect()
             
     def show_window(self):
         """显示窗口"""
-        if not self.is_hidden or not self.adsorbed_position or self.is_adjusting:
-            return
+        print(f"=== 尝试唤醒窗口 ===")
+        print(f"is_hidden: {self.is_hidden}")
+        print(f"adsorbed_position: {self.adsorbed_position}")
+        print(f"is_adjusting: {self.is_adjusting}")
+        
+        # 修复条件：只有当所有条件都不满足时才唤醒
+        if self.is_hidden and self.adsorbed_position is not None and not self.is_adjusting:
+            print("开始显示动画")
+            self.is_adjusting = True
+            
+            # 使用动画显示
+            self.start_animation(self.adsorbed_position, "show")
+        else:
+            print("唤醒条件不满足，退出")
+            # 打印具体哪个条件不满足
+            if not self.is_hidden:
+                print(" - 窗口没有隐藏")
+            if not self.adsorbed_position:
+                print(" - 没有吸附位置")
+            if self.is_adjusting:
+                print(" - 正在调整中")
             
         self.is_adjusting = True
-        
-        # 使用动画显示
-        self.start_animation(self.adsorbed_position, "show")
         
     def stop_all_operations(self):
         """停止所有操作"""
