@@ -46,23 +46,15 @@
             </property>
             <item>
              <widget class="QPushButton" name="btn_opFile">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
               <property name="minimumSize">
                <size>
                 <width>80</width>
                 <height>0</height>
                </size>
               </property>
-              <property name="maximumSize">
-               <size>
-                <width>100</width>
-                <height>16777215</height>
-               </size>
+              <property name="styleSheet">
+               <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
               </property>
               <property name="text">
                <string>打开文件</string>
@@ -71,17 +63,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="btn_saveFile">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>60</width>
-                <height>16777215</height>
-               </size>
+              <property name="styleSheet">
+               <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
               </property>
               <property name="text">
                <string>保存</string>
@@ -133,17 +117,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="btn_newLine">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>100</width>
-                <height>16777215</height>
-               </size>
+              <property name="styleSheet">
+               <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
               </property>
               <property name="text">
                <string>新增线路</string>
@@ -152,17 +128,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="btn_MvUp_BusLine">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
+              <property name="styleSheet">
+               <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
               </property>
               <property name="text">
                <string>上移</string>
@@ -171,17 +139,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="btn_MvDn_BusLine">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
+              <property name="styleSheet">
+               <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
               </property>
               <property name="text">
                <string>下移</string>
@@ -190,17 +150,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="btn_delLine">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
+              <property name="styleSheet">
+               <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
               </property>
               <property name="text">
                <string>删除</string>
@@ -264,6 +216,10 @@
             </item>
             <item>
              <widget class="QPushButton" name="btn_LoadIcons">
+              <property name="styleSheet">
+               <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
+              </property>
               <property name="text">
                <string>加载图标</string>
               </property>
@@ -335,11 +291,9 @@
               </item>
               <item>
                <widget class="QPushButton" name="btn_LineSet">
-                <property name="maximumSize">
-                 <size>
-                  <width>30</width>
-                  <height>16777215</height>
-                 </size>
+                <property name="styleSheet">
+                 <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
                 </property>
                 <property name="text">
                  <string>←</string>
@@ -348,11 +302,9 @@
               </item>
               <item>
                <widget class="QPushButton" name="btn_LineReSet">
-                <property name="maximumSize">
-                 <size>
-                  <width>30</width>
-                  <height>16777215</height>
-                 </size>
+                <property name="styleSheet">
+                 <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
                 </property>
                 <property name="text">
                  <string>→</string>
@@ -372,6 +324,10 @@
                   <width>16777215</width>
                   <height>16777215</height>
                  </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
                 </property>
                 <property name="text">
                  <string>添加到节目单&gt;&gt;</string>
@@ -430,6 +386,10 @@
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
+                <property name="styleSheet">
+                 <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
+                </property>
                 <property name="text">
                  <string>确认修改</string>
                 </property>
@@ -459,7 +419,7 @@
              <widget class="DraggableProportionalTable" name="tableWidget_ProgramSheet"/>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_25">
+             <layout class="QHBoxLayout" name="horizontalLayout_25" stretch="1,0,0,0,0">
               <item>
                <spacer name="horizontalSpacer_4">
                 <property name="orientation">
@@ -475,11 +435,15 @@
               </item>
               <item>
                <widget class="QPushButton" name="btn_MvUp_Program">
-                <property name="maximumSize">
-                 <size>
-                  <width>60</width>
-                  <height>30</height>
-                 </size>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
                 </property>
                 <property name="text">
                  <string>上移↑</string>
@@ -488,11 +452,15 @@
               </item>
               <item>
                <widget class="QPushButton" name="btn_MvDn_Program">
-                <property name="maximumSize">
-                 <size>
-                  <width>60</width>
-                  <height>30</height>
-                 </size>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
                 </property>
                 <property name="text">
                  <string>下移↓</string>
@@ -501,11 +469,15 @@
               </item>
               <item>
                <widget class="QPushButton" name="btn_CopyProgram">
-                <property name="maximumSize">
-                 <size>
-                  <width>80</width>
-                  <height>30</height>
-                 </size>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
                 </property>
                 <property name="text">
                  <string>复制节目</string>
@@ -514,11 +486,15 @@
               </item>
               <item>
                <widget class="QPushButton" name="btn_Remove">
-                <property name="maximumSize">
-                 <size>
-                  <width>60</width>
-                  <height>30</height>
-                 </size>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
                 </property>
                 <property name="text">
                  <string>删除</string>
@@ -596,6 +572,10 @@
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="styleSheet">
+                 <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
+                </property>
                 <property name="text">
                  <string>屏幕设置</string>
                 </property>
@@ -603,6 +583,10 @@
               </item>
               <item>
                <widget class="QPushButton" name="btn_showSelectedScreen">
+                <property name="styleSheet">
+                 <string notr="true">padding: 6px 12px;
+margin: 1px;</string>
+                </property>
                 <property name="text">
                  <string>预览</string>
                 </property>
@@ -897,6 +881,12 @@
               </item>
               <item row="0" column="2" rowspan="2">
                <widget class="QPushButton" name="btn_textSetting">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -916,6 +906,12 @@
               </item>
               <item row="0" column="3" rowspan="2">
                <widget class="QPushButton" name="btn_ok">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="minimumSize">
                  <size>
                   <width>0</width>

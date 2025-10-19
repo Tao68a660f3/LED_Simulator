@@ -461,12 +461,12 @@ class SmartWindowBase(QWidget):
                 
         new_pos = QPoint(new_x, new_y)
 
-        print(f"=== 隐藏操作 ===")
-        print(f"方向: {direction}")
-        print(f"原位置: {self.pos().x()}, {self.pos().y()}")
-        print(f"新位置: {new_x}, {new_y}")
-        print(f"屏幕区域: {screen_geom}")
-        print(f"===================")
+        # print(f"=== 隐藏操作 ===")
+        # print(f"方向: {direction}")
+        # print(f"原位置: {self.pos().x()}, {self.pos().y()}")
+        # print(f"新位置: {new_x}, {new_y}")
+        # print(f"屏幕区域: {screen_geom}")
+        # print(f"===================")
 
         # 隐藏时强制置顶
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
@@ -548,17 +548,17 @@ class SmartWindowBase(QWidget):
         if wake_zone.contains(mouse_pos):
             self.show_window()
 
-        # 详细调试信息
-        print(f"=== 鼠标接近检查 ===")
-        print(f"吸附方向: {self.adsorb_direction}")
-        print(f"窗口位置: {self.pos().x()}, {self.pos().y()}")
-        print(f"窗口大小: {self.width()}x{self.height()}")
-        print(f"鼠标位置: {mouse_pos.x()}, {mouse_pos.y()}")
-        print(f"屏幕区域: {screen_geom}")
-        print(f"唤醒区域: {wake_zone}")
-        print(f"鼠标在唤醒区域: {wake_zone.contains(mouse_pos)}")
-        print(f"隐藏状态: {self.is_hidden}")
-        print(f"===================")
+        # # 详细调试信息
+        # print(f"=== 鼠标接近检查 ===")
+        # print(f"吸附方向: {self.adsorb_direction}")
+        # print(f"窗口位置: {self.pos().x()}, {self.pos().y()}")
+        # print(f"窗口大小: {self.width()}x{self.height()}")
+        # print(f"鼠标位置: {mouse_pos.x()}, {mouse_pos.y()}")
+        # print(f"屏幕区域: {screen_geom}")
+        # print(f"唤醒区域: {wake_zone}")
+        # print(f"鼠标在唤醒区域: {wake_zone.contains(mouse_pos)}")
+        # print(f"隐藏状态: {self.is_hidden}")
+        # print(f"===================")
             
     def get_wake_zone(self, screen_geom):
         """获取鼠标唤醒区域"""
@@ -599,27 +599,27 @@ class SmartWindowBase(QWidget):
             
     def show_window(self):
         """显示窗口"""
-        print(f"=== 尝试唤醒窗口 ===")
-        print(f"is_hidden: {self.is_hidden}")
-        print(f"adsorbed_position: {self.adsorbed_position}")
-        print(f"is_adjusting: {self.is_adjusting}")
+        # print(f"=== 尝试唤醒窗口 ===")
+        # print(f"is_hidden: {self.is_hidden}")
+        # print(f"adsorbed_position: {self.adsorbed_position}")
+        # print(f"is_adjusting: {self.is_adjusting}")
         
         # 修复条件：只有当所有条件都不满足时才唤醒
         if self.is_hidden and self.adsorbed_position is not None and not self.is_adjusting:
-            print("开始显示动画")
+            # print("开始显示动画")
             self.is_adjusting = True
             
             # 使用动画显示
             self.start_animation(self.adsorbed_position, "show")
-        else:
-            print("唤醒条件不满足，退出")
-            # 打印具体哪个条件不满足
-            if not self.is_hidden:
-                print(" - 窗口没有隐藏")
-            if not self.adsorbed_position:
-                print(" - 没有吸附位置")
-            if self.is_adjusting:
-                print(" - 正在调整中")
+        # else:
+        #     print("唤醒条件不满足，退出")
+        #     # 打印具体哪个条件不满足
+        #     if not self.is_hidden:
+        #         print(" - 窗口没有隐藏")
+        #     if not self.adsorbed_position:
+        #         print(" - 没有吸附位置")
+        #     if self.is_adjusting:
+        #         print(" - 正在调整中")
             
         self.is_adjusting = True
         
