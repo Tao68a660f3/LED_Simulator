@@ -10,7 +10,36 @@ from ScreenInfo import *
 from LineInfo import *
 from BmpCreater import *
 
-undefinedProgramSheet = [['测试信息', 900, {'frontScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'frontSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': r'欢迎使用LED模拟器 created by: Tao68a660f3 今天是 %Y年%m月%d日 %A 时间 %H时%M分', 'color_1': 'white', 'color_RGB': [255, 255, 0], 'bitmap': None}]]}]]
+word_list = [
+    '越过群山追斜阳, 拨开面纱回望故乡. ',
+    '漫山遍野你的脸庞, 唯有遗忘是最漫长. ',
+    '宝剑锋从磨砺出, 梅花香自苦寒来. ',
+    '山重水复疑无路, 柳暗花明又一村. ',
+    '长风破浪会有时, 直挂云帆济沧海. ',
+    '千淘万漉虽辛苦, 吹尽狂沙始到金. ',
+    '路漫漫其修远兮, 吾将上下而求索. ',
+    '会当凌绝顶, 一览众山小. ',
+    '星辰大海在远方, 诗和田野在心上. ',
+    '拨开云雾见青天, 踏破铁鞋无觅处. ',
+    '翻山越岭只为一场遇见, 全力以赴只为一次改变. ',
+    '穿过黑暗的夜, 才懂黎明的晨. ',
+    '走过平湖烟雨, 跨过岁月山河. ',
+    '踏遍青山人未老, 风景这边独好. ',
+    '披荆斩棘向前走, 曙光就在风雨后. ',
+    '攀登最高的山峰, 只为看见最美的日出. ',
+    '保持热爱, 奔赴山海. ',
+    '心之所向, 素履以往. ',
+    '凡是过往, 皆为序章. ',
+    '夜色难免黑凉, 前行必有曙光. ',
+    '前路漫漫亦灿灿, 往事堪堪亦澜澜. ',
+    '向阳而生, 逐光而行. '
+]
+
+def get_undefinedProgramSheet():
+    word_str = random.choice(word_list)
+    welcome_str = f'{word_str} 欢迎使用LED模拟器. Created by: Tao68a660f3. 今天是 %Y年%m月%d日 %A 北京时间 %H时%M分'
+
+    return [['测试信息', 900, {'frontScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': welcome_str, 'color_1': 'orange_2', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': welcome_str, 'color_1': 'orange_2', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'frontSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': welcome_str, 'color_1': 'orange_2', 'color_RGB': [255, 255, 0], 'bitmap': None}]],'backSideScreen': [[{'position': [0, 0], 'pointNum': [80, 24], 'pointSize': 4, 'scale': (6, 6)}], [{'font': '宋体', 'fontSize': 16, 'ascFont': 'ASCII_8-16', 'sysFontOnly': False, 'appearance': '向左滚动', 'vertical': False, 'argv_1': 1, 'argv_2': -1, 'spacing': 0, 'bold': [1, 1], 'y_offset': 0, 'align': [0, 0], 'scale': 100, 'autoScale': False, 'scaleSysFontOnly': False, 'text': welcome_str, 'color_1': 'orange_2', 'color_RGB': [255, 255, 0], 'bitmap': None}]]}]]
 
 sector_area_eft = ["向右扇形圆形","向左扇形圆形","向下扇形圆形","向上扇形圆形"]
 hwindow_area_eft = ["向左开百叶窗","向右开百叶窗","向上开百叶窗","向下开百叶窗","向左关百叶窗","向右关百叶窗","向上关百叶窗","向下关百叶窗"]
@@ -252,7 +281,7 @@ class ScreenController(SmartWindowBase):
         self.BackImg = Image.new("RGB", (screenInfo["screenSize"][0],screenInfo["screenSize"][1]))
 
         if len(self.screenProgramSheet) == 0:
-            self.screenProgramSheet = undefinedProgramSheet
+            self.screenProgramSheet = get_undefinedProgramSheet()
             for s in {"frontScreen","backScreen","frontSideScreen","backSideScreen"}:
                 self.screenProgramSheet[0][2][s][0][0]["pointNum"] = self.screenSize
                 self.screenProgramSheet[0][2][s][0][0]["scale"] = self.screenScale
@@ -428,18 +457,18 @@ class ScreenController(SmartWindowBase):
 
     def screen_shot(self):
         try:
-            os.makedirs("./ScreenShots")
+            os.makedirs(GIF_OUTPUT_DIR)
         except Exception as e:
             print("开始录制GIF：无法新建文件夹{e}")
             return
     
         self.capture_screen()
         fileName = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S.png")
-        self.gifFrames[0].save(os.path.join("./ScreenShots",fileName))
+        self.gifFrames[0].save(os.path.join(GIF_OUTPUT_DIR,fileName))
 
     def start_recording_gif(self):
         try:
-            os.makedirs("./ScreenShots")
+            os.makedirs(GIF_OUTPUT_DIR)
         except Exception as e:
             print("开始录制GIF：无法新建文件夹{e}")
         self.tmpGifNames = []
@@ -1884,7 +1913,7 @@ if __name__ == '__main__':
             "colorMode":"1",    # "RGB","1"
             "screenSize":[144,16,(6,6)],
         },
-        "screenProgramSheet":undefinedProgramSheet
+        "screenProgramSheet":get_undefinedProgramSheet()
     }
     screenInfomation["screenProgramSheet"][0][2]["frontScreen"][0][0]["pointNum"] = screenInfomation['screenInfo']['screenSize'][:2]
     screenInfomation["screenProgramSheet"][0][2]["frontScreen"][0][0]["scale"] = screenInfomation['screenInfo']['screenSize'][2]
