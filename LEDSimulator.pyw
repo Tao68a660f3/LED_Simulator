@@ -1359,16 +1359,16 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         for name,scn in self.LedScreens.items():
             try:
                 try:
-                    os.makedirs("./ScreenShots")
+                    os.makedirs(GIF_OUTPUT_DIR)
                 except:
                     pass
                 if scn.isVisible():
                     window_handle = scn.winId()
                     screenshot = screen.grabWindow(window_handle)
                     fileName = datetime.datetime.now().strftime(f"{name}_%H%M%S.png")
-                    screenshot.save(os.path.join("./ScreenShots",fileName))
-            except:
-                pass
+                    screenshot.save(os.path.join(GIF_OUTPUT_DIR, fileName))
+            except Exception as e:
+                print(f"MainWindow: Canot screenShot.{e}")
 
     def topMost(self):
         for scn in self.LedScreens.values():

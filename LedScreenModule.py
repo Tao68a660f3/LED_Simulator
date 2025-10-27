@@ -456,11 +456,12 @@ class ScreenController(SmartWindowBase):
             self.save_gif(True)
 
     def screen_shot(self):
-        try:
-            os.makedirs(GIF_OUTPUT_DIR)
-        except Exception as e:
-            print("开始录制GIF：无法新建文件夹{e}")
-            return
+        if not os.path.exists(GIF_OUTPUT_DIR):
+            try:
+                os.makedirs(GIF_OUTPUT_DIR)
+            except Exception as e:
+                print(f"开始录制GIF：无法新建文件夹{e}")
+                return
     
         self.capture_screen()
         fileName = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S.png")
