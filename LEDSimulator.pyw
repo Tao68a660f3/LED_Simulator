@@ -937,9 +937,11 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.FontMgr = FontManager()
         self.settings = dict()
         self.currentFileDir = ""
-        self.currentFileName = ""
+        self.currentNewFileCount = 0
+        self.currentFileName = "新建文件"
         self.thisFileSaved = True
         self.keep_speed = False
+        self.use_changed_scale = True
         self.allow_auto_hide = False
         self.icon_infofile_list = []
         self.currentLine = None
@@ -1035,8 +1037,8 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
     def make_menu(self):
         fileMenu = self.menuBar().addMenu('文件')
-        newAction = QAction('新建BSU文件', self)
-        newAction.triggered.connect(self.new_file)
+        newAction = QAction('新建文件', self)
+        newAction.triggered.connect(lambda: self.new_file(action_str="新建"))
         fileMenu.addAction(newAction)
         openAction = QAction('打开', self)
         openAction.triggered.connect(self.open_file)
@@ -1048,8 +1050,8 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         resaveAction = QAction('另存为', self)
         resaveAction.triggered.connect(self.save_another)
         fileMenu.addAction(resaveAction)
-        exitAction = QAction('关闭', self)
-        exitAction.triggered.connect(self.close)
+        exitAction = QAction('关闭文件', self)
+        exitAction.triggered.connect(lambda: self.new_file(action_str="关闭"))
         fileMenu.addAction(exitAction)
 
         scnMenu = self.menuBar().addMenu('显示屏')
@@ -1071,13 +1073,21 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         kepSpeedAction.setChecked(self.keep_speed)
         kepSpeedAction.triggered.connect(self.set_keep_speed)
         scnMenu.addAction(kepSpeedAction)
-        hideAction = QAction('显示屏吸附隐藏', self)
+        hideAction = QAction('显示屏贴边隐藏', self)
         hideAction.setCheckable(True)
         hideAction.setChecked(self.allow_auto_hide)
         hideAction.triggered.connect(self.set_absorb_hide_scn)
         scnMenu.addAction(hideAction)
 
         moreMenu = self.menuBar().addMenu('更多功能')
+
+        scaleAlgSetAction = QAction('使用改进的单字缩放算法', self)
+        scaleAlgSetAction.setCheckable(True)
+        scaleAlgSetAction.setChecked(self.use_changed_scale)
+        scaleAlgSetAction.triggered.connect(self.set_use_changed_scale)
+        moreMenu.addAction(scaleAlgSetAction)
+
+        moreMenu.addSeparator()
         setbgfolderAction = QAction('指定背景文件夹', self)
         setbgfolderAction.triggered.connect(self.set_background_folder)
         moreMenu.addAction(setbgfolderAction)
@@ -1090,11 +1100,14 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         pasteLineAction = QAction('粘贴线路', self)
         pasteLineAction.triggered.connect(self.LineController.paste_busLine)
         moreMenu.addAction(pasteLineAction)
+
+        moreMenu.addSeparator()
         showAboutAction = QAction('关于', self)
         showAboutAction.triggered.connect(self.show_about_window)
         moreMenu.addAction(showAboutAction)
+
+        moreMenu.addSeparator()
         quitAction = QAction('退出', self)
-        quitAction.setShortcut('Ctrl+Q')
         quitAction.triggered.connect(self.close)
         moreMenu.addAction(quitAction)
 
@@ -1113,6 +1126,9 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
         if "icon_infofile_list" in self.settings.keys():
             self.icon_infofile_list = self.settings["icon_infofile_list"]
+
+        if "use_changed_scale" in self.settings.keys():
+            self.use_changed_scale = self.settings["use_changed_scale"]
 
     def save_setting(self):
         setting_file = "./resources/settings.info"
@@ -1184,19 +1200,21 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         except Exception as e:
             print("MainWindow.set_selected_row(),", e)
     
-    def new_file(self):
-        if os.path.exists(self.currentFileDir):
-            button = QMessageBox.question(self, "对话框", "确定要新建文件吗？")
+    def new_file(self, action_str = "新建"):
+        # if os.path.exists(self.currentFileDir) and not self.thisFileSaved:
+        if not self.thisFileSaved:
+            button = QMessageBox.question(self, f"{action_str}文件", f"确定要{action_str}文件吗？当前的更改可能未保存。")
             if button == QMessageBox.No:
                 return
         self.LineController.new_line()
         self.currentFileDir = ""
-        self.currentFileName = "新建文件"
+        self.currentNewFileCount += 1
+        self.currentFileName = f"新建文件{self.currentNewFileCount}"
         self.thisFile_saveStat.emit(False)
         self.recovery_lineMgr_widget()
     
     def save_another(self):
-        filedir,ok = QFileDialog.getSaveFileName(self,'保存','./','路牌文件 (*.bsu)')
+        filedir,ok = QFileDialog.getSaveFileName(self,'保存',f'./{self.currentFileName}','路牌文件 (*.bsu)')
         if ok:
             self.currentFileDir = filedir
             self.currentFileName = os.path.basename(filedir)
@@ -1208,7 +1226,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
     
     def save_file(self,pop = False):
         if pop:
-            button = QMessageBox.question(self, "对话框", "确定要保存吗？")
+            button = QMessageBox.question(self, "保存文件", "当前文件暂未保存，确定要保存吗？")
             if button == QMessageBox.No:
                 return False
         if os.path.exists(self.currentFileDir):
@@ -1223,8 +1241,9 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         return True
 
     def open_file(self):
-        if os.path.exists(self.currentFileDir):
-            button = QMessageBox.question(self, "对话框", "确定要打开另一个文件吗？")
+        # if os.path.exists(self.currentFileDir) and not self.thisFileSaved:
+        if not self.thisFileSaved:
+            button = QMessageBox.question(self, "打开文件", "确定要打开另一个文件吗？当前的更改可能未保存。")
             if button == QMessageBox.No:
                 return
         file_dir,ok = QFileDialog.getOpenFileName(self,'打开','./','路牌文件 (*.bsu)')
@@ -1317,6 +1336,12 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         _dir = QFileDialog.getExistingDirectory(self,"选取默认背景文件夹","./")
         if os.path.exists(_dir):
             self.settings["background_folder"] = _dir
+
+        self.save_setting()
+
+    def set_use_changed_scale(self):
+        self.use_changed_scale = not self.use_changed_scale
+        self.settings["use_changed_scale"] = self.use_changed_scale
 
         self.save_setting()
 
@@ -1840,7 +1865,7 @@ class ProgramSettler():
 
             for i in all:
                 p = screenProgList[i]
-                Creater = BmpCreater(self.MainWindow.IconManager.FontMgr,self.colorMode,p["color_RGB"],p["font"],p["ascFont"],p["sysFontOnly"],)
+                Creater = BmpCreater(self.MainWindow.IconManager.FontMgr,self.colorMode,p["color_RGB"],p["font"],p["ascFont"],p["sysFontOnly"],self.MainWindow.use_changed_scale)
                 _roll_asc = True
                 _scale_y = 100
                 if "rollAscii" in p.keys():
@@ -2667,9 +2692,6 @@ class LineController():
         row = self.MainWindow.currentLine
         if row is not None:
             self.MainWindow.LineEditor.copy_data(row)
-            # self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
-            # self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,len(self.MainWindow.LineEditor.LineInfoList)-1)
-            # self.MainWindow.thisFile_saveStat.emit(False)
 
     def paste_busLine(self):
         if self.MainWindow.LineEditor.paste_data():

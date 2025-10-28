@@ -257,6 +257,7 @@ class ScreenController(SmartWindowBase):
         self.currentScreenProgSet = dict()
         self.maskMode = False
         self.keep_speed = False
+        self.use_changed_scale = True
         self.cntProgIsOrigin = True
         self.jumpFrom = 0
         self.currentIndex = 0
@@ -330,6 +331,9 @@ class ScreenController(SmartWindowBase):
 
         if "scn_hide_delay" in self.settings.keys():
             self.hide_delay = self.settings["scn_hide_delay"]
+
+        if "use_changed_scale" in self.settings.keys():
+            self.use_changed_scale = self.settings["use_changed_scale"]
 
     def stopThread_BmpUpdater(self):
         try:
@@ -699,7 +703,12 @@ class ScreenController(SmartWindowBase):
         self.units = []
         if inhertLevel == 0:
             for i in range(min(len(newUnitAndProgram[0]),len(newUnitAndProgram[1]))):
-                self.units.append(ScreenUnit(newUnitAndProgram[0][i],newUnitAndProgram[1][i],self.colorMode,self.offset,self.FontIconMgr))
+                self.units.append(ScreenUnit(unitInfo=newUnitAndProgram[0][i], 
+                                            progSheet=newUnitAndProgram[1][i], 
+                                            colorMode=self.colorMode, 
+                                            klscale=self.use_changed_scale, 
+                                            offset=self.offset, 
+                                            FontIconMgr=self.FontIconMgr))
         else:
             old_progsheetList = [u.progSheet for u in self.old_units]
             new_progsheetList = newUnitAndProgram[1]
@@ -712,7 +721,12 @@ class ScreenController(SmartWindowBase):
                     if self.compare_dicts_ignore_keys(old_progsheetList[i], new_progsheetList[i], ignore_keys):
                         self.use_new_argvs(self.old_units[i], new_progsheetList[i], argvs)
                     else:
-                        self.units.append(ScreenUnit(newUnitAndProgram[0][i],newUnitAndProgram[1][i],self.colorMode,self.offset,self.FontIconMgr))
+                        self.units.append(ScreenUnit(unitInfo=newUnitAndProgram[0][i], 
+                                                    progSheet=newUnitAndProgram[1][i], 
+                                                    colorMode=self.colorMode, 
+                                                    klscale=self.use_changed_scale, 
+                                                    offset=self.offset, 
+                                                    FontIconMgr=self.FontIconMgr))
             if inhertLevel == 2:
                 in_is = True
                 for i in i_range:
@@ -724,7 +738,12 @@ class ScreenController(SmartWindowBase):
                         self.use_new_argvs(self.old_units[i], new_progsheetList[i], argvs)
                 else:
                     for i in i_range:
-                        self.units.append(ScreenUnit(newUnitAndProgram[0][i],newUnitAndProgram[1][i],self.colorMode,self.offset,self.FontIconMgr))
+                        self.units.append(ScreenUnit(unitInfo=newUnitAndProgram[0][i], 
+                                                    progSheet=newUnitAndProgram[1][i], 
+                                                    colorMode=self.colorMode, 
+                                                    klscale=self.use_changed_scale, 
+                                                    offset=self.offset, 
+                                                    FontIconMgr=self.FontIconMgr))
 
     def programTimeout(self):
         isSameLayout = False
@@ -1806,9 +1825,10 @@ class ScreenController(SmartWindowBase):
                 qp.drawEllipse(ellipse_x, ellipse_y, pointSize, pointSize+1)
 
 class ScreenUnit():
-    def __init__(self,unitInfo,progSheet,colorMode,offset,FontIconMgr):
+    def __init__(self,unitInfo,progSheet,colorMode,klscale,offset,FontIconMgr):
         self.offset = offset
         self.colorMode = colorMode
+        self.klscale = klscale
         self.position = unitInfo["position"]
         self.pointNum = unitInfo["pointNum"]
         self.pointSize = unitInfo["pointSize"]
@@ -1833,7 +1853,14 @@ class ScreenUnit():
         self.color_RGB = self.progSheet["color_RGB"]
         self.Bitmap = Image.new(self.colorMode,(1,1))
         self.backBitmap = None
-        self.BmpCreater = BmpCreater(self.FontIconMgr,self.colorMode,self.progSheet["color_RGB"],self.progSheet["font"],self.progSheet["ascFont"],self.progSheet["sysFontOnly"],)
+        self.BmpCreater = BmpCreater(Manager=self.FontIconMgr, 
+                                     color_type=self.colorMode, 
+                                     color=self.progSheet["color_RGB"], 
+                                     ch_font=self.progSheet["font"], 
+                                     asc_font=self.progSheet["ascFont"], 
+                                     only_sysfont=self.progSheet["sysFontOnly"], 
+                                     klscale=self.klscale)
+
         self.createFontImg()
 
         if "x_offset" in self.progSheet.keys():
