@@ -701,14 +701,17 @@ class BmpCreater():
                     this_take_size = int(current_size * ((100 + space) / 100))
                     next_take_size = int(next_size * ((100 + space) / 100))
 
+                oldst = 0
+                oldst = space if space > 0 else 0
+
                 if cnt_chr not in self.lineBreakChr:
-                    if t_li_size == 0 or t_li_size + this_take_size <= exps:
+                    if t_li_size == 0 or t_li_size + this_take_size <= exps + oldst:
                         t_li.append({"img": image_list[i]["img"], "chr": None})
                         t_li_size += this_take_size
 
                 s = False
                 if cnt_chr not in self.lineBreakChr:    # 不是换行符
-                    if t_li_size + next_take_size > exps:  # 下一个字符在行尾，s用于换行
+                    if t_li_size + next_take_size > exps + oldst:  # 下一个字符在行尾，s用于换行
                         s = True
                         auto_s_ed = True
                     if i+1 == len(image_list):    # 所有字符的最后一个字符
