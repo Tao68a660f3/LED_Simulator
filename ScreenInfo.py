@@ -61,6 +61,12 @@ template_screenInfo = {
         "pointSize":3,
         "scale":(4,4),
     },
+	"smallSizeScaled45":{
+        "position":[0,0],
+        "pointNum":[32,16],
+        "pointSize":3,
+        "scale":(4,5),
+    },
     "smallSizeScaled":{
         "position":[0,0],
         "pointNum":[32,16],

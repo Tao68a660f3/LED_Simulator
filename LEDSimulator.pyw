@@ -18,8 +18,8 @@ from LedScreenModule import *
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
-version = "1.5 Pre"
-release_date = "20250908"
+version = ""
+release_date = ""
 
 ledTypes = [i for i in pointKindDict.keys()]
 scales = [ast.literal_eval(i) for i in ledTypes]
