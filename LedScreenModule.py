@@ -467,6 +467,7 @@ class ScreenController(SmartWindowBase):
                 print(f"开始录制GIF：无法新建文件夹{e}")
                 return
     
+        self.gifFrames = []
         self.capture_screen()
         fileName = datetime.datetime.now().strftime(f"{self.toDisplay}_%Y%m%d%H%M%S.png")
         self.gifFrames[0].save(os.path.join(GIF_OUTPUT_DIR,fileName))
