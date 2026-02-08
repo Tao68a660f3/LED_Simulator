@@ -481,14 +481,14 @@ class ScreenController(SmartWindowBase):
                 # 如果已经是最大值，稍微降低其他通道
                 if new_r == 255 and new_g == 255 and new_b == 255:
                     # 稍微降低一点亮度
-                    new_r = max(r - 1, 0)
-                    new_g = max(g - 1, 0)
-                    new_b = max(b - 1, 0)
+                    new_r = max(r - 20, 0)
+                    new_g = max(g - 20, 0)
+                    new_b = max(b - 20, 0)
                 
                 arr[y, x] = [new_r, new_g, new_b, a]
             else:
                 # 如果亮度为0，稍微增加一点亮度
-                arr[y, x] = [1, 1, 1, a]
+                arr[y, x] = [20, 20, 20, a]
         
         # 处理后两个像素点：降低10%亮度
         for pos in selected_positions[2:]:
@@ -511,9 +511,9 @@ class ScreenController(SmartWindowBase):
                 # 如果已经是最小值（0），稍微增加一点亮度
                 if new_r == 0 and new_g == 0 and new_b == 0:
                     # 稍微增加一点亮度
-                    new_r = min(r + 1, 255)
-                    new_g = min(g + 1, 255)
-                    new_b = min(b + 1, 255)
+                    new_r = min(r + 20, 255)
+                    new_g = min(g + 20, 255)
+                    new_b = min(b + 20, 255)
                 
                 arr[y, x] = [new_r, new_g, new_b, a]
         
@@ -1788,7 +1788,7 @@ class ScreenController(SmartWindowBase):
             qp.drawRect(self.offset,self.offset,self.screenSize[0]*self.screenScale[0],self.screenSize[1]*self.screenScale[1])
             self.resize(2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
         else:
-            qp.setBrush(QColor(0,0,0))
+            qp.setBrush(QColor(1,1,1))
             qp.drawRect(0,0,2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
             self.resize(2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
 
