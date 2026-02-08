@@ -79,6 +79,12 @@ template_screenInfo = {
         "pointSize":2,
         "scale":(3,3),
     },
+	"oneSize":{
+        "position":[0,0],
+        "pointNum":[32,16],
+        "pointSize":1,
+        "scale":(1,1),
+    },
 }
 
 pointKindDict = {}

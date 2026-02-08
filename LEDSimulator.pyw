@@ -1100,6 +1100,11 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         manageIconFileAction = QAction('管理图标信息文件', self)
         manageIconFileAction.triggered.connect(self.show_iconMgr_window)
         moreMenu.addAction(manageIconFileAction)
+
+        transToLAction = QAction('转换线路点阵尺寸为1', self)
+        transToLAction.triggered.connect(self.LineController.trans_busline_dot_size_to_one)
+        moreMenu.addAction(transToLAction)
+
         copyLineAction = QAction('复制线路', self)
         copyLineAction.triggered.connect(self.LineController.copy_busLine)
         moreMenu.addAction(copyLineAction)
@@ -2742,6 +2747,23 @@ class LineController():
             self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
             self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,min(len(self.MainWindow.LineEditor.LineInfoList)-1,row+1))
 
+    def trans_busline_dot_size_to_one(self):
+        print("trans_busline_dot_size_to_one")
+        row = self.MainWindow.currentLine
+        if row is not None:
+            try:
+                success = self.MainWindow.LineEditor.trans_line_dot_size_to_one(row)
+                if success:
+                    self.MainWindow.thisFile_saveStat.emit(False)
+                    self.MainWindow.flush_table(self.MainWindow.tableWidget_lineChoose,[[i["lineName"],i["preset"],i["flushRate"]] for i in self.MainWindow.LineEditor.LineInfoList])
+                    self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,len(self.MainWindow.LineEditor.LineInfoList)-1)
+                    msg = QMessageBox.information(self.MainWindow, "提示", "转换成功！")
+                else:
+                    msg = QMessageBox.information(self.MainWindow, "提示", "无法转换！")
+            except Exception as e:
+                msg = QMessageBox.information(self.MainWindow, "错误", str(e))
+
+
 class LineEditor():
     def __init__(self):
         self.copyed_line = None
@@ -2786,6 +2808,70 @@ class LineEditor():
     def mv_dn(self,row):
         if row < len(self.LineInfoList)-1:
             self.LineInfoList[row],self.LineInfoList[row+1] = self.LineInfoList[row+1],self.LineInfoList[row]
+
+    def trans_line_dot_size_to_one(self,row):
+        line_data = copy.deepcopy(self.LineInfoList[row])
+        line_name = line_data["lineName"]
+        preset = line_data["preset"]
+        can_trans = True
+        # print(line_name, preset)
+
+        # 检查线路是否满足转换条件
+        for scn in screenLink.values():
+            if not line_data[scn]["enabled"]:
+                continue
+            scaleSet1 = set()
+            a = line_data[scn]["screenUnit"]
+            for b in a:
+                scaleSet1.add(b["scale"])
+            # 1. 检查布局管理器是否只有一种缩放的分区
+            if len(scaleSet1) == 1:
+                # print("level 1: yes", scaleSet1)
+                scaleSet2 = set()
+                for prog in line_data["programSheet"]:
+                    prl = prog[2]
+                    areal = prl[scn][0]
+                    for sa in areal:
+                        scaleSet2.add(sa["scale"])
+                # 2. 检查是否每个路牌的所有节目都只有一种分区
+                if len(scaleSet2) == 1:
+                    pass
+                    # print("level 2: ok", scaleSet2)
+                else:
+                    can_trans = False
+                    # print("level 2: no", scaleSet2)
+            else:
+                can_trans = False
+                # print("level 1: no", scaleSet1)
+
+        if can_trans:
+            for scn in screenLink.values():
+                if not line_data[scn]["enabled"]:
+                    continue
+                # 1. 修改节目单里所有路牌所有节目的scale、pointsize、位置
+                for prog in line_data["programSheet"]:
+                    prl = prog[2]
+                    areal = prl[scn][0]
+                    for sa in areal:
+                        sa["position"][0], sa["position"][1] = sa["position"][0] // sa["scale"][0], sa["position"][1] // sa["scale"][1]
+                        sa["scale"] = template_screenInfo["oneSize"]["scale"]
+                        sa["pointSize"] = template_screenInfo["oneSize"]["pointSize"]
+
+                # 2. 修改路牌缓存区
+                a = line_data[scn]["screenUnit"]
+                for b in a:
+                    b["position"][0], b["position"][1] = b["position"][0] // b["scale"][0], b["position"][1] // b["scale"][1]
+                    b["scale"] = template_screenInfo["oneSize"]["scale"]
+
+                # 3. 修改路牌实际scale
+                line_data[scn]["screenSize"][2] = template_screenInfo["oneSize"]["scale"]
+
+            # 4. 保存到列表，注意写在循环外面
+            line_data["lineName"] += "_(1,1)"
+            self.LineInfoList.append(line_data)
+
+        return can_trans
+
 
 
 if __name__ == "__main__":

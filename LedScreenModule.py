@@ -1898,7 +1898,10 @@ class ScreenController(SmartWindowBase):
                 #------------------------------------------------
                 ellipse_x = offset + position[0] + x * scale[0] + int(0.5 * (scale[0] - pointSize))
                 ellipse_y = offset + position[1] + y * scale[1] + int(0.5 * (scale[1] - pointSize))
-                qp.drawEllipse(ellipse_x, ellipse_y, pointSize, pointSize+1)
+                if (pointSize > 1):
+                    qp.drawEllipse(ellipse_x, ellipse_y, pointSize, pointSize+1)
+                else:
+                    qp.drawRect(ellipse_x, ellipse_y, 1, 1)
 
 class ScreenUnit():
     def __init__(self,unitInfo,progSheet,colorMode,klscale,offset,FontIconMgr):
