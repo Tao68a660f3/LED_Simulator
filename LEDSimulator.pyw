@@ -18,8 +18,8 @@ from LedScreenModule import *
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
-version = ""
-release_date = ""
+version = "1.5.0"
+release_date = "20260208"
 
 ledTypes = [i for i in pointKindDict.keys()]
 scales = [ast.literal_eval(i) for i in ledTypes]
@@ -2748,7 +2748,7 @@ class LineController():
             self.MainWindow.set_selected_row(self.MainWindow.tableWidget_lineChoose,min(len(self.MainWindow.LineEditor.LineInfoList)-1,row+1))
 
     def trans_busline_dot_size_to_one(self):
-        print("trans_busline_dot_size_to_one")
+        # print("trans_busline_dot_size_to_one")
         row = self.MainWindow.currentLine
         if row is not None:
             try:
