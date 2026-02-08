@@ -943,6 +943,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.keep_speed = False
         self.use_changed_scale = True
         self.allow_auto_hide = False
+        self.use_no_edge_style = False
         self.icon_infofile_list = []
         self.currentLine = None
         self.currentProg = None
@@ -1078,6 +1079,11 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         hideAction.setChecked(self.allow_auto_hide)
         hideAction.triggered.connect(self.set_absorb_hide_scn)
         scnMenu.addAction(hideAction)
+        scnNoEdgeAction = QAction('使用无边框样式', self)
+        scnNoEdgeAction.setCheckable(True)
+        scnNoEdgeAction.setChecked(self.use_no_edge_style)
+        scnNoEdgeAction.triggered.connect(self.set_use_no_edge_style)
+        scnMenu.addAction(scnNoEdgeAction)
 
         moreMenu = self.menuBar().addMenu('更多功能')
 
@@ -1123,6 +1129,9 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
 
         if "scn_allow_auto_hide" in self.settings.keys():
             self.allow_auto_hide = self.settings["scn_allow_auto_hide"]
+
+        if "scn_use_no_edge_style" in self.settings.keys():
+            self.use_no_edge_style = self.settings["scn_use_no_edge_style"]
 
         if "icon_infofile_list" in self.settings.keys():
             self.icon_infofile_list = self.settings["icon_infofile_list"]
@@ -1354,7 +1363,11 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
     def set_absorb_hide_scn(self):
         self.allow_auto_hide = not self.allow_auto_hide
         self.settings["scn_allow_auto_hide"] = self.allow_auto_hide
+        self.save_setting()
 
+    def set_use_no_edge_style(self):
+        self.use_no_edge_style = not self.use_no_edge_style
+        self.settings["scn_use_no_edge_style"] = self.use_no_edge_style
         self.save_setting()
 
     def set_hide_time(self):

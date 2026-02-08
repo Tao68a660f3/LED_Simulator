@@ -258,6 +258,7 @@ class ScreenController(SmartWindowBase):
         self.maskMode = False
         self.keep_speed = False
         self.use_changed_scale = True
+        self.use_no_edge_style = False
         self.cntProgIsOrigin = True
         self.jumpFrom = 0
         self.currentIndex = 0
@@ -328,6 +329,11 @@ class ScreenController(SmartWindowBase):
             self.allow_auto_hide = self.settings["scn_allow_auto_hide"]
         else:
             self.allow_auto_hide = False
+
+        if "scn_use_no_edge_style" in self.settings.keys():
+            self.use_no_edge_style = self.settings["scn_use_no_edge_style"]
+            if self.use_no_edge_style:
+                self.offset = 0
 
         if "scn_hide_delay" in self.settings.keys():
             self.hide_delay = self.settings["scn_hide_delay"]
@@ -449,13 +455,72 @@ class ScreenController(SmartWindowBase):
         # 转换通道顺序从 ARGB 到 RGBA
         arr = arr[..., [2, 1, 0, 3]]  # 将通道顺序从 ARGB 转换为 RGBA
         
+        # 随机选择四个不同的像素位置
+        height, width, _ = arr.shape
+        all_positions = [(y, x) for y in range(height) for x in range(width)]
+        selected_positions = random.sample(all_positions, 4)
+        
+        # 处理前两个像素点：提高10%亮度
+        for pos in selected_positions[:2]:
+            y, x = pos
+            r, g, b, a = arr[y, x]
+            
+            # 计算当前亮度（使用加权平均值）
+            current_brightness = 0.299 * r + 0.587 * g + 0.114 * b
+            
+            # 提高10%亮度
+            if current_brightness > 0:
+                # 计算亮度调整因子
+                factor = 1.1
+                
+                # 调整RGB值
+                new_r = min(int(r * factor), 255)
+                new_g = min(int(g * factor), 255)
+                new_b = min(int(b * factor), 255)
+                
+                # 如果已经是最大值，稍微降低其他通道
+                if new_r == 255 and new_g == 255 and new_b == 255:
+                    # 稍微降低一点亮度
+                    new_r = max(r - 1, 0)
+                    new_g = max(g - 1, 0)
+                    new_b = max(b - 1, 0)
+                
+                arr[y, x] = [new_r, new_g, new_b, a]
+            else:
+                # 如果亮度为0，稍微增加一点亮度
+                arr[y, x] = [1, 1, 1, a]
+        
+        # 处理后两个像素点：降低10%亮度
+        for pos in selected_positions[2:]:
+            y, x = pos
+            r, g, b, a = arr[y, x]
+            
+            # 计算当前亮度
+            current_brightness = 0.299 * r + 0.587 * g + 0.114 * b
+            
+            # 降低10%亮度
+            if current_brightness > 0:
+                # 计算亮度调整因子
+                factor = 0.9
+                
+                # 调整RGB值
+                new_r = max(int(r * factor), 0)
+                new_g = max(int(g * factor), 0)
+                new_b = max(int(b * factor), 0)
+                
+                # 如果已经是最小值（0），稍微增加一点亮度
+                if new_r == 0 and new_g == 0 and new_b == 0:
+                    # 稍微增加一点亮度
+                    new_r = min(r + 1, 255)
+                    new_g = min(g + 1, 255)
+                    new_b = min(b + 1, 255)
+                
+                arr[y, x] = [new_r, new_g, new_b, a]
+        
         # 使用 PIL Image 从 NumPy 数组中读取图像
         pil_image = Image.fromarray(arr, 'RGBA')
-
-        # img = ImageQt.fromqpixmap(pixmap)
-        # print(type(pil_image))
+        
         self.gifFrames.append(pil_image)
-        # print(pil_image)
         if len(self.gifFrames) >= 200:
             self.save_gif(True)
 
@@ -1716,15 +1781,16 @@ class ScreenController(SmartWindowBase):
             return (y == showat or y == pointNum[1]-showat-1) and arg2 == 1 and showat < pointNum[1]//2
 
     def drawBackground(self,qp):
-        qp.setBrush(QColor(25,25,25))
-        qp.drawRect(0,0,2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
-        qp.setBrush(QColor(30,30,30))
-        qp.drawRect(self.offset,self.offset,self.screenSize[0]*self.screenScale[0],self.screenSize[1]*self.screenScale[1])
-        qp.setBrush(QColor(random.randint(30,200),random.randint(30,200),random.randint(30,200)))
-        qp.drawRect(int(0.8*(2*self.offset+self.screenSize[0]*self.screenScale[0])),(2*self.offset+self.screenSize[1]*self.screenScale[1])-int(0.5*self.offset),1,1)
-        qp.setBrush(QColor(random.randint(30,200),random.randint(30,200),random.randint(30,200)))
-        qp.drawRect(int(0.8*(2*self.offset+self.screenSize[0]*self.screenScale[0])+10),(2*self.offset+self.screenSize[1]*self.screenScale[1])-int(0.5*self.offset),1,1)
-        self.resize(2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
+        if not self.use_no_edge_style:
+            qp.setBrush(QColor(25,25,25))
+            qp.drawRect(0,0,2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
+            qp.setBrush(QColor(30,30,30))
+            qp.drawRect(self.offset,self.offset,self.screenSize[0]*self.screenScale[0],self.screenSize[1]*self.screenScale[1])
+            self.resize(2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
+        else:
+            qp.setBrush(QColor(0,0,0))
+            qp.drawRect(0,0,2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
+            self.resize(2*self.offset+self.screenSize[0]*self.screenScale[0],2*self.offset+self.screenSize[1]*self.screenScale[1])
 
     def drawScreen(self, unit, qp):
         if not self.isVisible():
@@ -1743,7 +1809,10 @@ class ScreenController(SmartWindowBase):
         appear = unit.appear
         # 预先计算可能用到的颜色和参数
         if colorMode == "RGB":
-            black = 60
+            if self.use_no_edge_style:
+                black = 0
+            else:
+                black = 60
             baseColor = QColor(black, black, black)
         else:
             baseColor = QColor(*unit.color_1[0])
@@ -1809,17 +1878,23 @@ class ScreenController(SmartWindowBase):
                             color = [int(bac_color[i] * alpha/255) for i in range(3)]
                         else:
                             color = [int(color[i] * alpha/255 + bac_color[i] * (255 - alpha)/255) for i in range(3)]
-                        color = [black + int((255 - black) * c / 255) for c in color[0:3]]
-                    else:
-                        color = [black + int((255 - black) * c / 255) for c in color[0:3]]
+
+                    if len(color) >= 3 and color[0] == 0 and color[1] == 0 and color[2] == 0 and self.use_no_edge_style:
+                        continue
+
+                    color = [black + int((255 - black) * c / 255) for c in color[0:3]]
                     qp.setBrush(QColor(*color))
                 elif colorMode == "1":
                     if self.maskMode:
                         if bac_color & color:
                             qp.setBrush(QColor(*unit.color_1[1]))
+                        elif self.use_no_edge_style:
+                            continue
                     else:
                         if bac_color | color and not bac_color & color:
                             qp.setBrush(QColor(*unit.color_1[1]))
+                        elif self.use_no_edge_style:
+                            continue
                 #------------------------------------------------
                 ellipse_x = offset + position[0] + x * scale[0] + int(0.5 * (scale[0] - pointSize))
                 ellipse_y = offset + position[1] + y * scale[1] + int(0.5 * (scale[1] - pointSize))
