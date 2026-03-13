@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont, ImageChops
 import numpy as np
-import binascii, re, os, ast #, freetype
+import binascii, re, os, ast, struct #, freetype
 
 class BMP_SCALE_BOLD_HELPER():
     def __init__(self):
@@ -86,6 +86,68 @@ class BMP_SCALE_BOLD_HELPER():
             bold_image = ImageChops.logical_or(bold_image, shifted)
         
         return bold_image
+
+class ASC_bin_reader:
+    def __init__(self, bin_path):
+        self.is_ready = False
+        self.font_data = None
+        self.height = 0
+        self.max_w = 0
+        self.bpc = 0
+        self.row_stride = 0
+        self.width_table = []
+        self._load_bin(bin_path)
+
+    def _load_bin(self, bin_path):
+        try:
+            if not os.path.exists(bin_path): return
+            with open(bin_path, "rb") as f:
+                header = f.read(16)
+                if header[0:4] != b'FONT': return
+                self.height, self.max_w, self.bpc = struct.unpack('<BBH', header[4:8])
+                self.row_stride = (self.max_w + 7) // 8
+                self.width_table = list(f.read(256))
+                self.font_data = f.read()
+                self.is_ready = True
+        except Exception as e:
+            print(f"Load Error: {e}")
+
+    def get_text_bmp(self, asc, y_offset=0, *not_used_argv) -> Image.Image:
+        """
+        返回一个 PIL.Image 对象，包含单个字符的点阵。
+        """
+        if not self.is_ready or not asc:
+            # 返回一个 1x1 的透明图防止报错
+            return Image.new("1", (10, 10), 0)
+
+        ascii_code = ord(asc[0]) if isinstance(asc, str) else int(asc)
+        char_w = self.width_table[ascii_code]
+        
+        # 寻址数据
+        start_offset = ascii_code * self.bpc
+        char_data = self.font_data[start_offset : start_offset + self.bpc]
+        
+        # 创建一个 1-bit 的黑底图像 (0:黑, 1:白)
+        # 尺寸为当前字符宽度 x 总高度
+        img = Image.new("1", (char_w + 1, self.height), 0)
+        pixels = img.load()
+
+        # 逐行填入点阵
+        for h_idx in range(self.height):
+            row_start = h_idx * self.row_stride
+            row_bytes = char_data[row_start : row_start + self.row_stride]
+            
+            for col_idx in range(char_w):
+                byte_pos = col_idx // 8
+                bit_pos = 7 - (col_idx % 8)
+                
+                if row_bytes[byte_pos] & (1 << bit_pos):
+                    # 在 PIL 坐标系中填入像素
+                    pixels[col_idx, h_idx] = 1 
+        
+        img = img.crop((0, y_offset, img.width, y_offset + img.height))
+
+        return img
     
 class ASC_font_Reader():
     def __init__(self,font_path):
@@ -409,6 +471,9 @@ class FontManager():
         self.icon_info = {"./resources/icon.info"}
         self.font_dict = dict()
         self.icon_dict = dict()  # 字体和图标均不可重名
+        self.AscFont = []
+        self.HzkFont = []
+        self.SysFont = []
         self.flush_resources()
 
     def flush_resources(self):
@@ -420,6 +485,7 @@ class FontManager():
             try:
                 with open(font_info, "r", encoding="utf-8") as f:
                     folder = None
+                    ftype = None
                     for line in f:
                         line = line.strip("\ufeff").strip()
                         
@@ -431,16 +497,23 @@ class FontManager():
                         if line.startswith("FONT"):
                             parts = line.split(",")
                             if len(parts) >= 3:
+                                ftype = parts[1]
                                 folder = parts[2][4:]  # 获取文件夹路径
                             continue
                         
                         # 处理字体定义行
-                        if folder is not None:
+                        if folder is not None and ftype is not None:
                             parts = line.split(",")
                             if len(parts) >= 3:
                                 font_file = parts[0].strip()
                                 font_name = parts[1].strip()
                                 self.font_dict[font_name] = folder+font_file
+                                if ftype == "ASCII_FONT":
+                                    self.AscFont.append(font_name)
+                                elif ftype == "SYS_FONT":
+                                    self.SysFont.append(font_name)
+                                elif ftype == "HZK_FONT":
+                                    self.HzkFont.append(font_name)
             except Exception as e:
                 print(f"Error processing {font_info}: {e}")
         # print(self.font_dict)
@@ -510,12 +583,14 @@ class BmpCreater():
                     self.ASC_Reader = ASC_font_Reader(self.asc_font)
                 elif asc_font_type == "bmp":
                     self.ASC_Reader = ASC_Bmp_Reader(self.asc_font)
+                elif asc_font_type == "bin":
+                    self.ASC_Reader = ASC_bin_reader(self.asc_font)
                 else:
                     self.ASC_Reader = Sys_Font_Reader(self.asc_font, self.klscale)
             except:
                 self.ASC_Reader = Sys_Font_Reader(self.asc_font, self.klscale)
             try:
-                if ch_font_type == "bin":
+                if ch_font_type == "hzk":
                     self.Ch_Reader = HZK_Font_Reader(self.ch_font, self.klscale)
                 else:
                     self.Ch_Reader = Sys_Font_Reader(self.ch_font, self.klscale)
@@ -872,7 +947,8 @@ class BmpCreater():
     
 if __name__ == "__main__":
     # t = "[{'char': '在本文中，', 'foreground': '#ffffff', 'background': '0'}, {'char': '我们', 'foreground': '#ffab81', 'background': '0'}, {'char': '介绍了', 'foreground': '#75ffca', 'background': '0'}, {'char': '四种', 'foreground': '#395dff', 'background': '0'}, {'char': '将单个文件', 'foreground': '#ffffff', 'background': '0'}, {'char': '恢复到', 'foreground': '#ff40b6', 'background': '0'}, {'char': '以前版本', 'foreground': '#ffff00', 'background': '0'}, {'char': '的方法', 'foreground': '#ffffff', 'background': '0'}]"
-    t = '\n\n换行测试\n测试开始\n第一项：\n第二项：\n\n第三项：\n测试文本\n第四项：\n测试文本\n\n第五项：\n测试文本\n\n\n第六项：\n测试文本测试文本\n第七项：\n测试文本测试文本\n\n第八项：\n测试文本测试文本\n\n\n测试结束\n\n'
+    # t = '\n\n换行测试\n测试开始\n第一项：\n第二项：\n\n第三项：\n测试文本\n第四项：\n测试文本\n\n第五项：\n测试文本\n\n\n第六项：\n测试文本测试文本\n第七项：\n测试文本测试文本\n\n第八项：\n测试文本测试文本\n\n\n测试结束\n\n'
+    t = "Hello World!"
 #     t = '''\n\n　！＂＃＄％＆＇（）＊＋，－．／\n\n
 # ０１２３４５６７８９：；＜＝＞？
 # ＠ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯ
@@ -880,7 +956,7 @@ if __name__ == "__main__":
 # ｀ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏ
 # ｐｑｒｓｔｕｖｗｘｙｚ｛｜｝～　'''
     ch_font="宋体"
-    asc_font="ASC1608"
+    asc_font="14 px"
     FontCreater = BmpCreater(Manager=FontManager(),color_type="RGB",color=(255,255,0),ch_font=ch_font,asc_font=asc_font,only_sysfont = 1, klscale=True)
     font_img = FontCreater.create_character(vertical=False, roll_asc = False, text=t, ch_font_size=24, asc_font_size=16, ch_bold_size_x=1, ch_bold_size_y=1, space=0, scale=80, scale_y=100, auto_scale=False, scale_sys_font_only=True, new_width = 128, new_height = 32, y_offset = 0, y_offset_asc = 0, style = [-1,0], multi_line = {"stat":True, "line_space": 1.0 })
     font_img.save("混合字体测试生成.bmp")

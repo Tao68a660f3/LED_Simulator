@@ -1,4 +1,4 @@
-import sys, os, ast, copy, datetime, base64, io, random
+import sys, os, ast, copy, datetime, base64, io, random, subprocess
 from PyQt5.QtWidgets import QApplication, QWidget, QDialog, QMainWindow, QAbstractItemView, QTableWidgetItem, QHeaderView, QFileDialog, QPushButton, QLabel, QColorDialog, QMenu, QAction, QMessageBox
 from PyQt5.QtGui import QPixmap, QIcon, QTextCharFormat, QFont
 from PyQt5.QtCore import pyqtSignal, Qt, QCoreApplication
@@ -1036,6 +1036,16 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.IconFileMgr.get_file_list()
         self.IconFileMgr.flush_table()
 
+    def open_font_tool(self):
+        config_path = "./resources/fontToolPath"
+        exec_path = ""
+        if os.path.exists(config_path):
+            with open(config_path, 'r', encoding = 'utf-8') as f:
+                exec_path = f.readline()
+        if os.path.exists(exec_path):
+            subprocess.Popen([exec_path], shell=True)
+                
+
     def make_menu(self):
         fileMenu = self.menuBar().addMenu('文件')
         newAction = QAction('新建文件', self)
@@ -1097,6 +1107,9 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         setbgfolderAction = QAction('指定背景文件夹', self)
         setbgfolderAction.triggered.connect(self.set_background_folder)
         moreMenu.addAction(setbgfolderAction)
+        openFontToolAction = QAction('打开字体工具', self)
+        openFontToolAction.triggered.connect(self.open_font_tool)
+        moreMenu.addAction(openFontToolAction)
         manageIconFileAction = QAction('管理图标信息文件', self)
         manageIconFileAction.triggered.connect(self.show_iconMgr_window)
         moreMenu.addAction(manageIconFileAction)
@@ -1633,10 +1646,9 @@ class ProgramSettler():
     def __init__(self, MainWindow: 'MainWindow'):
         self.MainWindow = MainWindow 
         self.FontMgr = self.MainWindow.FontMgr
-        self.FontLib = self.FontMgr.font_dict.keys()
-        self.ChFont = [c for c in self.FontLib if "asc" not in c.lower()]
-        self.TtFont = [c for c in self.FontLib if "asc" not in c.lower() and "hzk" not in c.lower()]
-        self.EngFont = [c for c in self.FontLib if "asc" in c.lower()]
+        self.HzkFont = self.FontMgr.HzkFont
+        self.SysFont = self.FontMgr.SysFont
+        self.AscFont = self.FontMgr.AscFont
         self.tmpBmp = []
         self.colorMode = "1"
         self.initUI()
@@ -1657,8 +1669,9 @@ class ProgramSettler():
         self.MainWindow.tableWidget_Screens.setContextMenuPolicy(Qt.CustomContextMenu)
         self.MainWindow.tableWidget_Screens.customContextMenuRequested.connect(self.show_context_menu)
 
-        self.MainWindow.combo_Font.addItems(self.ChFont)
-        self.MainWindow.combo_ASCII_Font.addItems(self.EngFont)
+        self.MainWindow.combo_Font.addItems(self.SysFont)
+        self.MainWindow.combo_Font.addItems(self.HzkFont)
+        self.MainWindow.combo_ASCII_Font.addItems(self.AscFont)
         self.MainWindow.combo_Show.addItems(showStyles)
         self.MainWindow.combo_TextDirect.addItems(["横向","竖向"])
         self.MainWindow.combo_SingleColorChoose.addItems(template_monochromeColors.keys())
@@ -1706,7 +1719,7 @@ class ProgramSettler():
         self.MainWindow.btn_ok.clicked.connect(self.save_progArgv)
         self.MainWindow.btn_Colorful_ChooseColor.clicked.connect(self.get_color)
         self.MainWindow.combo_Show.activated.connect(self.update_argv)
-        self.MainWindow.checkBox_sysFont.stateChanged.connect(self.change_EngFont_set)
+        self.MainWindow.checkBox_sysFont.stateChanged.connect(self.change_AscFont_set)
         self.MainWindow.btn_textSetting.clicked.connect(self.set_colorstr_multiLine)
         self.MainWindow.btn_screenSet.clicked.connect(self.set_screenSet)
         
@@ -1789,13 +1802,13 @@ class ProgramSettler():
         
         self.show_progArgv()
 
-    def change_EngFont_set(self):
+    def change_AscFont_set(self):
         if self.MainWindow.checkBox_sysFont.isChecked():
             self.MainWindow.combo_ASCII_Font.clear()
-            self.MainWindow.combo_ASCII_Font.addItems(self.TtFont)
+            self.MainWindow.combo_ASCII_Font.addItems(self.SysFont)
         else:
             self.MainWindow.combo_ASCII_Font.clear()
-            self.MainWindow.combo_ASCII_Font.addItems(self.EngFont)
+            self.MainWindow.combo_ASCII_Font.addItems(self.AscFont)
 
     def init_ProgramSetting(self):
         row = self.MainWindow.currentLine
