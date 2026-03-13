@@ -19,8 +19,8 @@ from FontManagerApp import *
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
-version = "1.5.0"
-release_date = "20260208"
+version = "1.5.1(测试版本)"
+release_date = "20260313"
 
 ledTypes = [i for i in pointKindDict.keys()]
 scales = [ast.literal_eval(i) for i in ledTypes]
@@ -1044,13 +1044,15 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
     def open_font_tool(self):
         config_path = "./resources/fontToolPath"
         exec_path = ""
+        
         if os.path.exists(config_path):
-            with open(config_path, 'r', encoding = 'utf-8') as f:
-                exec_path = f.readline()
-        if os.path.exists(exec_path):
-            subprocess.Popen([exec_path], shell=True)
+            with open(config_path, 'r', encoding='utf-8') as f:
+                exec_path = f.readline().strip()
                 
-
+        if exec_path and os.path.exists(exec_path):
+            abs_path = os.path.abspath(exec_path)
+            subprocess.Popen([abs_path], shell=True)
+                
     def make_menu(self):
         fileMenu = self.menuBar().addMenu('文件')
         newAction = QAction('新建文件', self)
