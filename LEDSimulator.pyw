@@ -1,7 +1,7 @@
 import sys, os, ast, copy, datetime, base64, io, random, subprocess
-from PyQt5.QtWidgets import QApplication, QWidget, QDialog, QMainWindow, QAbstractItemView, QTableWidgetItem, QHeaderView, QFileDialog, QPushButton, QLabel, QColorDialog, QMenu, QAction, QMessageBox
-from PyQt5.QtGui import QPixmap, QIcon, QTextCharFormat, QFont
-from PyQt5.QtCore import pyqtSignal, Qt, QCoreApplication
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
 from BmpCreater import FontManager, BmpCreater
 from UI_ControlPanel import Ui_ControlPanel
@@ -14,6 +14,7 @@ from UI_IconInfoManagement import *
 from ScreenInfo import *
 from LineInfo import *
 from LedScreenModule import *
+from FontManagerApp import *
 
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
@@ -967,6 +968,7 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.verticalLayout_LayoutBtn.addWidget(self.BtnWidget)
         self.AboutWindow = AboutWindow(self)
         self.IconFileMgr = IconInfoManager(self)
+        self.FontManagerApp = FontManagerApp(self)
         self.LineEditor = LineEditor()
         self.LineController = LineController(self)
         self.LineSettler = LineSettler(self)
@@ -1035,6 +1037,9 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         self.IconFileMgr.show()
         self.IconFileMgr.get_file_list()
         self.IconFileMgr.flush_table()
+
+    def show_fontMgr_window(self):
+        self.FontManagerApp.show()
 
     def open_font_tool(self):
         config_path = "./resources/fontToolPath"
@@ -1110,6 +1115,9 @@ class MainWindow(QMainWindow, Ui_ControlPanel):
         openFontToolAction = QAction('打开字体工具', self)
         openFontToolAction.triggered.connect(self.open_font_tool)
         moreMenu.addAction(openFontToolAction)
+        manageFontsAction = QAction('管理字体文件', self)
+        manageFontsAction.triggered.connect(self.show_fontMgr_window)
+        moreMenu.addAction(manageFontsAction)
         manageIconFileAction = QAction('管理图标信息文件', self)
         manageIconFileAction.triggered.connect(self.show_iconMgr_window)
         moreMenu.addAction(manageIconFileAction)
@@ -2889,6 +2897,7 @@ class LineEditor():
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    # app.setStyle('Fusion')
     myWindow = MainWindow()
     myWindow.show()
     sys.exit(app.exec_())
