@@ -971,7 +971,7 @@ margin: 1px;</string>
   <customwidget>
    <class>DraggableProportionalTable</class>
    <extends>QTableWidget</extends>
-   <header>ModifiedModule</header>
+   <header>Modules.ModifiedModule</header>
   </customwidget>
  </customwidgets>
  <resources/>

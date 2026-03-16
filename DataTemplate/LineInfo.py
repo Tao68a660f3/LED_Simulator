@@ -1,4 +1,4 @@
-from ScreenInfo import *
+from DataTemplate.ScreenInfo import *
 
 template_busLine_custom = {
     "lineName":"testLine1",

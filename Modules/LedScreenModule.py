@@ -5,10 +5,10 @@ from PyQt5.QtGui import QPainter, QColor, QImage
 from PyQt5.QtCore import QTimer, Qt, QThread, QRunnable, QThreadPool, pyqtSignal, QMutex, QWaitCondition, QObject
 from PIL import Image
 
-from ModifiedModule import SmartWindowBase
-from ScreenInfo import *
-from LineInfo import *
-from BmpCreater import *
+from Modules.ModifiedModule import SmartWindowBase
+from DataTemplate.ScreenInfo import *
+from DataTemplate.LineInfo import *
+from Modules.BmpCreater import *
 
 word_list = [
     '越过群山追斜阳, 拨开面纱回望故乡. ',

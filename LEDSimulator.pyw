@@ -3,18 +3,18 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from BmpCreater import FontManager, BmpCreater
-from UI_ControlPanel import Ui_ControlPanel
-from UI_NewALine import Ui_NewALine
-from UI_SelfDefineScreenDialog import Ui_SelfDefineScreen
-from UI_About import *
-from UI_ColorMultiLine import *
-from UI_ProgSettings import *
-from UI_IconInfoManagement import *
-from ScreenInfo import *
-from LineInfo import *
-from LedScreenModule import *
-from FontManagerApp import *
+from Modules.BmpCreater import FontManager, BmpCreater
+from UI.UI_ControlPanel import Ui_ControlPanel
+from UI.UI_NewALine import Ui_NewALine
+from UI.UI_SelfDefineScreenDialog import Ui_SelfDefineScreen
+from UI.UI_About import *
+from UI.UI_ColorMultiLine import *
+from UI.UI_ProgSettings import *
+from UI.UI_IconInfoManagement import *
+from DataTemplate.ScreenInfo import *
+from DataTemplate.LineInfo import *
+from Modules.LedScreenModule import *
+from Modules.FontManagerApp import *
 
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)

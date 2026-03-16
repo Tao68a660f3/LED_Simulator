@@ -1,2 +1,2 @@
-# dir 不需要提交的目录
-/__pycache__
+**/__pycache__/
+*.pyc
