@@ -92,9 +92,12 @@ class ASC_bin_reader:
         self.is_ready = False
         self.font_data = None
         self.height = 0
-        self.max_w = 0
+        self.width = 0
         self.bpc = 0
-        self.row_stride = 0
+        self.config = 0
+        self.is_vert_scan = False
+        self.is_lsb = False
+        self.stride = 0
         self.width_table = []
         self._load_bin(bin_path)
 
@@ -102,10 +105,23 @@ class ASC_bin_reader:
         try:
             if not os.path.exists(bin_path): return
             with open(bin_path, "rb") as f:
-                header = f.read(16)
-                if header[0:4] != b'FONT': return
-                self.height, self.max_w, self.bpc = struct.unpack('<BBH', header[4:8])
-                self.row_stride = (self.max_w + 7) // 8
+                magic = f.read(4)
+                if magic != b'FONT': return
+                
+                self.height = struct.unpack('<B', f.read(1))[0]
+                self.width = struct.unpack('<B', f.read(1))[0]
+                self.bpc = struct.unpack('<H', f.read(2))[0]
+                self.config = struct.unpack('<B', f.read(1))[0]
+                f.read(7)  # 跳过保留位
+                
+                self.is_vert_scan = (self.config & 0x02) != 0  # Bit 1
+                self.is_lsb = (self.config & 0x04) != 0        # Bit 2
+                
+                if self.is_vert_scan:
+                    self.stride = (self.height + 7) // 8
+                else:
+                    self.stride = (self.width + 7) // 8
+                
                 self.width_table = list(f.read(256))
                 self.font_data = f.read()
                 self.is_ready = True
@@ -113,40 +129,43 @@ class ASC_bin_reader:
             print(f"Load Error: {e}")
 
     def get_text_bmp(self, asc, y_offset=0, *not_used_argv) -> Image.Image:
-        """
-        返回一个 PIL.Image 对象，包含单个字符的点阵。
-        """
         if not self.is_ready or not asc:
-            # 返回一个 1x1 的透明图防止报错
             return Image.new("1", (10, 10), 0)
 
         ascii_code = ord(asc[0]) if isinstance(asc, str) else int(asc)
         char_w = self.width_table[ascii_code]
         
-        # 寻址数据
         start_offset = ascii_code * self.bpc
-        char_data = self.font_data[start_offset : start_offset + self.bpc]
+        char_data = self.font_data[start_offset:start_offset + self.bpc]
         
-        # 创建一个 1-bit 的黑底图像 (0:黑, 1:白)
-        # 尺寸为当前字符宽度 x 总高度
-        img = Image.new("1", (char_w + 1, self.height), 0)
+        img = Image.new("1", (self.width, self.height), 0)
         pixels = img.load()
-
-        # 逐行填入点阵
-        for h_idx in range(self.height):
-            row_start = h_idx * self.row_stride
-            row_bytes = char_data[row_start : row_start + self.row_stride]
-            
-            for col_idx in range(char_w):
-                byte_pos = col_idx // 8
-                bit_pos = 7 - (col_idx % 8)
-                
-                if row_bytes[byte_pos] & (1 << bit_pos):
-                    # 在 PIL 坐标系中填入像素
-                    pixels[col_idx, h_idx] = 1 
         
-        img = img.crop((0, y_offset, img.width, y_offset + img.height))
+        main_limit = self.width if self.is_vert_scan else self.height
+        sub_limit = self.height if self.is_vert_scan else self.width
+        
+        for m in range(main_limit):
+            for s in range(sub_limit):
+                byte_pos = m * self.stride + (s // 8)
+                bit_pos = (s % 8) if self.is_lsb else (7 - (s % 8))
+                
+                if byte_pos < len(char_data):
+                    if (char_data[byte_pos] >> bit_pos) & 1:
+                        res_x = m if self.is_vert_scan else s
+                        res_y = s if self.is_vert_scan else m
+                        
+                        if res_x < self.width and res_y < self.height:
+                            pixels[res_x, res_y] = 1
+        
+        if char_w < self.width:
+            img = img.crop((0, 0, char_w, self.height))
 
+        ext_w = 0
+        if not self.config & 0x01:
+            ext_w = 1
+
+        img = img.crop((0, y_offset, img.width + ext_w, y_offset + img.height))
+        
         return img
     
 class ASC_font_Reader():
@@ -234,32 +253,25 @@ class HZK_Font_Reader():
     def __init__(self, fontPath, is_klscale):
         self.fontPath = fontPath
         self.is_klscale = is_klscale
-        self.font_size = 16  # 16或24
+        self.font_size = 16  # 默认16
         self.HELPER = BMP_SCALE_BOLD_HELPER()
-        
-        # 根据字体大小设置不同的参数
-        if self.font_size == 16:
-            self.bytes_per_char = 32
-            self.char_width = 16
-            self.char_height = 16
-            self.KEYS = [0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01]
-        elif self.font_size == 24:
-            self.bytes_per_char = 72
-            self.char_width = 24
-            self.char_height = 24
-            self.KEYS = [0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01]
-        else:
-            raise ValueError("只支持16x16或24x24字体大小")
+        self._init_font_params()
         
         # 验证文件存在
         with open(self.fontPath, "rb") as f:
-            pass  # 只是验证文件可访问
+            pass
+
+    def _init_font_params(self):
+        """根据字体大小初始化参数"""
+        self.bytes_per_char = (self.font_size * self.font_size) // 8
+        self.char_width = self.font_size
+        self.char_height = self.font_size
+        self.KEYS = [0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01]
 
     def get_char_map(self, text):
         try:
             gb2312 = text.encode('gb2312')
         except:
-            # 对于无法编码的字符，使用全角空格代替
             gb2312 = "　".encode('gb2312')
         
         hex_str = binascii.b2a_hex(gb2312)
@@ -271,37 +283,24 @@ class HZK_Font_Reader():
         offset = (94 * (area-1) + (index-1)) * self.bytes_per_char
         
         # 初始化字符点阵
-        if self.font_size == 16:
-            rect_list = [[] for _ in range(16)]
-        else:  # 24x24
-            rect_list = [[] for _ in range(24)]
+        rect_list = [[] for _ in range(self.char_height)]
         
         # 读取字体数据
         with open(self.fontPath, "rb") as f:
             f.seek(offset)
             font_rect = f.read(self.bytes_per_char)
         
-        # 处理16x16字体
-        if self.font_size == 16:
-            for k in range(len(font_rect) // 2):
-                row_list = rect_list[k]
-                for j in range(2):
-                    for i in range(8):
-                        asc = font_rect[k * 2 + j]
-                        flag = 1 if asc & self.KEYS[i] else 0
-                        row_list.append(flag)
+        # 每行字节数
+        bytes_per_row = self.char_width // 8
         
-        # 处理24x24字体
-        else:
-            for k in range(24):  # 24行
-                row_list = rect_list[k]
-                # 每行3字节
-                for j in range(3):
-                    for i in range(8):
-                        asc = font_rect[k * 3 + j]
-                        flag = 1 if asc & self.KEYS[i] else 0
-                        row_list.append(flag)
-                        
+        for row in range(self.char_height):
+            row_list = rect_list[row]
+            for byte_idx in range(bytes_per_row):
+                byte_data = font_rect[row * bytes_per_row + byte_idx]
+                for bit in range(8):
+                    flag = 1 if byte_data & self.KEYS[bit] else 0
+                    row_list.append(flag)
+        
         return rect_list
         
     def make_text_bmp(self, fontData, y_offset, xb=1, yb=1, scale=100, scale_y=100):
@@ -338,29 +337,19 @@ class HZK_Font_Reader():
         return image
         
     def get_text_bmp(self, text, y_offset=0, font_size=16, xb=1, yb=1, scale=100, scale_y=100, *not_used_argv):
-        self.set_font_size(font_size)
+        self.font_size = font_size
+        self._init_font_params()
         try:
             bmp = self.make_text_bmp(self.get_char_map(text), y_offset, xb, yb, scale, scale_y)
         except Exception as e:
             print(f"get_text_bmp in HZK_Font_Reader: {e}")
-            bmp = Image.new("1",(16,16))
+            bmp = Image.new("1",(font_size, font_size))
         return bmp
     
     def set_font_size(self, font_size):
         """设置字体大小"""
-        if font_size not in [16, 24]:
-            print("只支持16或24字体大小")
-            font_size = 16
-        
         self.font_size = font_size
-        if self.font_size == 16:
-            self.bytes_per_char = 32
-            self.char_width = 16
-            self.char_height = 16
-        else:
-            self.bytes_per_char = 72
-            self.char_width = 24
-            self.char_height = 24
+        self._init_font_params()
 
 class Sys_Font_Reader():
     def __init__(self,font_path,is_klscale):

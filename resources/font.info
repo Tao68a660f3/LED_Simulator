@@ -111,8 +111,11 @@ hzk24s.hzk,HZK24宋体,
 hzk24f.hzk,HZK24仿宋,
 hzk24h.hzk,HZK24黑体,
 hzk24k.hzk,HZK24楷体,
+hzk40s.hzk,HZK40宋体,
+hzk48s.hzk,HZK48宋体,
 
 # 使用生成程序生成的二进制ASCII字体
 FONT,ASCII_FONT,DIR:./resources/binAsc/,
 ASCE14.bin,14 px bin字体实验,
+ASC0816.bin,16 px bin字体实验,
 

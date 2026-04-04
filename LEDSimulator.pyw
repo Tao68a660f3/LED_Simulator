@@ -19,8 +19,8 @@ from Modules.FontManagerApp import *
 #适配高分辨率
 # QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
-version = "1.5.1(测试版本)"
-release_date = "20260313"
+version = "1.5.2"
+release_date = "20260404"
 
 ledTypes = [i for i in pointKindDict.keys()]
 scales = [ast.literal_eval(i) for i in ledTypes]
@@ -2899,7 +2899,7 @@ class LineEditor():
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    # app.setStyle('Fusion')
+    app.setStyle('Fusion')
     myWindow = MainWindow()
     myWindow.show()
     sys.exit(app.exec_())
