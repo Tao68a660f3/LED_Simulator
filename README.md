@@ -12,6 +12,8 @@
 >
 > 本仓库保留全部历史代码，可自由 clone、fork 和使用。
 
+![](/doc_image/archived.png "archived")
+
 ---
 
 ## 维护状态说明
